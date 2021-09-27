@@ -19,14 +19,11 @@ import javax.swing.JProgressBar;
 import javax.swing.JScrollPane;
 import javax.swing.SwingWorker;
 
-import org.jfree.chart.ChartPanel;
-import org.jfree.chart.JFreeChart;
 import org.jfree.data.xy.XYSeriesCollection;
 import org.qut.exogenousaware.data.ExogenousAnnotatedLog;
 import org.qut.exogenousaware.gui.ExogenousEnhancementTracablity;
 import org.qut.exogenousaware.gui.panels.ExogenousEnhancementDotPanel.ExoDotNode;
 import org.qut.exogenousaware.gui.workers.ExogenousObservedUniverse;
-import org.qut.exogenousaware.ml.clustering.HierarchicalClustering.DistanceType;
 
 import lombok.Builder;
 import lombok.Builder.Default;
@@ -46,7 +43,7 @@ public class ExogenousEnhancementAnalysis {
 	@Default private JLabel guard = new JLabel();
 	@Default private JProgressBar progress = new JProgressBar();
 	@Default private JLabel progressLabel = new JLabel();
-	@Default private Map<String,ChartPanel> exoCharts = new HashMap<String, ChartPanel>();
+	@Default private Map<String,JPanel> exoCharts = new HashMap<String, JPanel>();
 	@Default private ExoDotNode focus = null;
 	@Default private ExogenousObservedUniverse task = null;
 	@Default private GridBagConstraints c = new GridBagConstraints();
@@ -159,7 +156,7 @@ public class ExogenousEnhancementAnalysis {
 	
 	public void hideCharts() {
 //		loop through previous charts and hide all charts
-		for(Entry<String, ChartPanel> entry : this.exoCharts.entrySet()) {
+		for(Entry<String, JPanel> entry : this.exoCharts.entrySet()) {
 			entry.getValue().setVisible(false);
 		}
 	}
@@ -198,74 +195,79 @@ public class ExogenousEnhancementAnalysis {
 		Map<String, XYSeriesCollection> universe = null;
 		Map<String, List<Map<String,Object>>> states = null;
 		Map<String, List<Map<String,Object>>> seriesStates = null;
-		this.progress.setVisible(true);
-		this.progress.setValue(0);
-		this.progressLabel.setText("Building Graphs :");
+		this.progress.setVisible(false);
 		try {
 			universe = cached ? this.cacheUniverse.get(this.focus) : this.task.get();
 			states = cached ? this.cacheStates.get(this.focus) : this.task.getDatasetStates();
 			seriesStates = cached ? this.cacheSeriesStates.get(this.focus) : this.task.getSeriesStates();
-			this.progress.setMaximum(universe.entrySet().size() * 3);
 			for(Entry<String,XYSeriesCollection> entry : universe.entrySet()) {
 				if (cached) {
-					showCachedGraph(entry.getKey() + " - Subseries");
-					showCachedGraph(entry.getKey() + " - Median By Group");
-					showCachedGraph(entry.getKey() + " - Cluster Graph");
+					showCachedGraph(this.focus.getId()+ entry.getKey());
 				} else {
-				System.out.println("Building graphs");
-				
-				EnhancementAllGraph allGraphBuilder = EnhancementAllGraph.builder()
-						.title(entry.getKey() + " - Subseries")
-						.xlabel("time:timestamp (hours)")
-						.ylabel("value")
-						.dataState(seriesStates.get(entry.getKey()))
+//				System.out.println("Building graphs");
+//				
+//				EnhancementAllGraph allGraphBuilder = EnhancementAllGraph.builder()
+//						.title(entry.getKey() + " - Subseries")
+//						.xlabel("time:timestamp (hours)")
+//						.ylabel("value")
+//						.dataState(seriesStates.get(entry.getKey()))
+//						.hasExpression(this.focus.getGuardExpression().hasExpression())
+//						.expression(this.focus.getGuardExpression())
+//						.graphData(entry.getValue())
+//						.build();
+//				allGraphBuilder.make();
+//				JFreeChart chart = allGraphBuilder.graph.getChart();
+//				cacheGraph(allGraphBuilder.getTitle(), chart);
+//				
+//				EnhancementMedianGraph medianGraphBuilder = EnhancementMedianGraph.builder()
+//						.title(entry.getKey() + " - Median By Group")
+//						.xlabel("time:timestamp (hours)")
+//						.ylabel("value")
+//						.dataState(seriesStates.get(entry.getKey()))
+//						.hasExpression(this.focus.getGuardExpression().hasExpression())
+//						.expression(this.focus.getGuardExpression())
+//						.graphData(entry.getValue())
+//						.build();
+//				medianGraphBuilder.make();
+//				chart = medianGraphBuilder.graph.getChart();
+//				cacheGraph(medianGraphBuilder.getTitle(), chart);
+//				
+//				EnhancementClusterGraph clusterGraphBuilder = EnhancementClusterGraph.builder()
+//						.title(entry.getKey() + " - (model) Cluster Graph")
+//						.xlabel("time:timestamp (hours)")
+//						.ylabel("value")
+//						.dataState(seriesStates.get(entry.getKey()))
+//						.hasExpression(this.focus.getGuardExpression().hasExpression())
+//						.expression(this.focus.getGuardExpression())
+//						.graphData(entry.getValue())
+//						.build();
+//				clusterGraphBuilder.make();
+//				chart = clusterGraphBuilder.graph.getChart();
+//				cacheGraph(clusterGraphBuilder.getTitle(), chart);
+//				
+//				clusterGraphBuilder = EnhancementClusterGraph.builder()
+//						.title(entry.getKey() + " - (DTW) Cluster Graph")
+//						.xlabel("time:timestamp (hours)")
+//						.ylabel("value")
+//						.distance(DistanceType.DTW)
+//						.dataState(seriesStates.get(entry.getKey()))
+//						.hasExpression(this.focus.getGuardExpression().hasExpression())
+//						.expression(this.focus.getGuardExpression())
+//						.graphData(entry.getValue())
+//						.build();
+//				clusterGraphBuilder.make();
+//				chart = clusterGraphBuilder.graph.getChart();
+				EnhancementExogenousDatasetGraphController controller = EnhancementExogenousDatasetGraphController.builder()
+						.datasetName(entry.getKey())
+						.universe(entry.getValue())
+						.states(states.get(entry.getKey()))
+						.seriesStates(seriesStates.get(entry.getKey()))
 						.hasExpression(this.focus.getGuardExpression().hasExpression())
-						.expression(this.focus.getGuardExpression())
-						.graphData(entry.getValue())
-						.build();
-				allGraphBuilder.make();
-				JFreeChart chart = allGraphBuilder.graph.getChart();
-				cacheGraph(allGraphBuilder.getTitle(), chart);
-				
-				EnhancementMedianGraph medianGraphBuilder = EnhancementMedianGraph.builder()
-						.title(entry.getKey() + " - Median By Group")
-						.xlabel("time:timestamp (hours)")
-						.ylabel("value")
-						.dataState(seriesStates.get(entry.getKey()))
-						.hasExpression(this.focus.getGuardExpression().hasExpression())
-						.expression(this.focus.getGuardExpression())
-						.graphData(entry.getValue())
-						.build();
-				medianGraphBuilder.make();
-				chart = medianGraphBuilder.graph.getChart();
-				cacheGraph(medianGraphBuilder.getTitle(), chart);
-				
-				EnhancementClusterGraph clusterGraphBuilder = EnhancementClusterGraph.builder()
-						.title(entry.getKey() + " - (model) Cluster Graph")
-						.xlabel("time:timestamp (hours)")
-						.ylabel("value")
-						.dataState(seriesStates.get(entry.getKey()))
-						.hasExpression(this.focus.getGuardExpression().hasExpression())
-						.expression(this.focus.getGuardExpression())
-						.graphData(entry.getValue())
-						.build();
-				clusterGraphBuilder.make();
-				chart = clusterGraphBuilder.graph.getChart();
-				cacheGraph(clusterGraphBuilder.getTitle(), chart);
-				
-				clusterGraphBuilder = EnhancementClusterGraph.builder()
-						.title(entry.getKey() + " - (DTW) Cluster Graph")
-						.xlabel("time:timestamp (hours)")
-						.ylabel("value")
-						.distance(DistanceType.DTW)
-						.dataState(seriesStates.get(entry.getKey()))
-						.hasExpression(this.focus.getGuardExpression().hasExpression())
-						.expression(this.focus.getGuardExpression())
-						.graphData(entry.getValue())
-						.build();
-				clusterGraphBuilder.make();
-				chart = clusterGraphBuilder.graph.getChart();
-				cacheGraph(clusterGraphBuilder.getTitle(), chart);
+						.guardExpression(this.focus.getGuardExpression())
+						.transName(this.focus.getTransLabel())
+						.build()
+						.setup();
+				cacheGraph(this.focus.getId()+ entry.getKey(), controller);
 				}
 			}
 		} catch (InterruptedException e) {
@@ -277,9 +279,10 @@ public class ExogenousEnhancementAnalysis {
 		} catch (Exception e) {
 			e.printStackTrace();
 		}
-		this.showProgress(false);
 		this.main.validate();
 		this.scroll.validate();
+		this.progressLabel.setVisible(false);
+		this.progress.setVisible(false);
 		if (!cached && universe != null) {
 			this.cacheUniverse.put(this.focus, universe);
 			this.cacheStates.put(this.focus, states);
@@ -287,26 +290,23 @@ public class ExogenousEnhancementAnalysis {
 		}
 	}
 	
-	public void cacheGraph(String title,JFreeChart chart) {
+	public void cacheGraph(String title,JPanel chart) {
 		if (this.exoCharts.containsKey(title)) {
-			this.exoCharts.get(title).setChart(chart);
 			this.exoCharts.get(title).setVisible(true);
 		} else {
-			ChartPanel graph = new ChartPanel(
-					chart
-			);
-			this.exoCharts.put(title, graph);
+			this.exoCharts.put(title, chart);
 			this.c.gridx = 0;
 			this.c.gridy++;
-			this.main.add(graph, c);
+			this.main.add(chart, c);
 		}
 		System.out.println("added graph");
 		this.progress.setValue(this.progress.getValue()+1);
+		this.main.validate();
 	}
 	
 	public void showCachedGraph(String title) {
 		if (this.exoCharts.containsKey(title)) {
-			ChartPanel graph = this.exoCharts.get(title);
+			JPanel graph = this.exoCharts.get(title);
 			graph.setVisible(true);
 		}
 	}
