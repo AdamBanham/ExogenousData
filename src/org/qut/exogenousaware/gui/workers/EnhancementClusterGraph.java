@@ -21,7 +21,10 @@ import org.apache.commons.lang.NotImplementedException;
 import org.jfree.chart.ChartFactory;
 import org.jfree.chart.ChartPanel;
 import org.jfree.chart.JFreeChart;
+import org.jfree.chart.axis.ValueAxis;
+import org.jfree.chart.labels.IntervalXYToolTipGenerator;
 import org.jfree.chart.labels.XYToolTipGenerator;
+import org.jfree.chart.plot.PlotOrientation;
 import org.jfree.chart.plot.XYPlot;
 import org.jfree.chart.renderer.xy.DeviationRenderer;
 import org.jfree.data.xy.XYDataItem;
@@ -62,6 +65,10 @@ public class EnhancementClusterGraph extends SwingWorker<JPanel, String> {
 	@Default double segmentInterval = 0.15;
 	@Default @Getter JPanel main = new JPanel();
 	@Default JProgressBar progress = new JProgressBar();
+	@Default double lowerRangeBound = Double.MAX_VALUE;
+	@Default double upperRangeBound = 0.0;
+	@Default double upperDomainBound = 0.0;
+	@Default double lowerDomainBound = 0.0;
 	
 	public EnhancementClusterGraph setup() {
 		this.main.setLayout(new BorderLayout(50,50));
@@ -151,12 +158,22 @@ public class EnhancementClusterGraph extends SwingWorker<JPanel, String> {
 				this.title, 
 				this.xlabel, 
 				this.ylabel, 
-				intervalDataset
+				intervalDataset,
+				PlotOrientation.VERTICAL, true,
+				true,
+				false
 		);
 		XYPlot plot = chart.getXYPlot();
+		renderer.setDefaultToolTipGenerator(new IntervalXYToolTipGenerator());
 		plot.setBackgroundPaint(Colours.CHART_BACKGROUND);
 		plot.setRangeGridlinesVisible(false);
 		plot.setDomainGridlinesVisible(false);
+		ValueAxis axis = plot.getRangeAxis();
+		axis.setLowerBound(this.lowerRangeBound);
+		axis.setUpperBound(this.upperRangeBound);
+		axis = plot.getDomainAxis();
+		axis.setUpperBound(this.upperDomainBound);
+		axis.setLowerBound(this.lowerDomainBound);
 //		renderer.setDefaultToolTipGenerator(new StandardXYToolTipGenerator());
 		plot.setRenderer(renderer);
 //		remake the graph 
@@ -172,6 +189,7 @@ public class EnhancementClusterGraph extends SwingWorker<JPanel, String> {
 		createIntervalSeries(seriesInt, medians);
 		intervalDataset.addSeries(seriesInt);
 		setupDeviationRender(renderCount, renderer, colour, memberCount, totalMembers);
+		renderer.setSeriesToolTipGenerator(renderCount, clusterSeriesInfoToolTip.builder().memberCount(memberCount).group("C"+ group + suffix).build());
 	}
 	
 	public List<List<Integer>> findClusterGroups(List<Integer> seriesIdentifiers) {
@@ -345,6 +363,16 @@ public class EnhancementClusterGraph extends SwingWorker<JPanel, String> {
 			stdValue = Math.sqrt(stdValue);
 			double median = findMedianValue(entry.getValue().toArray(new Double[entry.getValue().size()]));
 			series.add( entry.getKey(), median, median-stdValue, median+stdValue);
+//			update lower and upper bounds
+			if ((median-stdValue) < this.lowerRangeBound) {
+				this.lowerRangeBound = median - stdValue;
+			}
+			if ((median+stdValue) > this.upperRangeBound) {
+				this.upperRangeBound = median + stdValue;
+			}
+			if (entry.getKey() < this.lowerDomainBound) {
+				this.lowerDomainBound = entry.getKey();
+			}
 		}
 	}
 	
@@ -371,7 +399,7 @@ public class EnhancementClusterGraph extends SwingWorker<JPanel, String> {
 		Color newSeriesPaint = new Color(seriesColor.getRed(), seriesColor.getGreen(), seriesColor.getBlue(), alpha);
 		renderer.setSeriesFillPaint(renderCount, fillPaint);
 		renderer.setSeriesPaint(renderCount, newSeriesPaint);
-		renderer.setSeriesToolTipGenerator(renderCount, clusterSeriesInfoToolTip.builder().memberCount(memberCount).build());
+		
 	}
 	
 	public static enum ClusterGraphType {
@@ -411,14 +439,15 @@ public class EnhancementClusterGraph extends SwingWorker<JPanel, String> {
 	public static class clusterSeriesInfoToolTip implements XYToolTipGenerator {
 
 		private int memberCount;
+		private String group;
 		
 		public String generateToolTip(XYDataset dataset, int series, int item) {
-			String tooltip = "Members: "+this.memberCount;
+			String tooltip = group+ " Members: "+this.memberCount;
 			return tooltip;
 		}
 		
 		public String generateToolTip(YIntervalSeriesCollection dataset, int series, int item) {
-			String tooltip = "Members: "+this.memberCount;
+			String tooltip = group+ " Members: "+this.memberCount;
 			return tooltip;
 		}
 
