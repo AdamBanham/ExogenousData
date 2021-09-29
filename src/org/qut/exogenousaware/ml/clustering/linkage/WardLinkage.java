@@ -63,7 +63,7 @@ public class WardLinkage implements LinkageDistancer {
 //			}
 //			sublist++;
 //		}
-		System.out.println("[HierarchicalClustering] Finding pair to combine took :: " + (System.currentTimeMillis() - starttime));
+//		System.out.println("[HierarchicalClustering] Finding pair to combine took :: " + (System.currentTimeMillis() - starttime));
 		return lowestScore.getLowestPair();
 	}
 	
