@@ -35,6 +35,8 @@ public class SubSeries {
 	@NonNull XTrace source;
 	@NonNull XEvent endogenous;
 	@Singular List<XEvent> subEvents;
+	XTrace endoSource;
+	
 	
 	/**
 	 * @return The length of sub-timeseries

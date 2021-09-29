@@ -113,6 +113,7 @@ public class TimeAwareSlicer implements Slicer{
 						.source(exogenous)
 						.endogenous(ev)
 						.subEvents(subseries)
+						.endoSource(endogenous)
 						.build();
 				points.put(ev, subtimeseries);
 			}
