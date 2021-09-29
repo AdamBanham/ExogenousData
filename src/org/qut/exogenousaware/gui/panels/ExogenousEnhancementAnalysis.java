@@ -296,8 +296,14 @@ public class ExogenousEnhancementAnalysis {
 		} else {
 			this.exoCharts.put(title, chart);
 			this.c.gridx = 0;
+			int oldfill = this.c.fill;
+			this.c.fill = GridBagConstraints.HORIZONTAL;
+			double oldweightx = this.c.weightx;
+			this.c.weightx = 1.0;
 			this.c.gridy++;
 			this.main.add(chart, c);
+			this.c.fill = oldfill;
+			this.c.weightx = oldweightx;
 		}
 		System.out.println("added graph");
 		this.progress.setValue(this.progress.getValue()+1);
