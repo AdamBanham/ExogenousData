@@ -47,6 +47,8 @@ public class EnhancementExogenousDatasetGraphController extends JPanel {
 	@NonNull Boolean hasExpression;
 	@NonNull String transName;
 	
+	@Default boolean useGroups = false;
+	@Default List<Integer> groups = null;
 	@Default GuardExpressionHandler guardExpression = null;
 	@Default GridBagLayout layout = new GridBagLayout();
 	@Default GridBagConstraints layoutcc = new GridBagConstraints();
@@ -142,6 +144,8 @@ public class EnhancementExogenousDatasetGraphController extends JPanel {
 					.hasExpression(hasExpression)
 					.expression(guardExpression)
 					.graphData(universe)
+					.useGroups(this.useGroups && this.groups != null)
+					.groups(this.groups)
 					.build()
 					.setup();
 			worker.execute();
@@ -159,6 +163,8 @@ public class EnhancementExogenousDatasetGraphController extends JPanel {
 					.dataState(seriesStates)
 					.hasExpression(hasExpression)
 					.expression(guardExpression)
+					.useGroups(this.useGroups && this.groups != null)
+					.groups(this.groups)
 					.graphData(universe)
 					.build()
 					.setup();
@@ -175,6 +181,8 @@ public class EnhancementExogenousDatasetGraphController extends JPanel {
 					.xlabel("time:timestamp (hours)")
 					.ylabel("value")
 					.dataState(seriesStates)
+					.useGroups(this.useGroups && this.groups != null)
+					.groups(this.groups)
 					.hasExpression(hasExpression)
 					.expression(guardExpression)
 					.graphData(universe)
@@ -196,6 +204,8 @@ public class EnhancementExogenousDatasetGraphController extends JPanel {
 					.hasExpression(hasExpression)
 					.expression(guardExpression)
 					.graphData(universe)
+					.useGroups(this.useGroups && this.groups != null)
+					.groups(this.groups)
 					.build()
 					.setup();
 			worker.execute();
@@ -215,6 +225,8 @@ public class EnhancementExogenousDatasetGraphController extends JPanel {
 					.hasExpression(hasExpression)
 					.expression(guardExpression)
 					.graphData(universe)
+					.useGroups(this.useGroups && this.groups != null)
+					.groups(this.groups)
 					.build()
 					.setup();
 			worker.execute();
