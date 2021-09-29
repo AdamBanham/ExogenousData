@@ -33,7 +33,7 @@ public class ActivitySearchGrouper implements ExogenousObserverGrouper {
 		int group = 0;
 		boolean found = trace
 				.stream()
-				.limit(endEvent)
+				.limit(endEvent+1)
 				.map(ev -> ev.getAttributes().get("concept:name").toString())
 				.map(ev -> ev.contains(this.activityName))
 				.reduce(false, (c,n) -> (c || n));
