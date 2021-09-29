@@ -1,7 +1,9 @@
-package org.qut.exogenousaware.gui.panels;
+package org.qut.exogenousaware.gui.workers;
 
 import java.awt.BasicStroke;
+import java.awt.BorderLayout;
 import java.awt.Color;
+import java.awt.Dimension;
 import java.awt.geom.Ellipse2D;
 import java.util.ArrayList;
 import java.util.Arrays;
@@ -9,6 +11,10 @@ import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 import java.util.Map.Entry;
+
+import javax.swing.JPanel;
+import javax.swing.JProgressBar;
+import javax.swing.SwingWorker;
 
 import org.apache.commons.math3.stat.descriptive.moment.StandardDeviation;
 import org.jfree.chart.ChartFactory;
@@ -29,7 +35,8 @@ import lombok.Getter;
 import lombok.NonNull;
 
 @Builder
-public class EnhancementMedianGraph {
+public class EnhancementMedianGraph extends SwingWorker<JPanel, String> {
+	
 	@NonNull XYSeriesCollection graphData;
 	@NonNull List<Map<String,Object>> dataState;
 	@NonNull Boolean hasExpression;
@@ -40,9 +47,21 @@ public class EnhancementMedianGraph {
 	@Default GuardExpressionHandler expression = null;
 	@Default Color passColour = new Color(0,102,51,255); 
 	@Default Color failColour = new Color(128,0,0,255);
-	@Default Color nullColour = new Color(0,0,0,255);
+	@Default Color nullColour = new Color(255,255,255,255);
 	@Default ChartPanel graph = null;
 	@Default double segmentInterval = 0.15;
+	@Default @Getter JPanel main = new JPanel();
+	@Default JProgressBar progress = new JProgressBar();
+	
+	public EnhancementMedianGraph setup() {
+		this.main.setLayout(new BorderLayout(50,50));
+		this.main.add(progress, BorderLayout.CENTER);
+		this.main.setMaximumSize(new Dimension(400,600));
+		this.progress.setVisible(true);
+		this.progress.setValue(0);
+		this.progress.setMaximum(this.graphData.getSeriesCount());
+		return this;
+	}
 	
 	public ChartPanel make() {
 //		for each time point (rounded to .25 of an hour) find median
@@ -67,6 +86,7 @@ public class EnhancementMedianGraph {
 				medians.get(x).add(y);
 			}
 			seriescount++;
+			this.progress.setValue(seriescount);
 		}
 //		we want three collections each with the following
 //		(1) median line
@@ -102,13 +122,6 @@ public class EnhancementMedianGraph {
 		seriesInt = new YIntervalSeries("null");
 		createIntervalSeries(seriesInt, nullMedians, dataset.getSeries(2));
 		intervalDataset.addSeries(seriesInt);
-		
-		
-		
-		
-		
-		
-		
 //		make dummy chart
 		JFreeChart chart = ChartFactory.createXYLineChart(
 				this.title, 
@@ -132,6 +145,9 @@ public class EnhancementMedianGraph {
         renderer.setSeriesFillPaint(2, nullColour);
         renderer.setSeriesPaint(2, nullColour);
         plot.setRenderer(renderer);
+        plot.setRangeGridlinesVisible(false);
+        plot.setDomainGridlinesVisible(false);
+        plot.setBackgroundPaint(Color.black);
 //		chart.removeLegend();
 //		remake the graph 
 		this.graph = new ChartPanel(
@@ -184,5 +200,23 @@ public class EnhancementMedianGraph {
 		exoRender.setSeriesVisible(seriescount, true);
 //		exoRender.setSeriesVisibleInLegend(seriescount, false);
 		exoRender.setSeriesLinesVisible(seriescount, true);
+	}
+
+	public JPanel getNewChart() {
+		JPanel panel = new JPanel();
+		panel.setMaximumSize(new Dimension(400,600));
+		panel.setLayout(new BorderLayout(50,50));
+		panel.add(new ChartPanel( graph.getChart()), BorderLayout.CENTER);
+		return panel;
+	}
+	
+	@Override
+    protected void done() {
+		this.progress.setVisible(false);
+		this.main.add(this.graph, BorderLayout.CENTER);
+	}
+
+	protected JPanel doInBackground() throws Exception {
+		return this.make();
 	}
 }
