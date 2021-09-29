@@ -1,19 +1,31 @@
-package org.qut.exogenousaware.gui.panels;
+package org.qut.exogenousaware.gui.workers;
 
 import java.awt.BasicStroke;
+import java.awt.BorderLayout;
 import java.awt.Color;
+import java.awt.Dimension;
 import java.util.ArrayList;
 import java.util.Arrays;
+import java.util.Collection;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 import java.util.Map.Entry;
+import java.util.stream.Collectors;
 
+import javax.swing.JPanel;
+import javax.swing.JProgressBar;
+import javax.swing.SwingWorker;
+
+import org.apache.commons.lang.NotImplementedException;
 import org.jfree.chart.ChartFactory;
 import org.jfree.chart.ChartPanel;
 import org.jfree.chart.JFreeChart;
+import org.jfree.chart.labels.XYToolTipGenerator;
 import org.jfree.chart.plot.XYPlot;
 import org.jfree.chart.renderer.xy.DeviationRenderer;
+import org.jfree.data.xy.XYDataItem;
+import org.jfree.data.xy.XYDataset;
 import org.jfree.data.xy.XYSeries;
 import org.jfree.data.xy.XYSeriesCollection;
 import org.jfree.data.xy.YIntervalSeries;
@@ -30,7 +42,7 @@ import lombok.Getter;
 import lombok.NonNull;
 
 @Builder
-public class EnhancementClusterGraph {
+public class EnhancementClusterGraph extends SwingWorker<JPanel, String> {
 	@NonNull XYSeriesCollection graphData;
 	@NonNull List<Map<String,Object>> dataState;
 	@NonNull Boolean hasExpression;
@@ -38,13 +50,35 @@ public class EnhancementClusterGraph {
 	@NonNull String xlabel;
 	@NonNull String ylabel;
 	
-	@Default DistanceType distance = DistanceType.EUCLID;
+	@Default ClusterGraphType graphType = ClusterGraphType.model;
 	@Default GuardExpressionHandler expression = null;
 	@Default Color passColour = new Color(0,102,51,175); 
 	@Default Color failColour = new Color(128,0,0,175);
-	@Default Color nullColour = new Color(0,0,0,175);
+	@Default Color nullColour = new Color(255,255,255,255);
 	@Default ChartPanel graph = null;
 	@Default double segmentInterval = 0.15;
+	@Default @Getter JPanel main = new JPanel();
+	@Default JProgressBar progress = new JProgressBar();
+	
+	public EnhancementClusterGraph setup() {
+		this.main.setLayout(new BorderLayout(50,50));
+		this.main.add(progress, BorderLayout.CENTER);
+		this.main.setMaximumSize(new Dimension(400,600));
+		this.progress.setVisible(true);
+		this.progress.setValue(0);
+		this.progress.setMaximum(this.graphData.getSeriesCount());
+		return this;
+	}
+	
+	public JPanel getNewChart() {
+		JPanel panel = new JPanel();
+		panel.setMaximumSize(new Dimension(400,600));
+		panel.setLayout(new BorderLayout(50,50));
+		if (this.isDone()) {
+			panel.add(new ChartPanel( graph.getChart()), BorderLayout.CENTER);
+		}
+		return panel;
+	}
 	
 	public ChartPanel make() {
 //		find groups for series, so that clustering occurs once for each outcome option
@@ -73,20 +107,26 @@ public class EnhancementClusterGraph {
 		int renderCount = 0;
 //		for each cluster set, create a median interval line graph using members of clusters
 		int group = 1;
+		int totalMemberSize = satClusterGroups.stream().map(g -> g.size()).reduce(0, (c,n) -> c+n);
+		int MaximMemberSize = satClusterGroups.stream().map(g -> g.size()).reduce(1,(c,n) -> c < n ? n : c);
 		for(List<Integer> seriesIdentifiers: satClusterGroups) {
-		 	createMedianTrend("- true", createMedianMap(seriesIdentifiers), group, intervalDataset, renderer, renderCount, passColour);
+		 	createMedianTrend("- true", createMedianMap(seriesIdentifiers), group, intervalDataset, renderer, renderCount, passColour, seriesIdentifiers.size(), MaximMemberSize);
 			group++;
 			renderCount++;
 		}
 		group = 1;
+		totalMemberSize = unsatClusterGroups.stream().map(g -> g.size()).reduce(0, (c,n) -> c+n);
+		MaximMemberSize = unsatClusterGroups.stream().map(g -> g.size()).reduce(1,(c,n) -> c < n ? n : c);
 		for(List<Integer> seriesIdentifiers: unsatClusterGroups) {
-		 	createMedianTrend("- false", createMedianMap(seriesIdentifiers), group, intervalDataset, renderer, renderCount, failColour);
+		 	createMedianTrend("- false", createMedianMap(seriesIdentifiers), group, intervalDataset, renderer, renderCount, failColour, seriesIdentifiers.size(), MaximMemberSize);
 			group++;
 			renderCount++;
 		}
 		group = 1;
+		totalMemberSize = noClusterGroups.stream().map(g -> g.size()).reduce(0, (c,n) -> c+n);
+		MaximMemberSize = noClusterGroups.stream().map(g -> g.size()).reduce(1,(c,n) -> c < n ? n : c);
 		for(List<Integer> seriesIdentifiers: noClusterGroups) {
-		 	createMedianTrend("- NE", createMedianMap(seriesIdentifiers), group, intervalDataset, renderer, renderCount, nullColour);
+		 	createMedianTrend("- NE", createMedianMap(seriesIdentifiers), group, intervalDataset, renderer, renderCount, nullColour, seriesIdentifiers.size(), MaximMemberSize);
 			group++;
 			renderCount++;
 		}
@@ -100,6 +140,10 @@ public class EnhancementClusterGraph {
 				intervalDataset
 		);
 		XYPlot plot = chart.getXYPlot();
+		plot.setBackgroundPaint(Color.black);
+		plot.setRangeGridlinesVisible(false);
+		plot.setDomainGridlinesVisible(false);
+//		renderer.setDefaultToolTipGenerator(new StandardXYToolTipGenerator());
 		plot.setRenderer(renderer);
 //		remake the graph 
 		this.graph = new ChartPanel(
@@ -109,14 +153,77 @@ public class EnhancementClusterGraph {
 	}
 	
 	
-	public void createMedianTrend(String suffix, Map<Double,List<Double>> medians, Integer group,YIntervalSeriesCollection intervalDataset,DeviationRenderer renderer, Integer renderCount ,Color colour) {
-		YIntervalSeries seriesInt = new YIntervalSeries("C"+ group + suffix);
+	public void createMedianTrend(String suffix, Map<Double,List<Double>> medians, Integer group,YIntervalSeriesCollection intervalDataset,DeviationRenderer renderer, Integer renderCount ,Color colour, int memberCount, int totalMembers) {
+		YIntervalSeries seriesInt = new YIntervalSeries("C"+ group + suffix + "(" + memberCount +")");
 		createIntervalSeries(seriesInt, medians);
 		intervalDataset.addSeries(seriesInt);
-		setupDeviationRender(renderCount, renderer, colour);
+		setupDeviationRender(renderCount, renderer, colour, memberCount, totalMembers);
 	}
 	
 	public List<List<Integer>> findClusterGroups(List<Integer> seriesIdentifiers) {
+		if (ClusterGraphType.model.equals(this.graphType)) {
+			return this.modelBasedClustering(seriesIdentifiers);
+		} else if (ClusterGraphType.shape.equals(this.graphType)) {
+			return this.shapeBasedClustering(seriesIdentifiers);
+		} else {
+			throw new NotImplementedException("Unknown cluster graph type of "+ this.graphType.toString());
+		}
+	}
+	
+	public List<List<Integer>> shapeBasedClustering(List<Integer> seriesIdentifiers) {
+//		create feature vectors to be used in clustering
+		List<FeatureVector> obs = new ArrayList<FeatureVector>();
+		for( int i : seriesIdentifiers) {
+			XYSeries series = this.graphData.getSeries(i);
+			obs.add( 
+					FeatureVectorImpl.builder()
+					.values(
+							(Collection<? extends Double>)
+							(series.getItems()
+									.stream()
+									.map( (it) -> {
+											XYDataItem item = (XYDataItem)it;
+											return item.getY().doubleValue();
+										}
+									)
+									.collect(Collectors.toList()))
+							)
+					.identifier(i)
+					.build()
+			);
+		}
+		if (obs.size() < 1) {
+			return new ArrayList<List<Integer>>();
+		}
+//		perform clustering
+		System.out.println("Starting clustering on "+ title +" using "+ obs.size());
+		HierarchicalClustering clusterer = HierarchicalClustering.builder()
+				.clusterNum(5)
+				.distance(this.graphType.distance)
+				.linkage(HierarchicalClustering.LinkageType.WARD)
+				.observations(obs)
+				.build();
+//		fit cluster groups to data
+		clusterer.fit();
+//		create median and std intervals for each cluster
+//		first collect each cluster into groups of members
+//		then collect all members references to their identifiers
+		List<List<Integer>> clusterGroups = new ArrayList<List<Integer>>();
+		for(int group=0;group < clusterer.getClusters().size();group++) {
+			System.out.println("Collecting cluster group "+ (group+1) +"...");
+			clusterGroups.add(new ArrayList<Integer>());
+			List<Integer> groupCollector = clusterGroups.get(group);
+			for(FeatureVector member :clusterer.getClusters().get(group).getMembers()) {
+				int identifier = member.getIdentifier();
+				groupCollector.add(identifier);
+			}
+			System.out.println("cluster group "+ (group+1) +" contains " + groupCollector.size() + " observations...");
+			this.progress.setValue(this.progress.getValue() + groupCollector.size());
+		}
+		return clusterGroups;
+	}
+	
+	public List<List<Integer>> modelBasedClustering(List<Integer> seriesIdentifiers){
 //		create feature vectors to be used in clustering
 		List<FeatureVector> obs = new ArrayList<FeatureVector>();
 		for( int i : seriesIdentifiers) {
@@ -140,7 +247,7 @@ public class EnhancementClusterGraph {
 		System.out.println("Starting clustering on "+ title +" using "+ obs.size());
 		HierarchicalClustering clusterer = HierarchicalClustering.builder()
 				.clusterNum(5)
-				.distance(this.distance)
+				.distance(this.graphType.distance)
 				.linkage(HierarchicalClustering.LinkageType.WARD)
 				.observations(obs)
 				.build();
@@ -159,6 +266,7 @@ public class EnhancementClusterGraph {
 				groupCollector.add(identifier);
 			}
 			System.out.println("cluster group "+ (group+1) +" contains " + groupCollector.size() + " observations...");
+			this.progress.setValue(this.progress.getValue() + groupCollector.size());
 		}
 		return clusterGroups;
 	}
@@ -240,11 +348,65 @@ public class EnhancementClusterGraph {
 		return median;
 	}
 	
-	public void setupDeviationRender(int renderCount, DeviationRenderer renderer, Color seriesColor ) {
+	public void setupDeviationRender(int renderCount, DeviationRenderer renderer, Color seriesColor, int memberCount, int totalMembers) {
 		renderer.setSeriesStroke(renderCount, new BasicStroke(3.0f,
                 BasicStroke.CAP_ROUND, BasicStroke.JOIN_ROUND));
-		Color fillPaint = new Color(seriesColor.getRed(), seriesColor.getGreen(), seriesColor.getBlue(), 100);
+		int alpha = (int) (255 * (memberCount/(totalMembers * 1.0)));
+		Color fillPaint = new Color(seriesColor.getRed(), seriesColor.getGreen(), seriesColor.getBlue(), alpha);
+		alpha = (int) (seriesColor.getAlpha() * (memberCount/(totalMembers * 1.0)));
+		Color newSeriesPaint = new Color(seriesColor.getRed(), seriesColor.getGreen(), seriesColor.getBlue(), alpha);
 		renderer.setSeriesFillPaint(renderCount, fillPaint);
-		renderer.setSeriesPaint(renderCount, seriesColor);
+		renderer.setSeriesPaint(renderCount, newSeriesPaint);
+		renderer.setSeriesToolTipGenerator(renderCount, clusterSeriesInfoToolTip.builder().memberCount(memberCount).build());
+	}
+	
+	public static enum ClusterGraphType {
+		model("Intercepted Time Series Clustering", DistanceType.EUCLID),
+		shape("DTW Series Clustering", DistanceType.DTW);
+		
+		public String label;
+		public DistanceType distance;
+		
+		private ClusterGraphType(String label, DistanceType distance) {
+			this.label = label;
+			this.distance = distance;
+		}
+		
+		@Override
+		public String toString() {
+			return "(" + this.label + ", " + this.distance.label +")"; 
+		}
+	}
+
+	protected JPanel doInBackground() throws Exception {
+		return this.make();
+	}
+	
+	@Override
+    protected void done() {
+		this.progress.setVisible(false);
+		if (this.graph == null) {
+			System.out.println("[EnhancementClusterGraph::"+this.graphType.toString()+"] Error :: graph panel is null");
+		} else {
+			this.main.add(this.graph, BorderLayout.CENTER);
+		}
+		
+	}
+	
+	@Builder
+	public static class clusterSeriesInfoToolTip implements XYToolTipGenerator {
+
+		private int memberCount;
+		
+		public String generateToolTip(XYDataset dataset, int series, int item) {
+			String tooltip = "Members: "+this.memberCount;
+			return tooltip;
+		}
+		
+		public String generateToolTip(YIntervalSeriesCollection dataset, int series, int item) {
+			String tooltip = "Members: "+this.memberCount;
+			return tooltip;
+		}
+
 	}
 }
