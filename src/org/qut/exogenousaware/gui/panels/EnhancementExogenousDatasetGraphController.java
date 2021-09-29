@@ -1,16 +1,23 @@
 package org.qut.exogenousaware.gui.panels;
 
 import java.awt.BorderLayout;
+import java.awt.Color;
 import java.awt.Dimension;
+import java.awt.Font;
 import java.awt.GridBagConstraints;
 import java.awt.GridBagLayout;
 import java.awt.Insets;
 import java.awt.event.ActionEvent;
 import java.awt.event.ActionListener;
+import java.awt.event.MouseEvent;
+import java.awt.event.MouseListener;
+import java.awt.event.WindowEvent;
+import java.awt.event.WindowListener;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 
+import javax.swing.BorderFactory;
 import javax.swing.JButton;
 import javax.swing.JFrame;
 import javax.swing.JLabel;
@@ -21,6 +28,9 @@ import javax.swing.SwingWorker;
 import org.jfree.data.xy.XYSeriesCollection;
 import org.qut.exogenousaware.gui.panels.ExogenousEnhancementDotPanel.GuardExpressionHandler;
 import org.qut.exogenousaware.gui.workers.EnhancementAllGraph;
+import org.qut.exogenousaware.gui.workers.EnhancementClusterGraph;
+import org.qut.exogenousaware.gui.workers.EnhancementClusterGraph.ClusterGraphType;
+import org.qut.exogenousaware.gui.workers.EnhancementMedianGraph;
 import org.qut.exogenousaware.gui.workers.EnhancementSmudgeGraph;
 
 import lombok.Builder;
@@ -42,11 +52,13 @@ public class EnhancementExogenousDatasetGraphController extends JPanel {
 	@Default GridBagConstraints layoutcc = new GridBagConstraints();
 	@Default JTabbedPane graphPane = new JTabbedPane();
 	@Default JButton pop = new JButton("popout");
-	@Default JButton min = new JButton("minimise");
+	@Default JButton min = new JButton("maximise");
 	@Default Map<String, SwingWorker<JPanel, String>> cachedGraphs = new HashMap<String, SwingWorker<JPanel, String>>();
 	
 	
 	public EnhancementExogenousDatasetGraphController setup() {
+//		style panel
+		styleMainPanel(this);
 //		setup layout manager
 		setLayout(this.layout);
 		layoutcc.anchor = GridBagConstraints.WEST;
@@ -59,11 +71,15 @@ public class EnhancementExogenousDatasetGraphController extends JPanel {
 		layoutcc.weighty=0;
 //		add label (left) then min and popout buttons (right)
 		layoutcc.insets = new Insets(25,50,10,0);
-		add(new JLabel(this.datasetName), layoutcc);
+		JLabel name = new JLabel(this.datasetName.toUpperCase());
+		name.setForeground(Color.white);
+		name.setFont(new Font("Times New Roman", 24, 24));
+		add(name, layoutcc);
 		layoutcc.gridx++;
 		layoutcc.anchor = GridBagConstraints.EAST;
 		layoutcc.weightx = 0.0;
 		layoutcc.insets = new Insets(25,0,10,5);
+		min.addMouseListener(MinimiseMouseListener.builder().button(min).source(this).build());
 		add(min,layoutcc);
 		layoutcc.gridx++;
 		layoutcc.insets = new Insets(25,0,10,50);
@@ -77,16 +93,16 @@ public class EnhancementExogenousDatasetGraphController extends JPanel {
 //		TODO as this is current only getting one slicer into
 		layoutcc.gridwidth = 3;
 		layoutcc.insets = new Insets(0,50,10,50);
-		add(new JPanel(),layoutcc);
+		JPanel fill = new JPanel();
+		fill.setBackground(Color.DARK_GRAY);
+		add(fill,layoutcc);
 		layoutcc.gridy++;
 //		add tabbed panned for all graph panels
 		layoutcc.fill = GridBagConstraints.BOTH;
 		layoutcc.weighty = 1.0;
-//		start smudge worker
+//		start graph workers for tabs
+//		TODO make graph workers start on tab click for the first time
 		addTabs();
-		graphPane.addTab("Median", new JPanel());
-		graphPane.addTab("Cluster", null, new JPanel(), "model");
-		graphPane.addTab("Cluster", null, new JPanel(), "DTW");
 		add(graphPane, layoutcc);
 		layoutcc.gridy++;
 		layoutcc.fill = GridBagConstraints.HORIZONTAL;
@@ -98,8 +114,19 @@ public class EnhancementExogenousDatasetGraphController extends JPanel {
 		add(new JPanel(),layoutcc);
 		layoutcc.gridy++;
 //		validate panel
+		this.graphPane.setVisible(false);
 		this.validate();
 		return this;
+	}
+	
+	public EnhancementExogenousDatasetGraphController maximise() {
+		this.graphPane.setVisible(true);
+		return this;
+	}
+	
+	public void styleMainPanel(JPanel panel) {
+		panel.setBackground(Color.DARK_GRAY);
+		panel.setBorder(BorderFactory.createLineBorder(Color.gray, 2));
 	}
 	
 	public void addTabs() {
@@ -108,7 +135,7 @@ public class EnhancementExogenousDatasetGraphController extends JPanel {
 			this.graphPane.addTab("Line", ((EnhancementAllGraph) this.cachedGraphs.get("Line")).getNewChart());
 		} else {
 			EnhancementAllGraph worker = EnhancementAllGraph.builder()
-					.title(this.datasetName + " - Subseries")
+					.title(this.datasetName + " - Line")
 					.xlabel("time:timestamp (hours)")
 					.ylabel("value")
 					.dataState(seriesStates)
@@ -126,7 +153,7 @@ public class EnhancementExogenousDatasetGraphController extends JPanel {
 			this.graphPane.addTab("Smudge", ((EnhancementSmudgeGraph) this.cachedGraphs.get("Smudge")).getNewChart());
 		} else {
 			EnhancementSmudgeGraph worker = EnhancementSmudgeGraph.builder()
-					.title(this.datasetName + " - Subseries")
+					.title(this.datasetName + " - Smudge")
 					.xlabel("time:timestamp (hours)")
 					.ylabel("value")
 					.dataState(seriesStates)
@@ -139,6 +166,61 @@ public class EnhancementExogenousDatasetGraphController extends JPanel {
 			graphPane.addTab("Smudge", worker.getMain());
 			this.cachedGraphs.put("Smudge", worker);
 		}		
+//		add median plot
+		if (this.cachedGraphs.containsKey("Median")) {
+			this.graphPane.addTab("Median", ((EnhancementMedianGraph) this.cachedGraphs.get("Median")).getNewChart());
+		} else {
+			EnhancementMedianGraph worker = EnhancementMedianGraph.builder()
+					.title(this.datasetName + " - Median")
+					.xlabel("time:timestamp (hours)")
+					.ylabel("value")
+					.dataState(seriesStates)
+					.hasExpression(hasExpression)
+					.expression(guardExpression)
+					.graphData(universe)
+					.build()
+					.setup();
+			worker.execute();
+			graphPane.addTab("Median", worker.getMain());
+			this.cachedGraphs.put("Median", worker);
+		}
+//		add Cluster (Model Based Approach) plot
+		if (this.cachedGraphs.containsKey("Cluster Model")) {
+			this.graphPane.addTab("Cluster", null, ((EnhancementClusterGraph) this.cachedGraphs.get("Cluster Model")).getNewChart(), "Model Based");
+		} else {
+			EnhancementClusterGraph worker = EnhancementClusterGraph.builder()
+					.title(this.datasetName + " - Clustered Sequences (Model)")
+					.xlabel("time:timestamp (hours)")
+					.ylabel("value")
+					.dataState(seriesStates)
+					.hasExpression(hasExpression)
+					.expression(guardExpression)
+					.graphData(universe)
+					.build()
+					.setup();
+			worker.execute();
+			graphPane.addTab("Cluster", null, worker.getMain() , "Model Based");
+			this.cachedGraphs.put("Cluster Model", worker);
+		}
+//		add Cluster (Shape Based Approach) plot
+		if (this.cachedGraphs.containsKey("Cluster Shape")) {
+			this.graphPane.addTab("Cluster", null, ((EnhancementClusterGraph) this.cachedGraphs.get("Cluster Shape")).getNewChart(), "Shape Based");
+		} else {
+			EnhancementClusterGraph worker = EnhancementClusterGraph.builder()
+					.title(this.datasetName + " - Clustered Sequences (Shape)")
+					.xlabel("time:timestamp (hours)")
+					.ylabel("value")
+					.graphType(ClusterGraphType.shape)
+					.dataState(seriesStates)
+					.hasExpression(hasExpression)
+					.expression(guardExpression)
+					.graphData(universe)
+					.build()
+					.setup();
+			worker.execute();
+			graphPane.addTab("Cluster", null, worker.getMain() , "Shape Based");
+			this.cachedGraphs.put("Cluster Shape", worker);
+		}
 	}
 	
 	@Builder
@@ -146,29 +228,127 @@ public class EnhancementExogenousDatasetGraphController extends JPanel {
 
 		@NonNull private EnhancementExogenousDatasetGraphController source;
 		
+		@Default private boolean poped = false;
+		
 		public void actionPerformed(ActionEvent e) {
-			// create new frame for this controller
-			JFrame frame = new JFrame(this.source.transName+ " --- "+ this.source.datasetName);
-			frame.setDefaultCloseOperation(JFrame.DISPOSE_ON_CLOSE);
-			// rebuild source instance
-			EnhancementExogenousDatasetGraphController resource = EnhancementExogenousDatasetGraphController.builder()
-					.datasetName(this.source.datasetName)
-					.universe(this.source.universe)
-					.seriesStates(this.source.seriesStates)
-					.states(this.source.states)
-					.hasExpression(this.source.hasExpression)
-					.guardExpression(this.source.guardExpression)
-					.cachedGraphs(this.source.cachedGraphs)
-					.transName(this.source.transName)
-					.build()
-					.setup();
-			resource.pop.setEnabled(false);
-			resource.min.setEnabled(false);
-			frame.getContentPane().add(resource, BorderLayout.CENTER);
-			frame.setPreferredSize(new Dimension(800,600));
-			frame.pack();
-			this.source.pop.setEnabled(false);
-			frame.setVisible(true);
+			if (!this.poped) {
+				// create new frame for this controller
+				JFrame frame = new JFrame(this.source.transName+ " --- "+ this.source.datasetName);
+				frame.setDefaultCloseOperation(JFrame.DISPOSE_ON_CLOSE);
+				// rebuild source instance
+				EnhancementExogenousDatasetGraphController resource = EnhancementExogenousDatasetGraphController.builder()
+						.datasetName(this.source.datasetName)
+						.universe(this.source.universe)
+						.seriesStates(this.source.seriesStates)
+						.states(this.source.states)
+						.hasExpression(this.source.hasExpression)
+						.guardExpression(this.source.guardExpression)
+						.cachedGraphs(this.source.cachedGraphs)
+						.transName(this.source.transName)
+						.build()
+						.setup()
+						.maximise();
+				resource.pop.setEnabled(false);
+				resource.min.setEnabled(false);
+				frame.getContentPane().add(resource, BorderLayout.CENTER);
+				frame.setPreferredSize(new Dimension(800,600));
+				frame.pack();
+				this.source.pop.setEnabled(false);
+				frame.setVisible(true);
+				frame.addWindowListener(PopoutCloseListener.builder().source(this).build());
+				this.poped = true;
+			}
+		}
+		
+		public void reset() {
+			this.poped = false;
+			this.source.pop.setEnabled(true);
+		}
+		
+	}
+
+	@Builder
+	public static class PopoutCloseListener implements WindowListener {
+		
+		@NonNull private PopoutActionListener source;
+		
+		public void windowClosed(WindowEvent e) {
+			this.source.reset();
+			
+		}
+		
+		public void windowClosing(WindowEvent e) {
+			// TODO Auto-generated method stub
+		}
+		
+		public void windowOpened(WindowEvent e) {
+			// TODO Auto-generated method stub
+			
+		}
+
+		public void windowIconified(WindowEvent e) {
+			// TODO Auto-generated method stub
+			
+		}
+
+		public void windowDeiconified(WindowEvent e) {
+			// TODO Auto-generated method stub
+			
+		}
+
+		public void windowActivated(WindowEvent e) {
+			// TODO Auto-generated method stub
+			
+		}
+
+		public void windowDeactivated(WindowEvent e) {
+			// TODO Auto-generated method stub
+			
+		}
+		
+	}
+	
+	@Builder
+	public static class MinimiseMouseListener implements MouseListener {
+		
+		@NonNull private JButton button;
+		@NonNull private EnhancementExogenousDatasetGraphController source;
+		
+		@Default private boolean clicked = true;
+		
+		public void mouseClicked(MouseEvent e) {
+			if (this.button.isEnabled()) {
+				if (this.clicked) {
+					this.clicked = !this.clicked;
+					this.button.setText("minimise");
+					this.source.graphPane.setVisible(true);
+				}
+				else {
+					this.button.setText("maximise");
+					this.source.graphPane.setVisible(false);
+					this.clicked = !this.clicked;
+				}
+			}
+		}
+
+		public void mousePressed(MouseEvent e) {
+			// TODO Auto-generated method stub
+			
+		}
+
+		public void mouseReleased(MouseEvent e) {
+			// TODO Auto-generated method stub
+			
+		}
+
+		public void mouseEntered(MouseEvent e) {
+			// TODO Auto-generated method stub
+			
+		}
+
+		public void mouseExited(MouseEvent e) {
+			// TODO Auto-generated method stub
+			
 		}
 		
 	}
