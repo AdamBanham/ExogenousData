@@ -34,6 +34,7 @@ public class HierarchicalClustering {
 	@Default @Getter List<Cluster> clusters = new ArrayList<Cluster>();
 	@Default @Getter Distancer distancer = null;
 	@Default @Getter LinkageDistancer linkager = null;
+	@Default int bulkprocess = 10;
 		
 	public HierarchicalClustering fit() {
 		setDistancer();
@@ -47,14 +48,15 @@ public class HierarchicalClustering {
 		int counter = this.clusters.size();
 		long starttime = System.currentTimeMillis();
 		while (this.clusters.size() > this.clusterNum) {
-			System.out.println("[HierarchicalClustering] Current cluster count : "+this.clusters.size());
+//			System.out.println("[HierarchicalClustering] Current cluster count : "+this.clusters.size());
 //			shortcut one (half the num of clusters)
 			if ((this.clusters.size() /2) > (this.clusterNum < 500 ? 500 : this.clusterNum) ) {
 				// keep removing until every cluster has a partner 
 				List<List<Cluster>> candiatePairs = new ArrayList<List<Cluster>>();
 				List<Cluster> candiatePair = new ArrayList<Cluster>();
 				// find candiate pairs
-				while (this.clusters.size() > this.clusterNum+500) {
+				int processSize = this.clusters.size() - this.bulkprocess;
+				while (this.clusters.size() > processSize) {
 					candiatePair = this.linkager.findNextPair(this.clusters);
 					this.clusters.remove(candiatePair.get(0));
 					this.clusters.remove(candiatePair.get(1));
