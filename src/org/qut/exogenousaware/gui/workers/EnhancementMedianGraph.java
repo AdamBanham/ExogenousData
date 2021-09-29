@@ -20,6 +20,7 @@ import org.apache.commons.math3.stat.descriptive.moment.StandardDeviation;
 import org.jfree.chart.ChartFactory;
 import org.jfree.chart.ChartPanel;
 import org.jfree.chart.JFreeChart;
+import org.jfree.chart.plot.PlotOrientation;
 import org.jfree.chart.plot.XYPlot;
 import org.jfree.chart.renderer.xy.DeviationRenderer;
 import org.jfree.chart.renderer.xy.XYLineAndShapeRenderer;
@@ -125,7 +126,10 @@ public class EnhancementMedianGraph extends SwingWorker<JPanel, String> {
 				this.title, 
 				this.xlabel, 
 				this.ylabel, 
-				intervalDataset
+				intervalDataset,
+				PlotOrientation.VERTICAL, true,
+				true,
+				false
 		);
 //		setup renderers for each series
 		XYPlot plot = chart.getXYPlot();
