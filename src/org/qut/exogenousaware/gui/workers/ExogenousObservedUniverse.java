@@ -24,6 +24,7 @@ import org.processmining.plugins.petrinet.replayresult.StepTypes;
 import org.processmining.plugins.replayer.replayresult.SyncReplayResult;
 import org.qut.exogenousaware.data.ExogenousAnnotatedLog;
 import org.qut.exogenousaware.gui.panels.ExogenousEnhancementDotPanel.ExoDotNode;
+import org.qut.exogenousaware.gui.workers.helpers.ExogenousObserverGrouper;
 import org.qut.exogenousaware.steps.slicing.data.SubSeries;
 import org.qut.exogenousaware.steps.transform.data.TransformedAttribute;
 
@@ -40,10 +41,12 @@ public class ExogenousObservedUniverse extends SwingWorker<Map<String,XYSeriesCo
 	@NonNull private ExoDotNode focus;
 	@NonNull private JProgressBar progress;
 	@NonNull private JLabel label;
+	@NonNull private ExogenousObserverGrouper grouper;
 	
 	@Getter @Default private Map<String,XYSeriesCollection> observed = new HashMap<String, XYSeriesCollection>();
 	@Getter @Default private Map<String, List<Map<String,Object>>> datasetStates = new HashMap<String, List<Map<String,Object>>>();
 	@Getter @Default private Map<String, List<Map<String,Object>>> seriesStates = new HashMap<String, List<Map<String,Object>>>();
+	@Getter @Default private Map<String, List<Integer>> seriesGroups = new HashMap<String, List<Integer>>();
 	@Default private double increment = 1;
 	@Default private int max = 1;
 	
@@ -106,6 +109,7 @@ public class ExogenousObservedUniverse extends SwingWorker<Map<String,XYSeriesCo
 					} catch (IndexOutOfBoundsException e) {
 						continue;
 					}
+					state.put("aligment:event:occurance", eventId);
 				}
 				lastupdate.add(updates);
 				lastDataUpdate.add(state);
@@ -143,11 +147,27 @@ public class ExogenousObservedUniverse extends SwingWorker<Map<String,XYSeriesCo
 				if (datasetValues.containsKey(dataset)) {
 					datasetValues.get(dataset).add(xattr.getValue().getSource());
 					this.datasetStates.get(dataset).add(lastDataUpdate.get(counter));
+//					work out what group this series belongs to
+					this.seriesGroups.get(dataset).add(
+							this.grouper.findGroup(
+									xattr.getValue().getSource().getEndoSource(),
+									xattr.getValue().getSource(),
+									(int) lastDataUpdate.get(counter).get("aligment:event:occurance")
+							)
+					);
 				} else {
 					datasetValues.put(dataset, new ArrayList<SubSeries>());
 					datasetValues.get(dataset).add(xattr.getValue().getSource());
 					this.datasetStates.put(dataset, new ArrayList<Map<String,Object>>());
 					this.datasetStates.get(dataset).add(lastDataUpdate.get(counter));
+					this.seriesGroups.put(dataset, new ArrayList<Integer>());
+					this.seriesGroups.get(dataset).add(
+							this.grouper.findGroup(
+									xattr.getValue().getSource().getEndoSource(),
+									xattr.getValue().getSource(),
+									(int) lastDataUpdate.get(counter).get("aligment:event:occurance")
+							)
+					);
 				}
 			}
 			counter++;
