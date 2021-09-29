@@ -24,6 +24,7 @@ import org.qut.exogenousaware.data.ExogenousAnnotatedLog;
 import org.qut.exogenousaware.gui.ExogenousEnhancementTracablity;
 import org.qut.exogenousaware.gui.panels.ExogenousEnhancementDotPanel.ExoDotNode;
 import org.qut.exogenousaware.gui.workers.ExogenousObservedUniverse;
+import org.qut.exogenousaware.gui.workers.helpers.ActivitySearchGrouper;
 
 import lombok.Builder;
 import lombok.Builder.Default;
@@ -184,6 +185,7 @@ public class ExogenousEnhancementAnalysis {
 				.focus(this.focus)
 				.progress(this.progress)
 				.label(this.progressLabel)
+				.grouper(ActivitySearchGrouper.builder().activityName("blood cultured").build())
 				.build()
 				.setup();
 			this.task.addPropertyChangeListener(new ObservedListener(this));
@@ -265,6 +267,8 @@ public class ExogenousEnhancementAnalysis {
 						.hasExpression(this.focus.getGuardExpression().hasExpression())
 						.guardExpression(this.focus.getGuardExpression())
 						.transName(this.focus.getTransLabel())
+						.useGroups(true)
+						.groups(this.task.getSeriesGroups().get(entry.getKey()))
 						.build()
 						.setup();
 				cacheGraph(this.focus.getId()+ entry.getKey(), controller);
