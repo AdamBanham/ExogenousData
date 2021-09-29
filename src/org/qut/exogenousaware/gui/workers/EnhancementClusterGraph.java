@@ -30,6 +30,7 @@ import org.jfree.data.xy.XYSeries;
 import org.jfree.data.xy.XYSeriesCollection;
 import org.jfree.data.xy.YIntervalSeries;
 import org.jfree.data.xy.YIntervalSeriesCollection;
+import org.qut.exogenousaware.gui.panels.Colours;
 import org.qut.exogenousaware.gui.panels.ExogenousEnhancementDotPanel.GuardExpressionHandler;
 import org.qut.exogenousaware.ml.clustering.HierarchicalClustering;
 import org.qut.exogenousaware.ml.clustering.HierarchicalClustering.DistanceType;
@@ -50,6 +51,8 @@ public class EnhancementClusterGraph extends SwingWorker<JPanel, String> {
 	@NonNull String xlabel;
 	@NonNull String ylabel;
 	
+	@Default boolean useGroups = false;
+	@Default List<Integer> groups = null;
 	@Default ClusterGraphType graphType = ClusterGraphType.model;
 	@Default GuardExpressionHandler expression = null;
 	@Default Color passColour = new Color(0,102,51,175); 
@@ -87,12 +90,23 @@ public class EnhancementClusterGraph extends SwingWorker<JPanel, String> {
 		List<Integer> noeval = new ArrayList<Integer>();
 		for( int i=0; i < this.graphData.getSeriesCount(); i++) {
 			XYSeries series = this.graphData.getSeries(i);
-			List<Integer> group = 
-					this.hasExpression ?
+			List<Integer> group = null;
+			if (this.useGroups && this.groups != null) {
+				int grouper = this.groups.get(i);
+				if (grouper == 0) {
+					group = unsatifised;
+				} else if (grouper == 1) {
+					group = satifised;
+				} else {
+					group = noeval;
+				}
+			} else {
+					group = this.hasExpression ?
 					(	this.expression.evaluate(this.dataState.get(i)) ? 
 							satifised : 
 								unsatifised
 					) : noeval ;
+			}
 			group.add(i);
 		}
 //		perform clustering and find groups
@@ -140,7 +154,7 @@ public class EnhancementClusterGraph extends SwingWorker<JPanel, String> {
 				intervalDataset
 		);
 		XYPlot plot = chart.getXYPlot();
-		plot.setBackgroundPaint(Color.black);
+		plot.setBackgroundPaint(Colours.CHART_BACKGROUND);
 		plot.setRangeGridlinesVisible(false);
 		plot.setDomainGridlinesVisible(false);
 //		renderer.setDefaultToolTipGenerator(new StandardXYToolTipGenerator());

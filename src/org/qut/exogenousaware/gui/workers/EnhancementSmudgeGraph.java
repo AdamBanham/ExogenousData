@@ -18,6 +18,7 @@ import org.jfree.chart.JFreeChart;
 import org.jfree.chart.plot.XYPlot;
 import org.jfree.chart.renderer.xy.XYLineAndShapeRenderer;
 import org.jfree.data.xy.XYSeriesCollection;
+import org.qut.exogenousaware.gui.panels.Colours;
 import org.qut.exogenousaware.gui.panels.ExogenousEnhancementDotPanel.GuardExpressionHandler;
 
 import lombok.Builder;
@@ -35,6 +36,8 @@ public class EnhancementSmudgeGraph extends SwingWorker<JPanel, String>{
 	@NonNull String xlabel;
 	@NonNull String ylabel;
 	
+	@Default boolean useGroups = false;
+	@Default List<Integer> groups = null;
 	@Default GuardExpressionHandler expression = null;
 	@Default Color passColour = new Color(0,102,51,75); 
 	@Default Color failColour = new Color(128,0,0,75);
@@ -81,18 +84,13 @@ public class EnhancementSmudgeGraph extends SwingWorker<JPanel, String>{
 		);
 //		setup renderers for each series
 		XYPlot plot = chart.getXYPlot();
-		plot.setBackgroundPaint(Color.BLACK);
+		plot.setBackgroundPaint(Colours.CHART_BACKGROUND);
 		plot.setDomainGridlinesVisible(false);
 		plot.setRangeGridlinesVisible(false);
 		XYLineAndShapeRenderer exoRender = new XYLineAndShapeRenderer(true, false);
 		exoRender.setUseFillPaint(true);
 		for(int i=0; i < this.graphData.getSeriesCount(); i++) {
-			Color paintColor = 
-					this.hasExpression ?
-					(	this.expression.evaluate(this.dataState.get(i)) ? 
-						this.passColour : 
-						this.failColour
-					) : this.nullColour ;
+			Color paintColor = this.findSeriesColor(i);
 			exoRender.setSeriesPaint(i, paintColor);
 			Shape shape = new Ellipse2D.Double((-1*(size/2.0)),(-1*(size/2.0)),size,size);
 			exoRender.setSeriesStroke(i, null);
@@ -112,6 +110,25 @@ public class EnhancementSmudgeGraph extends SwingWorker<JPanel, String>{
 		);
 		this.graph.setMaximumSize(new Dimension(400,600));
 		return this.graph;
+	}
+	
+	public Color findSeriesColor(int series) {
+		if (this.useGroups && this.groups != null) {
+			int group = this.groups.get(series);
+			if (group == 0) {
+				return this.failColour;
+			} else if (group == 1) {
+				return this.passColour;
+			} else {
+				return this.nullColour;
+			}
+		} else {
+			return this.hasExpression ?
+					(	this.expression.evaluate(this.dataState.get(series)) ? 
+						this.passColour : 
+						this.failColour
+					) : this.nullColour ;
+		}
 	}
 
 	protected JPanel doInBackground() throws Exception {

@@ -27,6 +27,7 @@ import org.jfree.data.xy.XYSeries;
 import org.jfree.data.xy.XYSeriesCollection;
 import org.jfree.data.xy.YIntervalSeries;
 import org.jfree.data.xy.YIntervalSeriesCollection;
+import org.qut.exogenousaware.gui.panels.Colours;
 import org.qut.exogenousaware.gui.panels.ExogenousEnhancementDotPanel.GuardExpressionHandler;
 
 import lombok.Builder;
@@ -44,6 +45,8 @@ public class EnhancementMedianGraph extends SwingWorker<JPanel, String> {
 	@NonNull String xlabel;
 	@NonNull String ylabel;
 	
+	@Default boolean useGroups = false;
+	@Default List<Integer> groups = null;
 	@Default GuardExpressionHandler expression = null;
 	@Default Color passColour = new Color(0,102,51,255); 
 	@Default Color failColour = new Color(128,0,0,255);
@@ -70,12 +73,7 @@ public class EnhancementMedianGraph extends SwingWorker<JPanel, String> {
 		Map<Double, List<Double>> nullMedians = new HashMap<Double, List<Double>>();
 		int seriescount = 0;
 		for(XYSeries series: (List<XYSeries>) this.graphData.getSeries()) {
-			Map<Double, List<Double>> medians = 
-					this.hasExpression ?
-					(	this.expression.evaluate(this.dataState.get(seriescount)) ? 
-							trueMedians : 
-							falseMedians
-					) : nullMedians ;
+			Map<Double, List<Double>> medians = chooseMap(seriescount, trueMedians, falseMedians, nullMedians);
 			for(int i=0;i < series.getItemCount();i++) {
 				double x = (double) series.getX(i);
 				x = x - (x % segmentInterval);
@@ -147,13 +145,32 @@ public class EnhancementMedianGraph extends SwingWorker<JPanel, String> {
         plot.setRenderer(renderer);
         plot.setRangeGridlinesVisible(false);
         plot.setDomainGridlinesVisible(false);
-        plot.setBackgroundPaint(Color.black);
+        plot.setBackgroundPaint(Colours.CHART_BACKGROUND);
 //		chart.removeLegend();
 //		remake the graph 
 		this.graph = new ChartPanel(
 				chart
 		);
 		return this.graph;
+	}
+	
+	public Map<Double, List<Double>> chooseMap(int series, Map<Double, List<Double>> truth, Map<Double, List<Double>> failure, Map<Double, List<Double>> fall){
+		if (this.useGroups && this.groups != null) {
+			int group = this.groups.get(series);
+			if (group == 0) {
+				return failure;
+			} else if (group == 1) {
+				return truth;
+			} else {
+				return fall;
+			}
+		} else {
+			return this.hasExpression ?
+					(	this.expression.evaluate(this.dataState.get(series)) ? 
+						truth : 
+						failure
+					) : fall ;
+		}
 	}
 	
 	
