@@ -14,8 +14,10 @@ import javax.swing.SwingWorker;
 import org.jfree.chart.ChartFactory;
 import org.jfree.chart.ChartPanel;
 import org.jfree.chart.JFreeChart;
+import org.jfree.chart.axis.ValueAxis;
 import org.jfree.chart.plot.XYPlot;
 import org.jfree.chart.renderer.xy.XYLineAndShapeRenderer;
+import org.jfree.data.xy.XYSeries;
 import org.jfree.data.xy.XYSeriesCollection;
 import org.qut.exogenousaware.gui.panels.Colours;
 import org.qut.exogenousaware.gui.panels.ExogenousEnhancementDotPanel.GuardExpressionHandler;
@@ -44,6 +46,10 @@ public class EnhancementAllGraph extends SwingWorker<JPanel, String>{
 	@Default ChartPanel graph = null;
 	@Default @Getter JPanel main = new JPanel();
 	@Default JProgressBar progress = new JProgressBar();
+	@Default double lowerDomainBound = Double.MAX_VALUE;
+	@Default double upperDomainBound = Double.MIN_VALUE;
+	@Default double lowerRangeBound = Double.MAX_VALUE;
+	@Default double upperRangeBound = Double.MIN_VALUE;
 	
 	public EnhancementAllGraph setup() {
 		this.main.setLayout(new BorderLayout(50,50));
@@ -64,6 +70,24 @@ public class EnhancementAllGraph extends SwingWorker<JPanel, String>{
 	}
 	
 	public ChartPanel make() {
+//		check graph data to find bounds
+		try {
+		for(Object item: this.graphData.getSeries()) {
+			if (item.getClass().equals(XYSeries.class)) {
+				XYSeries series = (XYSeries) item;
+				double lowx = series.getMinX();
+				double highx = series.getMaxX();
+				double lowy = series.getMinY();
+				double highy = series.getMaxY();
+//				check x bounds
+				this.lowerDomainBound = lowx < this.lowerDomainBound ? lowx : this.lowerDomainBound;
+				this.upperDomainBound = highx >= this.upperDomainBound ? highx : this.upperDomainBound;
+//				check y bounds
+				this.lowerRangeBound = lowy < this.lowerRangeBound ? lowy : this.lowerRangeBound;
+				this.upperRangeBound = highy >= this.upperRangeBound ? highy : this.upperRangeBound;
+			}
+		}
+		
 //		make dummy chart
 		JFreeChart chart = ChartFactory.createXYLineChart(
 				this.title, 
@@ -90,12 +114,23 @@ public class EnhancementAllGraph extends SwingWorker<JPanel, String>{
 			this.progress.setValue(this.progress.getValue()+1);
 		}
 		plot.setRenderer(exoRender);
+		ValueAxis axis = plot.getDomainAxis();
+		axis.setUpperBound(this.upperDomainBound);
+		axis.setLowerBound(this.lowerDomainBound);
+		axis = plot.getRangeAxis();
+		axis.setUpperBound(205.0); // should be this.upperRangeBound
+		axis.setLowerBound(45.0); // should be this.lowerRangeBound
 		chart.removeLegend();
 //		remake the graph 
 		this.graph = new ChartPanel(
 				chart
 		);
 		this.graph.setMaximumSize(new Dimension(400,600));
+		} 
+		catch (Exception e) {
+			System.out.println("Something went wrong with bound checking :: " + e.getCause());
+			System.out.println(e.getMessage());
+		}
 		return this.graph;
 	}
 	
