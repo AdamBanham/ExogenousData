@@ -169,10 +169,10 @@ public class EnhancementClusterGraph extends SwingWorker<JPanel, String> {
 		plot.setRangeGridlinesVisible(false);
 		plot.setDomainGridlinesVisible(false);
 		ValueAxis axis = plot.getRangeAxis();
-		axis.setLowerBound(this.lowerRangeBound);
-		axis.setUpperBound(this.upperRangeBound);
+		axis.setLowerBound(45.0); // should be this.lowerRangeBound
+		axis.setUpperBound(205.0); // should be this.upperRangeBound
 		axis = plot.getDomainAxis();
-		axis.setUpperBound(this.upperDomainBound);
+		axis.setUpperBound(this.upperDomainBound); 
 		axis.setLowerBound(this.lowerDomainBound);
 //		renderer.setDefaultToolTipGenerator(new StandardXYToolTipGenerator());
 		plot.setRenderer(renderer);
