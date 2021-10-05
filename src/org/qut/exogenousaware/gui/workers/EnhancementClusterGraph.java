@@ -63,8 +63,8 @@ public class EnhancementClusterGraph extends SwingWorker<JPanel, String> {
 	@Default Color failColour = Colours.getGraphPaletteColour(7);
 	@Default Color nullColour = Colours.getGraphPaletteColour(4);
 	@Default ChartPanel graph = null;
-	@Default double segmentInterval = 0.025;
-	@Default double segmentWindow = 0.05;
+	@Default double segmentInterval = 0.01;
+	@Default double segmentWindow = 0.025;
 	@Default @Getter JPanel main = new JPanel();
 	@Default JProgressBar progress = new JProgressBar();
 	@Default double lowerRangeBound = Double.MAX_VALUE;

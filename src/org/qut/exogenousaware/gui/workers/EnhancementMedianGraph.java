@@ -5,7 +5,6 @@ import java.awt.BorderLayout;
 import java.awt.Color;
 import java.awt.Dimension;
 import java.awt.geom.Ellipse2D;
-import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.HashMap;
 import java.util.List;
@@ -32,6 +31,7 @@ import org.jfree.data.xy.XYSeriesCollection;
 import org.jfree.data.xy.YIntervalSeries;
 import org.jfree.data.xy.YIntervalSeriesCollection;
 import org.qut.exogenousaware.ds.linear.BestFittingLine;
+import org.qut.exogenousaware.ds.timeseries.sample.TimeSeriesSampling;
 import org.qut.exogenousaware.gui.panels.Colours;
 import org.qut.exogenousaware.gui.panels.ExogenousEnhancementDotPanel.GuardExpressionHandler;
 
@@ -53,11 +53,14 @@ public class EnhancementMedianGraph extends SwingWorker<JPanel, String> {
 	@Default boolean useGroups = false;
 	@Default List<Integer> groups = null;
 	@Default GuardExpressionHandler expression = null;
-	@Default Color passColour = new Color(0,102,51,255); 
-	@Default Color failColour = new Color(128,0,0,255);
-	@Default Color nullColour = new Color(255,255,255,255);
+	@Default Color passColour = Colours.getGraphPaletteColour(1);
+	@Default Color passColourBg = Colours.getGraphPaletteColour(2);
+	@Default Color failColour = Colours.getGraphPaletteColour(7);
+	@Default Color failColourBg = Colours.getGraphPaletteColour(6);
+	@Default Color nullColour = Colours.getGraphPaletteColour(4);
 	@Default ChartPanel graph = null;
-	@Default double segmentInterval = 0.05;
+	@Default double segmentInterval = 0.01;
+	@Default double segmentWindow = 0.025;
 	@Default @Getter JPanel main = new JPanel();
 	@Default JProgressBar progress = new JProgressBar();
 	@Default double lowerDomainBound = Double.MAX_VALUE;
@@ -83,33 +86,7 @@ public class EnhancementMedianGraph extends SwingWorker<JPanel, String> {
 		int seriescount = 0;
 		for(XYSeries series: (List<XYSeries>) this.graphData.getSeries()) {
 			Map<Double, List<Double>> medians = chooseMap(seriescount, trueMedians, falseMedians, nullMedians);
-			double startx = series.getX(0).doubleValue();
-			startx = startx + (startx % this.segmentInterval);
-			double endx = series.getX(series.getItemCount()-1).doubleValue();
-			endx = endx + (endx % this.segmentInterval);
-			System.out.println("["+title+"] start :: "+startx);
-			System.out.println("["+title+"] end :: "+endx);
-//			sample between start and end using the window segment
-			while (startx <= endx) {
-				double sampleMiddle = startx + (this.segmentInterval/2.0);
-				sampleMiddle = sampleMiddle - (sampleMiddle % (this.segmentInterval/2.0) );
-				double sample = 0.0;
-				boolean foundsample = false;
-				try {
-					sample = this.findSample(series, startx, startx+this.segmentInterval);
-					foundsample = true;
-				} catch (Exception e) {
-//					System.out.println("["+title+"] Unable to find sample in window :: "+startx+" to "+(startx+this.segmentInterval));
-				}
-				if(foundsample) {
-					if (!medians.containsKey(sampleMiddle)) {
-						medians.put(sampleMiddle, new ArrayList<Double>());
-					}
-					medians.get(sampleMiddle).add(sample);
-					System.out.println("["+title+"] add point ("+sampleMiddle+", "+sample+")");
-				}
-				startx += this.segmentInterval;
-			}
+			TimeSeriesSampling.resampleSeries(series, medians, this.segmentInterval, this.segmentWindow);
 			seriescount++;
 			this.progress.setValue(seriescount);
 		}
@@ -166,9 +143,9 @@ public class EnhancementMedianGraph extends SwingWorker<JPanel, String> {
                 BasicStroke.CAP_ROUND, BasicStroke.JOIN_ROUND));
         renderer.setSeriesStroke(2, new BasicStroke(3.0f,
                 BasicStroke.CAP_ROUND, BasicStroke.JOIN_ROUND));
-        renderer.setSeriesFillPaint(0, passColour);
+        renderer.setSeriesFillPaint(0, passColourBg);
         renderer.setSeriesPaint(0, passColour);
-        renderer.setSeriesFillPaint(1, failColour);
+        renderer.setSeriesFillPaint(1, failColourBg);
         renderer.setSeriesPaint(1, failColour);
         renderer.setSeriesFillPaint(2, nullColour);
         renderer.setSeriesPaint(2, nullColour);
@@ -350,7 +327,9 @@ public class EnhancementMedianGraph extends SwingWorker<JPanel, String> {
 		JPanel panel = new JPanel();
 		panel.setMaximumSize(new Dimension(400,600));
 		panel.setLayout(new BorderLayout(50,50));
-		panel.add(new ChartPanel( graph.getChart()), BorderLayout.CENTER);
+		if (this.isDone()) {
+			panel.add(new ChartPanel( graph.getChart()), BorderLayout.CENTER);
+		}
 		return panel;
 	}
 	
