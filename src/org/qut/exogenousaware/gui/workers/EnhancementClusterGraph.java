@@ -33,6 +33,7 @@ import org.jfree.data.xy.XYSeries;
 import org.jfree.data.xy.XYSeriesCollection;
 import org.jfree.data.xy.YIntervalSeries;
 import org.jfree.data.xy.YIntervalSeriesCollection;
+import org.qut.exogenousaware.ds.timeseries.sample.TimeSeriesSampling;
 import org.qut.exogenousaware.gui.panels.Colours;
 import org.qut.exogenousaware.gui.panels.ExogenousEnhancementDotPanel.GuardExpressionHandler;
 import org.qut.exogenousaware.ml.clustering.HierarchicalClustering;
@@ -58,11 +59,12 @@ public class EnhancementClusterGraph extends SwingWorker<JPanel, String> {
 	@Default List<Integer> groups = null;
 	@Default ClusterGraphType graphType = ClusterGraphType.model;
 	@Default GuardExpressionHandler expression = null;
-	@Default Color passColour = new Color(0,102,51,175); 
-	@Default Color failColour = new Color(128,0,0,175);
-	@Default Color nullColour = new Color(255,255,255,255);
+	@Default Color passColour = Colours.getGraphPaletteColour(1); 
+	@Default Color failColour = Colours.getGraphPaletteColour(7);
+	@Default Color nullColour = Colours.getGraphPaletteColour(4);
 	@Default ChartPanel graph = null;
-	@Default double segmentInterval = 0.15;
+	@Default double segmentInterval = 0.025;
+	@Default double segmentWindow = 0.05;
 	@Default @Getter JPanel main = new JPanel();
 	@Default JProgressBar progress = new JProgressBar();
 	@Default double lowerRangeBound = Double.MAX_VALUE;
@@ -333,15 +335,8 @@ public class EnhancementClusterGraph extends SwingWorker<JPanel, String> {
 							trueMedians : 
 							falseMedians
 					) : nullMedians ;
-			for(int i=0;i < series.getItemCount();i++) {
-				double x = (double) series.getX(i);
-				x = x - (x % segmentInterval);
-				double y = (double) series.getY(i);				
-				if (!medians.containsKey(x)) {
-					medians.put(x, new ArrayList<Double>());
-				}
-				medians.get(x).add(y);
-			}
+			
+			TimeSeriesSampling.resampleSeries(series, medians, this.segmentInterval, this.segmentWindow);
 		}
 //		return back maps
 		List<Object> out = new ArrayList<Object>();
