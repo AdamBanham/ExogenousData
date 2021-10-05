@@ -8,12 +8,16 @@ import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 import java.util.Map.Entry;
+import java.util.stream.Collectors;
 
 import javax.swing.JPanel;
 
 import org.apache.commons.lang.NotImplementedException;
 import org.apache.commons.lang.StringEscapeUtils;
 import org.processmining.datapetrinets.expression.GuardExpression;
+import org.processmining.datapetrinets.expression.syntax.ExprRoot;
+import org.processmining.datapetrinets.expression.syntax.ExpressionParser;
+import org.processmining.datapetrinets.expression.syntax.SimpleNode;
 import org.processmining.models.graphbased.directed.petrinet.PetrinetEdge;
 import org.processmining.models.graphbased.directed.petrinet.PetrinetNode;
 import org.processmining.models.graphbased.directed.petrinet.elements.Place;
@@ -24,13 +28,6 @@ import org.processmining.plugins.graphviz.dot.Dot.GraphDirection;
 import org.processmining.plugins.graphviz.dot.DotEdge;
 import org.processmining.plugins.graphviz.dot.DotNode;
 import org.processmining.plugins.graphviz.visualisation.DotPanel;
-import org.processmining.datapetrinets.expression.syntax.ExprRoot;
-import org.processmining.datapetrinets.expression.syntax.ExpressionParser;
-import org.processmining.datapetrinets.expression.syntax.ExpressionParserTokenManager;
-import org.processmining.datapetrinets.expression.syntax.Node;
-import org.processmining.datapetrinets.expression.syntax.ParseException;
-import org.processmining.datapetrinets.expression.syntax.SimpleNode;
-import org.processmining.datapetrinets.expression.syntax.Token;
 
 import lombok.AllArgsConstructor;
 import lombok.Builder;
@@ -68,15 +65,48 @@ public class ExogenousInvestigatorDotPanel  {
 	public Dot convertGraphToDot(DotPanel panel) {
 		Dot test = new Dot();
 		test.setOption("bgcolor", "none");
+		test.setOption("ordering", "out");
+		test.setOption("rank", "min");
+		List<Place> initial = this.graph.getInitialMarking().toList();
+		List<Place> end = this.graph.getFinalMarkings()[0].toList();
+		List<Place> places = new ArrayList<Place>();
 		Map<String, DotNode> nodes = new HashMap<String, DotNode>();
+//		add initial places first
+		for (Place place : initial) {
+			nodes.put(place.getId().toString(), buildPlaceNode(place.getLabel()));
+			DotNode ePlace = nodes.get(place.getId().toString());
+			ePlace.setOption("fillcolor", "green");
+			ePlace.setOption("style", "filled");
+			ePlace.setOption("xlabel","START");
+			test.addNode(ePlace);
+			places.add(place);
+			List<? extends PetrinetNode> trans = this.graph.getEdges().stream()
+				.filter(ed -> ed.getSource().getId().equals(place.getId()))
+				.map(ed -> ed.getTarget())
+				.collect(Collectors.toList());
+			System.out.println("Place= "+place.getLabel()+" has "+trans.size()+" out coming transitions");
+		}
+//		add end place last
+		for (Place place : end) {
+			nodes.put(place.getId().toString(), buildPlaceNode(place.getLabel()));
+			DotNode ePlace = nodes.get(place.getId().toString());
+			ePlace.setOption("fillcolor", "red");
+			ePlace.setOption("style", "filled");
+			ePlace.setOption("xlabel","END");
+			test.addNode(ePlace);
+			places.add(place);
+		}
 		for( Transition trans: this.graph.getTransitions()) {
 			nodes.put(trans.getId().toString(), buildTransitionNode(trans.getLabel(),panel));
 			test.addNode( nodes.get(trans.getId().toString()) );
 		}
 		for ( Place place : this.graph.getPlaces()) {
-			nodes.put(place.getId().toString(), buildPlaceNode(place.getLabel()));
-			test.addNode(nodes.get(place.getId().toString()));
+			if (!initial.contains(place) & !end.contains(place)) {
+				nodes.put(place.getId().toString(), buildPlaceNode(place.getLabel()));
+				test.addNode(nodes.get(place.getId().toString()));
+			}
 		}
+
 		for (PetrinetEdge<? extends PetrinetNode, ? extends PetrinetNode> arc : this.graph.getEdges()) {
 			test.addEdge(
 					new ExoDotEdge(nodes.get(arc.getSource().getId().toString()),
@@ -93,7 +123,33 @@ public class ExogenousInvestigatorDotPanel  {
 //		build new dot graph with rules 
 		Dot update = new Dot();
 		update.setOption("bgcolor", "none");
+		update.setOption("ordering", "out");
+		update.setOption("rank", "min");
+		List<Place> initial = new ArrayList<>();
+		List<Place> end = new ArrayList<>();
 		Map<String, DotNode> nodes = new HashMap<String, DotNode>();
+//		add initial places first
+		for (Place place : graph.getInitialMarking().stream().collect(Collectors.toList())) {
+			for(Place newPlace : this.updatedGraph.getPlaces()) {
+				if (newPlace.getLabel().equals(place.getLabel())) {
+					nodes.put(newPlace.getId().toString(), buildPlaceNode(newPlace.getLabel()));
+					DotNode ePlace = nodes.get(newPlace.getId().toString());
+					ePlace.setOption("fillcolor", "green");
+					ePlace.setOption("style", "filled");
+					ePlace.setOption("xlabel","START");
+					update.addNode(nodes.get(newPlace.getId().toString()));
+					initial.add(newPlace);
+					break;
+				}
+			}
+		}
+		for (Place place : graph.getFinalMarkings()[0].stream().collect(Collectors.toList())) {
+			for(Place newPlace : this.updatedGraph.getPlaces()) {
+				if (newPlace.getLabel().equals(place.getLabel())) {
+					end.add(newPlace);
+				}
+			}
+		}
 //		build transitions to show rules found under variable bars
 		for( Transition trans: this.updatedGraph.getTransitions()) {
 			ExoDotNode node;
@@ -108,8 +164,24 @@ public class ExogenousInvestigatorDotPanel  {
 //		places and edges are built the same 
 //		#TODO highligh arcs with blue green as in the original paper
 		for ( Place place : this.updatedGraph.getPlaces()) {
-			nodes.put(place.getId().toString(), buildPlaceNode(place.getLabel()));
-			update.addNode(nodes.get(place.getId().toString()));
+			if (!initial.contains(place) & !end.contains(place)) {
+				nodes.put(place.getId().toString(), buildPlaceNode(place.getLabel()));
+				update.addNode(nodes.get(place.getId().toString()));
+			}
+		}
+//		add end place last
+		for (Place place : end) {
+			for(Place newPlace : this.updatedGraph.getPlaces()) {
+				if (newPlace.getLabel().equals(place.getLabel())) {
+					nodes.put(newPlace.getId().toString(), buildPlaceNode(newPlace.getLabel()));
+					DotNode ePlace = nodes.get(newPlace.getId().toString());
+					ePlace.setOption("fillcolor", "red");
+					ePlace.setOption("style", "filled");
+					ePlace.setOption("xlabel","END");
+					update.addNode(nodes.get(newPlace.getId().toString()));
+					break;
+				}
+			}
 		}
 		for (PetrinetEdge<? extends PetrinetNode, ? extends PetrinetNode> arc : this.updatedGraph.getEdges()) {
 			update.addEdge(
@@ -144,8 +216,6 @@ public class ExogenousInvestigatorDotPanel  {
 				label.toLowerCase().contains("tau ") ? "WHITE" : "BLACK",
 				label.toLowerCase().contains("tau ") ? "&tau;" : label
 		);
-		System.out.println(label);
-		System.out.println(guardExpression.toPrettyString(1));
 		List<String> exprList = new ArrayList<String>();
 		try {
 			String expr = guardExpression.toString();
@@ -157,10 +227,8 @@ public class ExogenousInvestigatorDotPanel  {
 				if (node.jjtGetFirstToken().kind == 16) {
 //					If the first conjuction is a OR, make rows
 					curr_right = node.jjtGetFirstToken().beginColumn-1;
-					System.out.println("R-Child "+1+" : " + expr.substring(curr_left, curr_right));
 					exprList.add(this.formatExpression(expr.substring(curr_left, curr_right),exprList.size()));
 					curr_left = node.jjtGetFirstToken().endColumn;
-					System.out.println("R-Child "+2+" : " + expr.substring(curr_left,expr.length()-1));
 					exprList.add(this.formatExpression(expr.substring(curr_left, expr.length()-1),exprList.size()));
 				} else if (node.jjtGetFirstToken().kind == 15) {
 //					If the first conjuction is a AND, make a table
@@ -186,7 +254,6 @@ public class ExogenousInvestigatorDotPanel  {
 		for( String element: exprList) {
 			expression = expression + element;
 		}
-		System.out.println(expression);
 		formattedlabel = formattedlabel + expression;
 		formattedlabel = formattedlabel + end;
 		return new ExoDotNode(formattedlabel, panel, label);
