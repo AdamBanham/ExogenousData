@@ -40,9 +40,9 @@ public class EnhancementAllGraph extends SwingWorker<JPanel, String>{
 	@Default boolean useGroups = false;
 	@Default List<Integer> groups = null;
 	@Default GuardExpressionHandler expression = null;
-	@Default Color passColour = new Color(0,102,51,75); 
-	@Default Color failColour = new Color(128,0,0,75);
-	@Default Color nullColour = new Color(255,255,255,75);
+	@Default Color passColour = Colours.getGraphPaletteColour(1); 
+	@Default Color failColour = Colours.getGraphPaletteColour(7);
+	@Default Color nullColour = Colours.getGraphPaletteColour(4);
 	@Default ChartPanel graph = null;
 	@Default @Getter JPanel main = new JPanel();
 	@Default JProgressBar progress = new JProgressBar();
@@ -65,7 +65,9 @@ public class EnhancementAllGraph extends SwingWorker<JPanel, String>{
 		JPanel panel = new JPanel();
 		panel.setMaximumSize(new Dimension(400,600));
 		panel.setLayout(new BorderLayout(50,50));
-		panel.add(new ChartPanel( graph.getChart()), BorderLayout.CENTER);
+		if (this.isDone()) {
+			panel.add(new ChartPanel( graph.getChart()), BorderLayout.CENTER);
+		}
 		return panel;
 	}
 	
