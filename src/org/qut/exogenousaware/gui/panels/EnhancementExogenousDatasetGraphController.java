@@ -24,6 +24,8 @@ import javax.swing.JLabel;
 import javax.swing.JPanel;
 import javax.swing.JTabbedPane;
 import javax.swing.SwingWorker;
+import javax.swing.event.ChangeEvent;
+import javax.swing.event.ChangeListener;
 
 import org.jfree.data.xy.XYSeriesCollection;
 import org.qut.exogenousaware.gui.panels.ExogenousEnhancementDotPanel.GuardExpressionHandler;
@@ -56,6 +58,7 @@ public class EnhancementExogenousDatasetGraphController extends JPanel {
 	@Default JButton pop = new JButton("popout");
 	@Default JButton min = new JButton("maximise");
 	@Default Map<String, SwingWorker<JPanel, String>> cachedGraphs = new HashMap<String, SwingWorker<JPanel, String>>();
+	@Default Map<Integer, String> workerToTab = new HashMap<Integer, String>();
 	
 	
 	public EnhancementExogenousDatasetGraphController setup() {
@@ -132,9 +135,12 @@ public class EnhancementExogenousDatasetGraphController extends JPanel {
 	}
 	
 	public void addTabs() {
+		int tabCount = 0;
 //		add normal line-series plot
 		if (this.cachedGraphs.containsKey("Line")) {
 			this.graphPane.addTab("Line", ((EnhancementAllGraph) this.cachedGraphs.get("Line")).getNewChart());
+			this.workerToTab.put(tabCount, "Line");
+			tabCount++;
 		} else {
 			EnhancementAllGraph worker = EnhancementAllGraph.builder()
 					.title(this.datasetName + " - Line")
@@ -149,12 +155,16 @@ public class EnhancementExogenousDatasetGraphController extends JPanel {
 					.build()
 					.setup();
 			worker.execute();
-			graphPane.addTab("Line", worker.getMain());
+			this.graphPane.addTab("Line", worker.getMain());
 			this.cachedGraphs.put("Line", worker);
+			this.workerToTab.put(tabCount, "Line");
+			tabCount++;
 		}
 //		add smudge plot
 		if (this.cachedGraphs.containsKey("Smudge")) {
 			this.graphPane.addTab("Smudge", ((EnhancementSmudgeGraph) this.cachedGraphs.get("Smudge")).getNewChart());
+			this.workerToTab.put(tabCount, "Smudge");
+			tabCount++;
 		} else {
 			EnhancementSmudgeGraph worker = EnhancementSmudgeGraph.builder()
 					.title(this.datasetName + " - Smudge")
@@ -168,13 +178,16 @@ public class EnhancementExogenousDatasetGraphController extends JPanel {
 					.graphData(universe)
 					.build()
 					.setup();
-			worker.execute();
 			graphPane.addTab("Smudge", worker.getMain());
 			this.cachedGraphs.put("Smudge", worker);
+			this.workerToTab.put(tabCount, "Smudge");
+			tabCount++;
 		}		
 //		add median plot
 		if (this.cachedGraphs.containsKey("Median")) {
 			this.graphPane.addTab("Median", ((EnhancementMedianGraph) this.cachedGraphs.get("Median")).getNewChart());
+			this.workerToTab.put(tabCount, "Median");
+			tabCount++;
 		} else {
 			EnhancementMedianGraph worker = EnhancementMedianGraph.builder()
 					.title(this.datasetName + " - Median")
@@ -188,13 +201,16 @@ public class EnhancementExogenousDatasetGraphController extends JPanel {
 					.graphData(universe)
 					.build()
 					.setup();
-			worker.execute();
-			graphPane.addTab("Median", worker.getMain());
+			this.graphPane.addTab("Median", worker.getMain());
 			this.cachedGraphs.put("Median", worker);
+			this.workerToTab.put(tabCount, "Median");
+			tabCount++;
 		}
 //		add Cluster (Model Based Approach) plot
 		if (this.cachedGraphs.containsKey("Cluster Model")) {
 			this.graphPane.addTab("Cluster", null, ((EnhancementClusterGraph) this.cachedGraphs.get("Cluster Model")).getNewChart(), "Model Based");
+			this.workerToTab.put(tabCount, "Cluster Model");
+			tabCount++;
 		} else {
 			EnhancementClusterGraph worker = EnhancementClusterGraph.builder()
 					.title(this.datasetName + " - Clustered Sequences (Model)")
@@ -208,13 +224,16 @@ public class EnhancementExogenousDatasetGraphController extends JPanel {
 					.groups(this.groups)
 					.build()
 					.setup();
-			worker.execute();
-			graphPane.addTab("Cluster", null, worker.getMain() , "Model Based");
+			this.graphPane.addTab("Cluster", null, worker.getMain() , "Model Based");
 			this.cachedGraphs.put("Cluster Model", worker);
+			this.workerToTab.put(tabCount, "Cluster Model");
+			tabCount++;
 		}
 //		add Cluster (Shape Based Approach) plot
 		if (this.cachedGraphs.containsKey("Cluster Shape")) {
 			this.graphPane.addTab("Cluster", null, ((EnhancementClusterGraph) this.cachedGraphs.get("Cluster Shape")).getNewChart(), "Shape Based");
+			this.workerToTab.put(tabCount, "Cluster Shape");
+			tabCount++;
 		} else {
 			EnhancementClusterGraph worker = EnhancementClusterGraph.builder()
 					.title(this.datasetName + " - Clustered Sequences (Shape)")
@@ -229,10 +248,20 @@ public class EnhancementExogenousDatasetGraphController extends JPanel {
 					.groups(this.groups)
 					.build()
 					.setup();
-			worker.execute();
 			graphPane.addTab("Cluster", null, worker.getMain() , "Shape Based");
 			this.cachedGraphs.put("Cluster Shape", worker);
+			this.workerToTab.put(tabCount, "Cluster Shape");
+			tabCount++;
 		}
+		graphPane.addChangeListener(new ChangeListener() {
+			
+			public void stateChanged(ChangeEvent e) {
+				SwingWorker worker = cachedGraphs.get(workerToTab.get(graphPane.getSelectedIndex()));
+				if (!worker.isDone()) {
+					worker.execute();
+				}
+			}
+		});
 	}
 	
 	@Builder
