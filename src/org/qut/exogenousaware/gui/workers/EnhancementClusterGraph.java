@@ -309,15 +309,16 @@ public class EnhancementClusterGraph extends SwingWorker<JPanel, String> {
 		Map<Double, List<Double>> medians = new HashMap<Double, List<Double>>();
 		for(int identifier: seriesIdentifiers) {
 			XYSeries series = this.graphData.getSeries(identifier);
-			for(int i=0;i < series.getItemCount();i++) {
-				double x = (double) series.getX(i);
-				x = x - (x % segmentInterval);
-				double y = (double) series.getY(i);				
-				if (!medians.containsKey(x)) {
-					medians.put(x, new ArrayList<Double>());
-				}
-				medians.get(x).add(y);
-			}
+//			for(int i=0;i < series.getItemCount();i++) {
+//				double x = (double) series.getX(i);
+//				x = x - (x % segmentInterval);
+//				double y = (double) series.getY(i);				
+//				if (!medians.containsKey(x)) {
+//					medians.put(x, new ArrayList<Double>());
+//				}
+//				medians.get(x).add(y);
+//			}
+			TimeSeriesSampling.resampleSeries(series, medians, this.segmentInterval, this.segmentWindow);
 		}
 		return medians;
 	}
