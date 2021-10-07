@@ -4,6 +4,7 @@ import java.awt.GridLayout;
 import java.awt.event.MouseEvent;
 import java.awt.event.MouseListener;
 import java.util.ArrayList;
+import java.util.Comparator;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
@@ -22,8 +23,10 @@ import org.processmining.datapetrinets.expression.syntax.ExpressionParser;
 import org.processmining.datapetrinets.expression.syntax.SimpleNode;
 import org.processmining.models.graphbased.directed.petrinet.PetrinetEdge;
 import org.processmining.models.graphbased.directed.petrinet.PetrinetNode;
+import org.processmining.models.graphbased.directed.petrinet.elements.Arc;
 import org.processmining.models.graphbased.directed.petrinet.elements.Place;
 import org.processmining.models.graphbased.directed.petrinet.elements.Transition;
+import org.processmining.models.graphbased.directed.petrinetwithdata.newImpl.PNWDTransition;
 import org.processmining.models.graphbased.directed.petrinetwithdata.newImpl.PetriNetWithData;
 import org.processmining.plugins.graphviz.dot.Dot;
 import org.processmining.plugins.graphviz.dot.Dot.GraphDirection;
@@ -81,22 +84,21 @@ public class ExogenousEnhancementDotPanel {
 //		build new dot graph with rules 
 		Dot update = new Dot();
 		update.setOption("bgcolor", "none");
-		update.setOption("ordering", "out");
 		update.setOption("rank", "min");
 		List<Place> initial = new ArrayList<>();
 		List<Place> end = new ArrayList<>();
+		List<Object> curr = new ArrayList<>();
+		List<PetrinetNode> next = new ArrayList<PetrinetNode>();
+		List<Object> nextEdges = new ArrayList<>();
+		List<String> seen = new ArrayList<>();
+		int group =1;
 		Map<String, DotNode> nodes = new HashMap<String, DotNode>();
 //		add initial places first
 		for (Place place : graph.getInitialMarking().stream().collect(Collectors.toList())) {
 			for(Place newPlace : this.updatedGraph.getPlaces()) {
 				if (newPlace.getLabel().equals(place.getLabel())) {
-					nodes.put(newPlace.getId().toString(), buildPlaceNode(newPlace.getLabel()));
-					DotNode ePlace = nodes.get(newPlace.getId().toString());
-					ePlace.setOption("fillcolor", "green");
-					ePlace.setOption("style", "filled");
-					ePlace.setOption("xlabel","START");
-					update.addNode(nodes.get(newPlace.getId().toString()));
 					initial.add(newPlace);
+					curr.add(newPlace);
 					break;
 				}
 			}
@@ -108,50 +110,130 @@ public class ExogenousEnhancementDotPanel {
 				}
 			}
 		}
-//		build transitions to show rules found under variable bars
-		for(Transition oldtrans : this.graph.getTransitions()) {
-//		for( Transition trans: this.updatedGraph.getTransitions()) {
-			ExoDotNode node;
-			Transition trans = transMapping.get(oldtrans);
-			if (this.rules.containsKey(trans.getId().toString())) {
-				node = buildTransitionNode(trans.getLabel(), oldtrans.getId().toString(),this.vis, this.rules.get(trans.getId().toString()));
-			} else {
-				node = buildTransitionNode(trans.getLabel(), oldtrans.getId().toString(),this.vis);
-			}
-			nodes.put(trans.getId().toString(), node);
-			node.addMouseListener(new EnhancementListener(this, this.vis, node));
-			update.addNode( nodes.get(trans.getId().toString()) );
-		}
-//		places and edges are built the same 
-//		#TODO highligh arcs with blue green as in the original paper
-		for ( Place place : this.updatedGraph.getPlaces()) {
-			if (!initial.contains(place) & !end.contains(place)) {
-				nodes.put(place.getId().toString(), buildPlaceNode(place.getLabel()));
-				update.addNode(nodes.get(place.getId().toString()));
-			}
-		}
-//		add end place last
-		for (Place place : end) {
-			for(Place newPlace : this.updatedGraph.getPlaces()) {
-				if (newPlace.getLabel().equals(place.getLabel())) {
-					nodes.put(newPlace.getId().toString(), buildPlaceNode(newPlace.getLabel()));
-					DotNode ePlace = nodes.get(newPlace.getId().toString());
-					ePlace.setOption("fillcolor", "red");
-					ePlace.setOption("style", "filled");
-					ePlace.setOption("xlabel","END");
-					update.addNode(nodes.get(newPlace.getId().toString()));
-					break;
+//		walk through petri net and find backwards edges
+		while (curr.size() > 0) {
+			next = new ArrayList<PetrinetNode>();
+			nextEdges = new ArrayList<>();
+			for(Object node : curr) {
+//				check that we have not seen this node before
+				String id = node.getClass().equals(Arc.class) ? ((Arc)node).getLocalID().toString() : ((PetrinetNode)node).getId().toString();
+//				System.out.println("Comparing '"+id+"'");
+				if (seen.contains(id)) {
+//					System.out.println("Found Match!");
+					continue;
+				}
+				Place p = null;
+				Transition t = null;
+				PetrinetEdge< ? extends PetrinetNode, ? extends PetrinetNode> arc = null;
+//				handle adding element
+				if (node.getClass().equals(Place.class)) {
+					p = (Place) node;
+					nodes.put(p.getId().toString(), buildPlaceNode(p.getLabel()));
+					if (initial.contains(p)) {
+						ExoDotPlace pp = (ExoDotPlace) nodes.get(p.getId().toString());
+						pp.setOption("fillcolor", "green");
+						pp.setOption("style", "filled");
+						pp.setOption("xlabel","START");
+					}
+					if (end.contains(p)) {
+						ExoDotPlace pp = (ExoDotPlace) nodes.get(p.getId().toString());
+						pp.setOption("fillcolor", "red");
+						pp.setOption("style", "filled");
+						pp.setOption("xlabel","END");
+					}
+					nodes.get(p.getId().toString()).setOption("group", ""+group);
+					update.addNode(nodes.get(p.getId().toString()));
+				} else if (node.getClass().equals(PNWDTransition.class)) {
+					t = (Transition) node;
+					Transition oldTrans = findOldTrans(t,transMapping);
+					ExoDotNode newNode;
+					if (this.rules.containsKey(t.getId().toString())) {
+						newNode = buildTransitionNode(t.getLabel(), oldTrans.getId().toString(),this.vis, this.rules.get(t.getId().toString()));
+					} else {
+						newNode = buildTransitionNode(t.getLabel(), oldTrans.getId().toString(),this.vis);
+					}
+					newNode.setOption("group", ""+group);
+					nodes.put(t.getId().toString(), newNode);
+					newNode.addMouseListener(new EnhancementListener(this, this.vis, newNode));
+					update.addNode( nodes.get(t.getId().toString()) );
+				} else if (node.getClass().equals(Arc.class)) {
+					arc = (Arc) node;
+					ExoDotEdge arcDot = new ExoDotEdge(nodes.get(arc.getSource().getId().toString()),
+							nodes.get(arc.getTarget().getId().toString()) );
+					if (seen.contains(arc.getTarget().getId().toString())) {
+//						arcDot.setOption("dir", "back");
+					}
+					update.addEdge(
+							arcDot
+					);
+				} else {
+					throw new IllegalStateException("Unable to find a class type for a petrinet node:: "+ node.getClass());
+				}
+//				get edges with this element as source
+				List<PetrinetEdge> edges;
+				if (p != null) {
+					final Place pp = p;
+					edges = this.updatedGraph.getEdges().stream()
+						.filter(ed -> {return ed.getSource().getId().toString().equals(pp.getId().toString());})
+						.collect(Collectors.toList());
+//					System.out.println("Place="+pp.getLabel()+" has "+edges.size()+" arcs.");
+				} else if (t != null) {
+					final Transition tt = t;
+					edges = this.updatedGraph.getEdges().stream()
+						.filter(ed -> {return ed.getSource().getId().toString().equals(tt.getId().toString());})
+						.collect(Collectors.toList());
+//					System.out.println("trans="+tt.getLabel()+" has "+edges.size()+" arcs.");
+				} else {
+					edges = null;
+				}
+//				get targets for edges
+				if (edges != null) {
+					for(PetrinetEdge< ? extends PetrinetNode, ? extends PetrinetNode> edge: edges) {
+						if (!seen.contains(edge.getTarget().getId().toString()) & !next.contains(edge.getTarget())) {
+							next.add(edge.getTarget());
+						}
+						nextEdges.add(edge);
+					}
 				}
 			}
+			group++;
+//			System.out.println("Number of new elements:: "+next.size());
+//			add elements to seen
+			seen.addAll(curr.stream()
+					.map(node -> node.getClass().equals(Arc.class) ? ((Arc)node).getLocalID().toString() : ((PetrinetNode)node).getId().toString())
+					.collect(Collectors.toList()));
+//			System.out.println("Number of seen elements:: "+seen.size());
+			curr = new ArrayList<Object>();
+			curr.addAll(next.stream().sorted(Comparator.comparing(PetrinetNode::getLabel)).collect(Collectors.toList()));
+			curr.addAll(nextEdges);
 		}
-		for (PetrinetEdge<? extends PetrinetNode, ? extends PetrinetNode> arc : this.updatedGraph.getEdges()) {
-			update.addEdge(
-					new ExoDotEdge(nodes.get(arc.getSource().getId().toString()),
-					nodes.get(arc.getTarget().getId().toString()) )
-			);
-		}
+//		build transitions to show rules found under variable bars
+//		for(Transition oldtrans : this.graph.getTransitions()) {
+////		for( Transition trans: this.updatedGraph.getTransitions()) {
+//			ExoDotNode node;
+//			Transition trans = transMapping.get(oldtrans);
+//			if (this.rules.containsKey(trans.getId().toString())) {
+//				node = buildTransitionNode(trans.getLabel(), oldtrans.getId().toString(),this.vis, this.rules.get(trans.getId().toString()));
+//			} else {
+//				node = buildTransitionNode(trans.getLabel(), oldtrans.getId().toString(),this.vis);
+//			}
+//			nodes.put(trans.getId().toString(), node);
+//			node.addMouseListener(new EnhancementListener(this, this.vis, node));
+//			update.addNode( nodes.get(trans.getId().toString()) );
+//		}
 //		regraph dot
 		this.vis.changeDot(update, true);
+	}
+	
+	public Transition findOldTrans(Transition t, Map<Transition,Transition> mapper) {
+		Transition map = null;
+		for (Entry<Transition, Transition> entry : mapper.entrySet()) {
+			if (entry.getValue().equals(t)) {
+				map = entry.getKey();
+				break;
+			}
+		}
+		return map;
 	}
 	
 	public ExogenousEnhancementDotPanel addListeners(ExogenousEnhancementTracablity source) {
@@ -166,57 +248,118 @@ public class ExogenousEnhancementDotPanel {
 	}
 	
 	public Dot convertGraphToDot(DotPanel panel) {
-		Dot test = new Dot();
-		test.setOption("bgcolor", "none");
-		test.setOption("ordering", "out");
-		test.setOption("rank", "min");
-		List<Place> initial = this.graph.getInitialMarking().toList();
-		List<Place> end = this.graph.getFinalMarkings()[0].toList();
-		List<Place> places = new ArrayList<Place>();
+//		build new dot graph with rules 
+		Dot update = new Dot();
+		update.setOption("bgcolor", "none");
+		update.setOption("rank", "min");
+		List<Place> initial = new ArrayList<>();
+		List<Place> end = new ArrayList<>();
+		List<Object> curr = new ArrayList<>();
+		List<PetrinetNode> next = new ArrayList<PetrinetNode>();
+		List<Object> nextEdges = new ArrayList<>();
+		List<String> seen = new ArrayList<>();
+		int group =1;
 		Map<String, DotNode> nodes = new HashMap<String, DotNode>();
 //		add initial places first
-		for (Place place : initial) {
-			nodes.put(place.getId().toString(), buildPlaceNode(place.getLabel()));
-			DotNode ePlace = nodes.get(place.getId().toString());
-			ePlace.setOption("fillcolor", "green");
-			ePlace.setOption("style", "filled");
-			ePlace.setOption("xlabel","START");
-			test.addNode(ePlace);
-			places.add(place);
-			List<? extends PetrinetNode> trans = this.graph.getEdges().stream()
-				.filter(ed -> ed.getSource().getId().equals(place.getId()))
-				.map(ed -> ed.getTarget())
-				.collect(Collectors.toList());
-			System.out.println("Place= "+place.getLabel()+" has "+trans.size()+" out coming transitions");
+		for (Place place : graph.getInitialMarking().stream().collect(Collectors.toList())) {
+				initial.add(place);
+				curr.add(place);
 		}
-//		add end place last
-		for (Place place : end) {
-			nodes.put(place.getId().toString(), buildPlaceNode(place.getLabel()));
-			DotNode ePlace = nodes.get(place.getId().toString());
-			ePlace.setOption("fillcolor", "red");
-			ePlace.setOption("style", "filled");
-			ePlace.setOption("xlabel","END");
-			test.addNode(ePlace);
-			places.add(place);
+		for (Place place : graph.getFinalMarkings()[0].stream().collect(Collectors.toList())) {
+				end.add(place);
 		}
-		for( Transition trans: this.graph.getTransitions()) {
-			nodes.put(trans.getId().toString(), buildTransitionNode(trans.getLabel(), trans.getId().toString() ,panel));
-			test.addNode( nodes.get(trans.getId().toString()) );
-		}
-		for ( Place place : this.graph.getPlaces()) {
-			if (!initial.contains(place) & !end.contains(place)) {
-				nodes.put(place.getId().toString(), buildPlaceNode(place.getLabel()));
-				test.addNode(nodes.get(place.getId().toString()));
+//		walk through petri net and find backwards edges
+		while (curr.size() > 0) {
+			next = new ArrayList<PetrinetNode>();
+			nextEdges = new ArrayList<>();
+			for(Object node : curr) {
+//				check that we have not seen this node before
+				String id = node.getClass().equals(Arc.class) ? ((Arc)node).getLocalID().toString() : ((PetrinetNode)node).getId().toString();
+//				System.out.println("Comparing '"+id+"'");
+				if (seen.contains(id)) {
+//					System.out.println("Found Match!");
+					continue;
+				}
+				Place p = null;
+				Transition t = null;
+				PetrinetEdge< ? extends PetrinetNode, ? extends PetrinetNode> arc = null;
+//				handle adding element
+				if (node.getClass().equals(Place.class)) {
+					p = (Place) node;
+					nodes.put(p.getId().toString(), buildPlaceNode(p.getLabel()));
+					if (initial.contains(p)) {
+						ExoDotPlace pp = (ExoDotPlace) nodes.get(p.getId().toString());
+						pp.setOption("fillcolor", "green");
+						pp.setOption("style", "filled");
+						pp.setOption("xlabel","START");
+					}
+					if (end.contains(p)) {
+						ExoDotPlace pp = (ExoDotPlace) nodes.get(p.getId().toString());
+						pp.setOption("fillcolor", "red");
+						pp.setOption("style", "filled");
+						pp.setOption("xlabel","END");
+					}
+					nodes.get(p.getId().toString()).setOption("group", ""+group);
+					update.addNode(nodes.get(p.getId().toString()));
+				} else if (node.getClass().equals(PNWDTransition.class)) {
+					t = (Transition) node;
+					ExoDotNode newNode;
+					newNode = buildTransitionNode(t.getLabel(), t.getId().toString() ,panel);
+					newNode.setOption("group", ""+group);
+					nodes.put(t.getId().toString(), newNode);
+					update.addNode( nodes.get(t.getId().toString()) );
+				} else if (node.getClass().equals(Arc.class)) {
+					arc = (Arc) node;
+					ExoDotEdge arcDot = new ExoDotEdge(nodes.get(arc.getSource().getId().toString()),
+							nodes.get(arc.getTarget().getId().toString()) );
+					if (seen.contains(arc.getTarget().getId().toString())) {
+//						arcDot.setOption("dir", "back");
+					}
+					update.addEdge(
+							arcDot
+					);
+				} else {
+					throw new IllegalStateException("Unable to find a class type for a petrinet node:: "+ node.getClass());
+				}
+//				get edges with this element as source
+				List<PetrinetEdge> edges;
+				if (p != null) {
+					final Place pp = p;
+					edges = this.graph.getEdges().stream()
+						.filter(ed -> {return ed.getSource().getId().toString().equals(pp.getId().toString());})
+						.collect(Collectors.toList());
+//					System.out.println("Place="+pp.getLabel()+" has "+edges.size()+" arcs.");
+				} else if (t != null) {
+					final Transition tt = t;
+					edges = this.graph.getEdges().stream()
+						.filter(ed -> {return ed.getSource().getId().toString().equals(tt.getId().toString());})
+						.collect(Collectors.toList());
+//					System.out.println("trans="+tt.getLabel()+" has "+edges.size()+" arcs.");
+				} else {
+					edges = null;
+				}
+//				get targets for edges
+				if (edges != null) {
+					for(PetrinetEdge< ? extends PetrinetNode, ? extends PetrinetNode> edge: edges) {
+						if (!seen.contains(edge.getTarget().getId().toString()) & !next.contains(edge.getTarget())) {
+							next.add(edge.getTarget());
+						}
+						nextEdges.add(edge);
+					}
+				}
 			}
+			group++;
+//			System.out.println("Number of new elements:: "+next.size());
+//			add elements to seen
+			seen.addAll(curr.stream()
+					.map(node -> node.getClass().equals(Arc.class) ? ((Arc)node).getLocalID().toString() : ((PetrinetNode)node).getId().toString())
+					.collect(Collectors.toList()));
+//			System.out.println("Number of seen elements:: "+seen.size());
+			curr = new ArrayList<Object>();
+			curr.addAll(next.stream().sorted(Comparator.comparing(PetrinetNode::getLabel)).collect(Collectors.toList()));
+			curr.addAll(nextEdges);
 		}
-
-		for (PetrinetEdge<? extends PetrinetNode, ? extends PetrinetNode> arc : this.graph.getEdges()) {
-			test.addEdge(
-					new ExoDotEdge(nodes.get(arc.getSource().getId().toString()),
-					nodes.get(arc.getTarget().getId().toString()) )
-			);
-		}
-		return test;
+		return update;
 	}
 	
 	private ExoDotNode buildTransitionNode(String label,String id, DotPanel panel, GuardExpression guardExpression) {
