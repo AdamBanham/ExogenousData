@@ -25,7 +25,7 @@ class DynamicTimeWarpingDistancerTest {
 	
 	
 	@Test
-	void test() {
+	void canCompute() {
 		
 		DynamicTimeWarpingDistancer distancer = DynamicTimeWarpingDistancer.builder().build();
 		

@@ -140,10 +140,10 @@ class HierarchicalClusteringTest {
 		}
 		
 		assertEquals(clusterer.getClusters().size(), 2);
-		assertEquals(clusterer.getClusters().get(0).getMembers().contains(this.clearCut.get(0)),true);
-		assertEquals(clusterer.getClusters().get(0).getMembers().contains(this.clearCut.get(1)),true);
-		assertEquals(clusterer.getClusters().get(1).getMembers().contains(this.clearCut.get(2)),true);
-		assertEquals(clusterer.getClusters().get(1).getMembers().contains(this.clearCut.get(3)),true);
+		assertEquals(clusterer.getClusters().get(1).getMembers().contains(this.clearCut.get(0)),true);
+		assertEquals(clusterer.getClusters().get(1).getMembers().contains(this.clearCut.get(1)),true);
+		assertEquals(clusterer.getClusters().get(0).getMembers().contains(this.clearCut.get(2)),true);
+		assertEquals(clusterer.getClusters().get(0).getMembers().contains(this.clearCut.get(3)),true);
 	}
 	
 	@Test
@@ -163,17 +163,32 @@ class HierarchicalClusteringTest {
 			System.out.println("Members are :");
 			for(FeatureVector mem: cluster.getMembers()) {
 				System.out.println(
+						"Identifier="   +
 					mem.getIdentifier() +
-					" with values of "  +
+					" ,Values="  +
 					mem.getValues().toString());
 			}
 		}
 		
 		assertEquals(clusterer.getClusters().size(), 3);
-		assertEquals(clusterer.getClusters().get(1).getMembers().contains(this.lessClearCut.get(0)),true);
-		assertEquals(clusterer.getClusters().get(1).getMembers().contains(this.lessClearCut.get(1)),true);
-		assertEquals(clusterer.getClusters().get(2).getMembers().contains(this.lessClearCut.get(4)),true);
-		assertEquals(clusterer.getClusters().get(2).getMembers().contains(this.lessClearCut.get(5)),true);
+//		check that [1.0,1.0] is in a lone cluster
+		for(Cluster cluster : clusterer.getClusters()) {
+			if (cluster.size() == 1) {
+				assertEquals(cluster.getMembers().contains(this.lessClearCut.get(1)), true);
+			}
+		}
+		
+//		check that [2.0,2.0] & [2.7,2.7] are in the same cluster
+		for(Cluster cluster : clusterer.getClusters()) {
+			if (cluster.size() == 2) {
+				assertEquals(cluster.getMembers().contains(this.lessClearCut.get(0)), true);
+				assertEquals(cluster.getMembers().contains(this.lessClearCut.get(3)), true);
+			}
+		}
+//		assertEquals(clusterer.getClusters().get(1).getMembers().contains(this.lessClearCut.get(0)),true);
+//		assertEquals(clusterer.getClusters().get(1).getMembers().contains(this.lessClearCut.get(1)),true);
+//		assertEquals(clusterer.getClusters().get(2).getMembers().contains(this.lessClearCut.get(4)),true);
+//		assertEquals(clusterer.getClusters().get(2).getMembers().contains(this.lessClearCut.get(5)),true);
 	}
 	
 	@Test
