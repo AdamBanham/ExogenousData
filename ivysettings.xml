@@ -11,6 +11,7 @@
             <artifact pattern="https://svn.win.tue.nl/repos/prom/Libraries/[module]/[revision]/[artifact]_[revision].[ext]" />
         </url>
         <ibiblio name="maven2" m2compatible="true"/>
+        <ibiblio name="adamBurke" m2compatible="true" root="https://maven.pkg.github.com/adamburkegh/prom-helpers" />        
         <chain name="default" returnFirst="true">  
             <resolver ref="prom" />  
             <resolver ref="prom-libs" />  
