@@ -1,4 +1,4 @@
-<project name="NewPackage.test" default="check">
+<project name="ExogenousAware.test" default="check">
 
 	<!-- retrieve basedir of this check script (DO NOT MODIFY) -->
 	<dirname property="test.basedir" file="${ant.file.NewPackage.test}" />
@@ -127,7 +127,11 @@
 
 	      <!-- JUnit: test cases to run -->
     	  <sysproperty key="test.testFileRoot" path="${dir.testfiles}"/>
-	      <test name="org.processmining.tests.newpackage.NewPackageTest" todir="${test.basedir}" />
+	      <batchtest todir="${test.basedir}">
+	    					<fileset dir="${test.basedir}/src-test">
+	    						<include name="**/*Test.java" />
+	    					</fileset>
+	      </batchtest>
 	    </junit>
 		
 		<!-- Cobertura: generate HTML coverage report -->
