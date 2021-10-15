@@ -32,6 +32,7 @@ import org.processmining.plugins.petrinet.replayer.algorithms.costbasedcomplete.
 import org.processmining.plugins.petrinet.replayresult.PNRepResult;
 import org.processmining.qut.exogenousaware.data.ExogenousAnnotatedLog;
 import org.processmining.qut.exogenousaware.data.storage.ExogenousDiscoveryInvestigation;
+import org.processmining.qut.exogenousaware.gui.panels.ExogenousEnhancementGraphInvestigator;
 import org.processmining.qut.exogenousaware.gui.panels.ExogenousInvestigatorDotPanel;
 import org.processmining.qut.exogenousaware.gui.panels.ExogenousInvestigatorSelectionPanel;
 
@@ -65,7 +66,10 @@ public class ExogenousDiscoveryInvestigator extends JPanel{
 	@Default private GridBagConstraints c = new GridBagConstraints();
 	@Default private ExogenousInvestigatorDotPanel exoDotController = null;
 	@Default private ExogenousInvestigatorSelectionPanel exoSelectionPanel = null;
+	@Default public String enhancementTracablityViewKey = "E-Trace";
 	@Default private ExogenousEnhancementTracablity enhancementView = null;
+	@Default public String enhancementSearchViewKey = "E-Search";
+	@Default private ExogenousEnhancementGraphInvestigator enhancementSearchView = null;
 	@Default private ExogenousDiscoveryInvestigation result = null;
 	@Default private int maxConcurrentThreads = Runtime.getRuntime().availableProcessors() > 3 ? Runtime.getRuntime().availableProcessors() - 2 : 1;
 	
@@ -331,6 +335,39 @@ public class ExogenousDiscoveryInvestigator extends JPanel{
 		temp.addAll(next);
 		temp.addAll(curr);
 		return temp;
+	}
+	
+	public void makeEnhancementSearcher() {
+		enhancementSearchView = ExogenousEnhancementGraphInvestigator.builder()
+				.source(this.enhancementView.getAnalysis())
+				.controller(this)
+				.build()
+				.setup();
+	}
+	
+	public void switchView(String view) {
+		if (view.equals(enhancementSearchViewKey)) {
+			if (this.enhancementView != null) {
+				this.enhancementView.getMain().setVisible(false);
+			}
+			this.exoSelectionPanel.getMain().setVisible(false);
+			this.exoDotController.getMain().setVisible(false);
+			makeEnhancementSearcher();
+			enhancementSearchView.getMain().setVisible(true);
+			// add panel to view
+			this.c.gridy = 4;
+			this.c.gridx = 0;
+			this.add(enhancementSearchView.getMain(), this.c);
+			this.validate();
+		} else if (view.equals(enhancementTracablityViewKey)) {
+			this.remove(enhancementSearchView.getMain());
+			if (this.enhancementView != null) {
+				this.enhancementView.getMain().setVisible(true);
+			}
+			this.enhancementSearchView.getMain().setVisible(false);
+			this.exoSelectionPanel.getMain().setVisible(false);
+			this.exoDotController.getMain().setVisible(false);
+		}
 	}
 
 }
