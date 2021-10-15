@@ -1,6 +1,7 @@
 package org.processmining.qut.exogenousaware.gui.panels;
 
 import java.awt.Color;
+import java.awt.Dimension;
 import java.awt.GridBagConstraints;
 import java.awt.GridBagLayout;
 import java.awt.Insets;
@@ -17,12 +18,13 @@ import javax.swing.JLabel;
 import javax.swing.JPanel;
 import javax.swing.JProgressBar;
 import javax.swing.JScrollPane;
+import javax.swing.JTextArea;
 import javax.swing.SwingWorker;
 
 import org.jfree.data.xy.XYSeriesCollection;
 import org.processmining.qut.exogenousaware.data.ExogenousAnnotatedLog;
 import org.processmining.qut.exogenousaware.gui.ExogenousEnhancementTracablity;
-import org.processmining.qut.exogenousaware.gui.panels.ExogenousEnhancementDotPanel.ExoDotNode;
+import org.processmining.qut.exogenousaware.gui.dot.ExoDotTransition;
 import org.processmining.qut.exogenousaware.gui.workers.ExogenousObservedUniverse;
 import org.processmining.qut.exogenousaware.gui.workers.helpers.ActivitySearchGrouper;
 
@@ -41,16 +43,17 @@ public class ExogenousEnhancementAnalysis {
 	@Default private JPanel main = new JPanel();
 	@Default private JScrollPane scroll = new JScrollPane();
 	@Default private JLabel focusedTrans = new JLabel();
-	@Default private JLabel guard = new JLabel();
+	@Default private JTextArea guard = new JTextArea();
 	@Default private JProgressBar progress = new JProgressBar();
 	@Default private JLabel progressLabel = new JLabel();
 	@Default private Map<String,JPanel> exoCharts = new HashMap<String, JPanel>();
-	@Default private ExoDotNode focus = null;
+	@Default private ExoDotTransition focus = null;
 	@Default private ExogenousObservedUniverse task = null;
 	@Default private GridBagConstraints c = new GridBagConstraints();
-	@Default private Map<ExoDotNode, Map<String,XYSeriesCollection>> cacheUniverse = new HashMap<ExoDotNode, Map<String,XYSeriesCollection>>();
-	@Default private Map<ExoDotNode, Map<String, List<Map<String,Object>>>> cacheStates = new HashMap<ExoDotNode, Map<String, List<Map<String,Object>>>>();
-	@Default private Map<ExoDotNode, Map<String, List<Map<String,Object>>>> cacheSeriesStates = new HashMap<ExoDotNode, Map<String, List<Map<String,Object>>>>();
+	@Default private Map<ExoDotTransition, Map<String,XYSeriesCollection>> cacheUniverse = new HashMap<ExoDotTransition, Map<String,XYSeriesCollection>>();
+	@Default private Map<ExoDotTransition, Map<String, List<Map<String,Object>>>> cacheStates = new HashMap<ExoDotTransition, Map<String, List<Map<String,Object>>>>();
+	@Default private Map<ExoDotTransition, Map<String, List<Map<String,Object>>>> cacheSeriesStates = new HashMap<ExoDotTransition, Map<String, List<Map<String,Object>>>>();
+	
 	
 	@Default private Color expressionFailedColor = new Color(128,0,0,25);
 	@Default private Color expressionPassedColor = new Color(0,102,51,25);
@@ -79,7 +82,19 @@ public class ExogenousEnhancementAnalysis {
 //		add label for guard
 		this.c.gridy++;
 		this.guard.setForeground(Color.WHITE);
-		this.main.add(this.guard, c);
+		this.guard.setBorder(BorderFactory.createEmptyBorder());
+		this.guard.setBackground(Color.DARK_GRAY);
+		this.guard.setPreferredSize(new Dimension(650,200));
+		this.guard.setLineWrap(true);
+		this.guard.setWrapStyleWord(true);
+		this.guard.setFont(this.focusedTrans.getFont());
+		c.fill = GridBagConstraints.BOTH;
+		c.weightx = 0.8;
+		c.weighty = 0.5;
+		this.main.add(guard, c);
+		c.fill = GridBagConstraints.NONE;
+		c.weightx = 0.0;
+		c.weighty = 0.0;
 //		add progress
 		this.c.gridy++;
 		this.c.gridwidth = 1;
@@ -102,8 +117,8 @@ public class ExogenousEnhancementAnalysis {
 	
 	public void reset() {
 //		clear cache
-		this.cacheUniverse = new HashMap<ExoDotNode, Map<String,XYSeriesCollection>>();
-		this.cacheStates = new HashMap<ExoDotNode, Map<String, List<Map<String,Object>>>>();
+		this.cacheUniverse = new HashMap<ExoDotTransition, Map<String,XYSeriesCollection>>();
+		this.cacheStates = new HashMap<ExoDotTransition, Map<String, List<Map<String,Object>>>>();
 		this.updateAnalysis(null);
 		this.task = null;
 		this.hideCharts();		
@@ -114,34 +129,14 @@ public class ExogenousEnhancementAnalysis {
 		return String.format(formater, trans);
 	}
 	
-	public void updateAnalysis(ExoDotNode node) {
+	public void updateAnalysis(ExoDotTransition node) {
 		if(node != null) {
 			this.focus = node;
 			this.focusedTrans.setText(this.formatTransLabel(this.focus.getTransLabel()));
 			if (node.getGuardExpression() != null) {
 				this.guard.setVisible(true);
 				this.guard.setText(node.getGuardExpression().getRepresentation());
-//				test out evaluation method on guard
-				if(focus.getGuardExpression().hasExpression()) {
-					Map<String, Object> update = new HashMap<String, Object>();
-					for(String var: node.getGuardExpression().getGuardExpression().getNormalVariables()) {
-						if (var.toLowerCase().contains("arterialline")) {
-							update.put(var, 4000.0);
-						} else {
-							update.put(var, 0.0);
-						}
-						
-					}
-					for(String var: node.getGuardExpression().getGuardExpression().getPrimeVariables()) {
-						if (var.toLowerCase().contains("arterialline")) {
-							update.put(var, 4000.0);
-						} else {
-							update.put(var, 0.0);
-						}
-					}
-					System.out.println("variables state used :: " +update.toString());
-					System.out.println("evaluating expressions with empty update :: " +node.getGuardExpression().getGuardExpression().evaluate(update));
-				}
+				this.main.validate();
 			}
 			this.buildObservedUniverse();
 			this.showProgress(true);
@@ -206,59 +201,7 @@ public class ExogenousEnhancementAnalysis {
 				if (cached) {
 					showCachedGraph(this.focus.getId()+ entry.getKey());
 				} else {
-//				System.out.println("Building graphs");
-//				
-//				EnhancementAllGraph allGraphBuilder = EnhancementAllGraph.builder()
-//						.title(entry.getKey() + " - Subseries")
-//						.xlabel("time:timestamp (hours)")
-//						.ylabel("value")
-//						.dataState(seriesStates.get(entry.getKey()))
-//						.hasExpression(this.focus.getGuardExpression().hasExpression())
-//						.expression(this.focus.getGuardExpression())
-//						.graphData(entry.getValue())
-//						.build();
-//				allGraphBuilder.make();
-//				JFreeChart chart = allGraphBuilder.graph.getChart();
-//				cacheGraph(allGraphBuilder.getTitle(), chart);
-//				
-//				EnhancementMedianGraph medianGraphBuilder = EnhancementMedianGraph.builder()
-//						.title(entry.getKey() + " - Median By Group")
-//						.xlabel("time:timestamp (hours)")
-//						.ylabel("value")
-//						.dataState(seriesStates.get(entry.getKey()))
-//						.hasExpression(this.focus.getGuardExpression().hasExpression())
-//						.expression(this.focus.getGuardExpression())
-//						.graphData(entry.getValue())
-//						.build();
-//				medianGraphBuilder.make();
-//				chart = medianGraphBuilder.graph.getChart();
-//				cacheGraph(medianGraphBuilder.getTitle(), chart);
-//				
-//				EnhancementClusterGraph clusterGraphBuilder = EnhancementClusterGraph.builder()
-//						.title(entry.getKey() + " - (model) Cluster Graph")
-//						.xlabel("time:timestamp (hours)")
-//						.ylabel("value")
-//						.dataState(seriesStates.get(entry.getKey()))
-//						.hasExpression(this.focus.getGuardExpression().hasExpression())
-//						.expression(this.focus.getGuardExpression())
-//						.graphData(entry.getValue())
-//						.build();
-//				clusterGraphBuilder.make();
-//				chart = clusterGraphBuilder.graph.getChart();
-//				cacheGraph(clusterGraphBuilder.getTitle(), chart);
-//				
-//				clusterGraphBuilder = EnhancementClusterGraph.builder()
-//						.title(entry.getKey() + " - (DTW) Cluster Graph")
-//						.xlabel("time:timestamp (hours)")
-//						.ylabel("value")
-//						.distance(DistanceType.DTW)
-//						.dataState(seriesStates.get(entry.getKey()))
-//						.hasExpression(this.focus.getGuardExpression().hasExpression())
-//						.expression(this.focus.getGuardExpression())
-//						.graphData(entry.getValue())
-//						.build();
-//				clusterGraphBuilder.make();
-//				chart = clusterGraphBuilder.graph.getChart();
+//				build exogenous enhancment graphs
 				EnhancementExogenousDatasetGraphController controller = EnhancementExogenousDatasetGraphController.builder()
 						.datasetName(entry.getKey())
 						.universe(entry.getValue())
@@ -309,7 +252,6 @@ public class ExogenousEnhancementAnalysis {
 			this.c.fill = oldfill;
 			this.c.weightx = oldweightx;
 		}
-		System.out.println("added graph");
 		this.progress.setValue(this.progress.getValue()+1);
 		this.main.validate();
 	}
