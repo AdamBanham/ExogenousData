@@ -38,7 +38,7 @@ public class ExogenousEnhancementTracablity {
 	@Default private ExogenousEnhancementDotPanel vis = null;
 	@Default private ExogenousEnhancementAnalysis analysis = null;
 	@Default @Getter private JButton back = new JButton("back");
-	@Default @Getter private JButton right = new JButton("right");
+	@Default @Getter private JButton right = new JButton("search");
 	
 	
 	public ExogenousEnhancementTracablity setup() {
@@ -90,7 +90,8 @@ public class ExogenousEnhancementTracablity {
 //		add button to go right ?
 		this.c.gridx++;
 		this.c.anchor = GridBagConstraints.FIRST_LINE_END;
-		this.right.setEnabled(false);
+		this.right.setEnabled(true);
+		this.right.addMouseListener(new SearchListener(right, this.source));
 		this.main.add(this.right, this.c);
 //		clean up main
 		this.main.validate();
@@ -116,6 +117,43 @@ public class ExogenousEnhancementTracablity {
 		this.analysis.updateAnalysis(node);
 	}
 	
+	public class SearchListener implements MouseListener {
+
+		private JButton clicked;
+		private ExogenousDiscoveryInvestigator source;
+		
+		public SearchListener(JButton clicked,ExogenousDiscoveryInvestigator source ) {
+			this.clicked = clicked;
+			this.source = source;
+		}
+		
+		public void mouseClicked(MouseEvent e) {
+			if (this.clicked.isEnabled()) {
+				this.source.switchView(this.source.enhancementSearchViewKey);
+			}
+		}
+
+		public void mousePressed(MouseEvent e) {
+			// TODO Auto-generated method stub
+			
+		}
+
+		public void mouseReleased(MouseEvent e) {
+			// TODO Auto-generated method stub
+			
+		}
+
+		public void mouseEntered(MouseEvent e) {
+			// TODO Auto-generated method stub
+			
+		}
+
+		public void mouseExited(MouseEvent e) {
+			// TODO Auto-generated method stub
+			
+		}
+		
+	}
 	
 	public class BackListener implements MouseListener {
 		
