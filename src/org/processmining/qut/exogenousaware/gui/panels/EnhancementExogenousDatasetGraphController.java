@@ -307,6 +307,22 @@ public class EnhancementExogenousDatasetGraphController extends JPanel {
 		}
 		
 	}
+	
+	public EnhancementExogenousDatasetGraphController createCopy() {
+		return EnhancementExogenousDatasetGraphController.builder()
+				.datasetName(this.datasetName)
+				.universe(this.universe)
+				.seriesStates(this.seriesStates)
+				.states(this.states)
+				.hasExpression(this.hasExpression)
+				.guardExpression(this.guardExpression)
+				.transName(this.transName)
+				.useGroups(true)
+				.groups(this.groups)
+				.build()
+				.setup()
+				.maximise();
+	}
 
 	@Builder
 	public static class PopoutCloseListener implements WindowListener {
