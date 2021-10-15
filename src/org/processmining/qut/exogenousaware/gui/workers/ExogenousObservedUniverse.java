@@ -23,7 +23,7 @@ import org.processmining.plugins.petrinet.replayresult.PNRepResult;
 import org.processmining.plugins.petrinet.replayresult.StepTypes;
 import org.processmining.plugins.replayer.replayresult.SyncReplayResult;
 import org.processmining.qut.exogenousaware.data.ExogenousAnnotatedLog;
-import org.processmining.qut.exogenousaware.gui.panels.ExogenousEnhancementDotPanel.ExoDotNode;
+import org.processmining.qut.exogenousaware.gui.dot.ExoDotTransition;
 import org.processmining.qut.exogenousaware.gui.workers.helpers.ExogenousObserverGrouper;
 import org.processmining.qut.exogenousaware.steps.slicing.data.SubSeries;
 import org.processmining.qut.exogenousaware.steps.transform.data.TransformedAttribute;
@@ -38,7 +38,7 @@ public class ExogenousObservedUniverse extends SwingWorker<Map<String,XYSeriesCo
 
 	@NonNull private ExogenousAnnotatedLog log;
 	@NonNull private PNRepResult alignment;
-	@NonNull private ExoDotNode focus;
+	@NonNull private ExoDotTransition focus;
 	@NonNull private JProgressBar progress;
 	@NonNull private JLabel label;
 	@NonNull private ExogenousObserverGrouper grouper;
