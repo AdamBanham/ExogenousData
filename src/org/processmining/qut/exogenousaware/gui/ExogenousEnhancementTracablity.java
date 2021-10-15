@@ -9,16 +9,13 @@ import java.awt.event.MouseListener;
 
 import javax.swing.JButton;
 import javax.swing.JPanel;
-import javax.swing.JScrollPane;
 
 import org.processmining.models.graphbased.directed.petrinetwithdata.newImpl.PetriNetWithData;
 import org.processmining.plugins.petrinet.replayresult.PNRepResult;
-import org.processmining.qut.exogenousaware.data.ExogenousAnnotatedLog;
 import org.processmining.qut.exogenousaware.data.storage.ExogenousDiscoveryInvestigation;
+import org.processmining.qut.exogenousaware.gui.dot.ExoDotTransition;
 import org.processmining.qut.exogenousaware.gui.panels.ExogenousEnhancementAnalysis;
 import org.processmining.qut.exogenousaware.gui.panels.ExogenousEnhancementDotPanel;
-import org.processmining.qut.exogenousaware.gui.panels.ExogenousInvestigatorDotPanel;
-import org.processmining.qut.exogenousaware.gui.panels.ExogenousEnhancementDotPanel.ExoDotNode;
 
 import lombok.Builder;
 import lombok.Builder.Default;
