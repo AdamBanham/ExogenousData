@@ -113,7 +113,7 @@ public class ExogenousEnhancementTracablity {
 		return this;
 	}
 	
-	public void updateAnalysisPanel(ExoDotNode node) {
+	public void updateAnalysisPanel(ExoDotTransition node) {
 		this.analysis.updateAnalysis(node);
 	}
 	
