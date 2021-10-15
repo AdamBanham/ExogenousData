@@ -28,12 +28,12 @@ import javax.swing.event.ChangeEvent;
 import javax.swing.event.ChangeListener;
 
 import org.jfree.data.xy.XYSeriesCollection;
-import org.processmining.qut.exogenousaware.gui.panels.ExogenousEnhancementDotPanel.GuardExpressionHandler;
+import org.processmining.qut.exogenousaware.data.dot.GuardExpressionHandler;
 import org.processmining.qut.exogenousaware.gui.workers.EnhancementAllGraph;
 import org.processmining.qut.exogenousaware.gui.workers.EnhancementClusterGraph;
+import org.processmining.qut.exogenousaware.gui.workers.EnhancementClusterGraph.ClusterGraphType;
 import org.processmining.qut.exogenousaware.gui.workers.EnhancementMedianGraph;
 import org.processmining.qut.exogenousaware.gui.workers.EnhancementSmudgeGraph;
-import org.processmining.qut.exogenousaware.gui.workers.EnhancementClusterGraph.ClusterGraphType;
 
 import lombok.Builder;
 import lombok.Builder.Default;
