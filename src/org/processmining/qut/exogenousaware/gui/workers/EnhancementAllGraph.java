@@ -19,8 +19,8 @@ import org.jfree.chart.plot.XYPlot;
 import org.jfree.chart.renderer.xy.XYLineAndShapeRenderer;
 import org.jfree.data.xy.XYSeries;
 import org.jfree.data.xy.XYSeriesCollection;
+import org.processmining.qut.exogenousaware.data.dot.GuardExpressionHandler;
 import org.processmining.qut.exogenousaware.gui.panels.Colours;
-import org.processmining.qut.exogenousaware.gui.panels.ExogenousEnhancementDotPanel.GuardExpressionHandler;
 
 import lombok.Builder;
 import lombok.Builder.Default;
