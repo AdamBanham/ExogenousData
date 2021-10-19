@@ -199,7 +199,7 @@ public class ExogenousEnhancementAnalysis {
 			seriesStates = cached ? this.cacheSeriesStates.get(this.focus) : this.task.getSeriesStates();
 			for(Entry<String,XYSeriesCollection> entry : universe.entrySet()) {
 				if (cached) {
-					showCachedGraph(this.focus.getId()+ entry.getKey());
+					showCachedGraph(this.focus.getControlFlowId()+ entry.getKey());
 				} else {
 //				build exogenous enhancment graphs
 				EnhancementExogenousDatasetGraphController controller = EnhancementExogenousDatasetGraphController.builder()
@@ -214,7 +214,7 @@ public class ExogenousEnhancementAnalysis {
 						.groups(this.task.getSeriesGroups().get(entry.getKey()))
 						.build()
 						.setup();
-				cacheGraph(this.focus.getId()+ entry.getKey(), controller);
+				cacheGraph(this.focus.getControlFlowId()+ entry.getKey(), controller);
 				}
 			}
 		} catch (InterruptedException e) {
