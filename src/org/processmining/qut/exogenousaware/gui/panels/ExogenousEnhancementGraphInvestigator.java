@@ -6,8 +6,12 @@ import java.awt.Dimension;
 import java.awt.GridBagConstraints;
 import java.awt.GridBagLayout;
 import java.awt.Insets;
+import java.awt.Point;
 import java.awt.event.MouseEvent;
 import java.awt.event.MouseListener;
+import java.awt.geom.NoninvertibleTransformException;
+import java.awt.geom.Point2D;
+import java.util.stream.Collectors;
 
 import javax.swing.JButton;
 import javax.swing.JPanel;
@@ -15,9 +19,13 @@ import javax.swing.JPanel;
 import org.processmining.framework.util.ui.widgets.ProMList;
 import org.processmining.plugins.graphviz.dot.Dot;
 import org.processmining.plugins.graphviz.dot.Dot.GraphDirection;
+import org.processmining.plugins.graphviz.dot.DotNode;
 import org.processmining.plugins.graphviz.visualisation.DotPanel;
 import org.processmining.qut.exogenousaware.gui.ExogenousDiscoveryInvestigator;
 import org.processmining.qut.exogenousaware.gui.dot.DotGraphVisualisation;
+import org.processmining.qut.exogenousaware.gui.dot.ExoDotTransition;
+
+import com.kitfox.svg.SVGElement;
 
 import lombok.Builder;
 import lombok.Builder.Default;
@@ -38,7 +46,7 @@ public class ExogenousEnhancementGraphInvestigator {
 	@Default private JPanel graphPanel = new JPanel();
 	@Default private JPanel rankingPanel = new JPanel();
 	
-	@Default private ProMList<String> rankList = null;
+	@Default private ProMList<RankedListItem> rankList = null;
 	@Default private DotPanel vis = new DotPanel(new Dot());
 	@Default private EnhancementExogenousDatasetGraphController currentGraphController = null;
 	
@@ -52,7 +60,7 @@ public class ExogenousEnhancementGraphInvestigator {
 		c.gridwidth = 1;
 		c.weightx = 0.0;
 		c.weighty = 0.4;
-		c.insets = new Insets(25, 10, 25, 10);
+		c.insets = new Insets(5, 5, 5, 5);
 		c.fill = GridBagConstraints.BOTH;
 		// style and set main
 		main.setBackground(Color.DARK_GRAY);
@@ -91,7 +99,17 @@ public class ExogenousEnhancementGraphInvestigator {
 		// set up ranking panel
 		rankingPanel.setLayout( new BorderLayout());
 		// create list of possible items
-		rankList = new ProMList<String>("Exogenous Ranked Charts", new ListModel(this.source.getExoCharts().keySet().toArray()));
+		rankList = new ProMList<RankedListItem>(
+				"Exogenous Ranked Charts", 
+				new ListModel(
+						this.source.getExoCharts().entrySet().stream()
+						.map( entry -> { return RankedListItem.builder()
+												.controller((EnhancementExogenousDatasetGraphController)entry.getValue())
+												.id(entry.getKey())
+												.build();})
+						.collect(Collectors.toList())
+						.toArray()
+		));	
 		rankList.setSelectionMode(ListModel.SINGLE_SELECTION);
 		rankList.setSelectedIndex(0);
 		rankList.setBackground(Color.GRAY);
@@ -104,18 +122,9 @@ public class ExogenousEnhancementGraphInvestigator {
 		rankingPanel.setBackground(Color.DARK_GRAY);
 		rankingPanel.validate();
 		// set up  model panel 
-		ExogenousEnhancementDotPanel dotp = this.source.getSource().getVis();
 		vis.setDirection(GraphDirection.leftRight);
 		vis.changeDot( 
-			DotGraphVisualisation.builder()
-				.graph(dotp.getGraph())
-				.updatedGraph(dotp.getUpdatedGraph())
-				.swapMap(dotp.getSwapMap())
-				.rules(dotp.getRules())
-				.transMapping(dotp.getSource().getFocus().getTask().getTransMap())
-				.build()
-				.make()
-				.getVisualisation(),
+			createDotVis(),
 			true);
 		modelPanel.setPreferredSize(new Dimension(600,250));
 		modelPanel.setLayout(new BorderLayout());
@@ -135,22 +144,134 @@ public class ExogenousEnhancementGraphInvestigator {
 		back.addMouseListener(new BackListener(back, controller));
 	}
 	
-	private void swapGraphController(String id) {
+	private void swapGraphController(RankedListItem cont) {
 		this.graphPanel.remove(currentGraphController);
-		currentGraphController = ((EnhancementExogenousDatasetGraphController) this.source.getExoCharts().get(id))
+		currentGraphController = cont.getController()
 				.createCopy();
 		graphPanel.add(
 				currentGraphController
 		);
 		graphPanel.validate();
 	}
+
+	private void changeDotFocus(RankedListItem item) {
+		this.vis.changeDot(createDotVis(item.getId()), true);
+	}
+	
+	/**
+	 * Attempt to center and zoom but seems not possible with public api.
+	 * @param item
+	 */
+	private void tryToCenter(RankedListItem item) {
+		ExoDotTransition exDot = findTransition(item.getId(), this.vis.getDot());
+		double x=0.0,y=0.0;
+		boolean xSet = false,ySet = false;
+		System.out.println("-- DEBUG FIND SVG X,Y --");
+		System.out.println("Can find element using id? :: "+this.vis.getSVG().getElement(exDot.getId()).toString());
+		System.out.println("SVG inline attributes :: "+ this.vis.getSVG().getElement(exDot.getId()).getInlineAttributes().toString());
+		System.out.println("SVG presentation attributes :: "+ this.vis.getSVG().getElement(exDot.getId()).getPresentationAttributes().toString());
+		System.out.println("SVG children :: "+ this.vis.getSVG().getElement(exDot.getId()).getChildren().size());
+		for (SVGElement el : this.vis.getSVG().getElement(exDot.getId()).getChildren()) {
+			System.out.println("Child tagname ::"+ el.getTagName());
+			if (el.getId() != null) {
+				System.out.println("Child Id :: " + el.getId().toString());
+			}
+			System.out.println("Child inline attributes :: "+ el.getInlineAttributes().toString());
+			System.out.println("Child presentation attributes :: "+ el.getPresentationAttributes().toString());
+			if (el.getPresentationAttributes().contains("x")) {
+				System.out.println("Child has x of :: "+ el.getPresAbsolute("x").getDoubleValue() );
+				x = el.getPresAbsolute("x").getDoubleValue();
+				xSet = true;
+			}
+			if (el.getPresentationAttributes().contains("y")) {
+				System.out.println("Child has y of :: "+ el.getPresAbsolute("y").getDoubleValue() );
+				y = el.getPresAbsolute("y").getDoubleValue();
+				ySet =true;
+			}
+				
+			
+		}
+//		find some way to call, however I need a x,y point on the svg 
+//		found some x , y on child of element
+//		using thoses and functions on vis to find a navigation point to focus on
+		try {
+			if (xSet && ySet) {
+				Point2D p = this.vis.transformImageToNavigation(new Point2D.Double(x, y));
+//				centers but does not account for the viewport size
+//				also zoom in is private
+				this.vis.centerImageAround(new Point((int)p.getX(),(int)p.getY()));
+			}
+		} catch (NoninvertibleTransformException e) {
+			// TODO Auto-generated catch block
+			e.printStackTrace();
+		}
+	}
+	
+	private Dot createDotVis() {
+		ExogenousEnhancementDotPanel dotp = this.source.getSource().getVis();
+		return DotGraphVisualisation.builder()
+				.graph(dotp.getGraph())
+				.updatedGraph(dotp.getUpdatedGraph())
+				.swapMap(dotp.getSwapMap())
+				.rules(dotp.getRules())
+				.transMapping(dotp.getSource().getFocus().getTask().getTransMap())
+				.build()
+				.make()
+				.getVisualisation();
+	}
+	
+	private ExoDotTransition findTransition(String transId, Dot dot) {
+		ExoDotTransition exNode = null;
+//		find transition being displayed
+		for(DotNode node : dot.getNodes()) {
+			if (node.getClass().equals(ExoDotTransition.class)) {
+				exNode = (ExoDotTransition) node;
+				System.out.println("checking node="+exNode.getControlFlowId());
+				if (transId.contains(exNode.getControlFlowId())) {
+					exNode.highlightNode();
+					break;
+				}
+			}
+		}
+		return exNode;
+	}
+	
+	private Dot createDotVis(String transId) {
+		ExogenousEnhancementDotPanel dotp = this.source.getSource().getVis();
+		Dot newDot = DotGraphVisualisation.builder()
+				.graph(dotp.getGraph())
+				.updatedGraph(dotp.getUpdatedGraph())
+				.swapMap(dotp.getSwapMap())
+				.rules(dotp.getRules())
+				.transMapping(dotp.getSource().getFocus().getTask().getTransMap())
+				.build()
+				.make()
+				.getVisualisation();
+//		find transition being displayed
+		ExoDotTransition exNode = findTransition(transId, newDot);
+		if (exNode != null) {
+			exNode.highlightNode();
+		}
+		return newDot;
+	}
+	
+	@Builder
+	private static class RankedListItem {
+		
+		@Getter private EnhancementExogenousDatasetGraphController controller;
+		@Getter private String id;
+		
+		public String toString() {
+			return "Rank=N/A || Transition="+controller.transName+" || Subseries="+controller.datasetName + "|| Distance=N/A";
+		}
+	}
 	
 	private class SelectionListener implements MouseListener {
 		
 		private ExogenousEnhancementGraphInvestigator source; 
-		private ProMList<String> clicked;
+		private ProMList<RankedListItem> clicked;
 		
-		public SelectionListener(ExogenousEnhancementGraphInvestigator source, ProMList<String> clicked) {
+		public SelectionListener(ExogenousEnhancementGraphInvestigator source, ProMList<RankedListItem> clicked) {
 			this.source = source;
 			this.clicked = clicked;
 		}
@@ -158,6 +279,7 @@ public class ExogenousEnhancementGraphInvestigator {
 		public void mouseClicked(MouseEvent e) {
 			if (this.clicked.getSelectedValuesList().size() > 0) {
 				this.source.swapGraphController(this.clicked.getSelectedValuesList().get(0));
+				this.source.changeDotFocus(this.clicked.getSelectedValuesList().get(0));
 			}
 			
 		}
