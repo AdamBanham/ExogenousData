@@ -67,6 +67,9 @@ public class EnhancementMedianGraph extends SwingWorker<JPanel, String> {
 	@Default double upperDomainBound = Double.MIN_VALUE;
 	@Default double lowerRangeBound = Double.MAX_VALUE;
 	@Default double upperRangeBound = Double.MIN_VALUE;
+	@Default @Getter YIntervalSeries trueMedianDataset = null;
+	@Default @Getter YIntervalSeries falseMedianDataset = null;
+	@Default @Getter YIntervalSeries nullMedianDataset = null;
 	
 	public EnhancementMedianGraph setup() {
 		this.main.setLayout(new BorderLayout(50,50));
@@ -118,12 +121,15 @@ public class EnhancementMedianGraph extends SwingWorker<JPanel, String> {
 		YIntervalSeriesCollection intervalDataset = new YIntervalSeriesCollection();
 		YIntervalSeries seriesInt = new YIntervalSeries("true");
 		createIntervalSeries(seriesInt, trueMedians, dataset.getSeries(0));
+		this.trueMedianDataset = seriesInt;
 		intervalDataset.addSeries(seriesInt);
 		seriesInt = new YIntervalSeries("false");
 		createIntervalSeries(seriesInt, falseMedians, dataset.getSeries(1));
+		this.falseMedianDataset = seriesInt;
 		intervalDataset.addSeries(seriesInt);
 		seriesInt = new YIntervalSeries("null");
 		createIntervalSeries(seriesInt, nullMedians, dataset.getSeries(2));
+		this.nullMedianDataset = seriesInt;
 		intervalDataset.addSeries(seriesInt);
 //		make dummy chart
 		JFreeChart chart = ChartFactory.createXYLineChart(
