@@ -50,10 +50,10 @@ public class ExogenousEnhancementTracablity {
 		this.c.gridheight = 1;
 		this.c.gridwidth = 2;
 		this.c.weightx = 1;
-		this.c.weighty = 0.3;
+		this.c.weighty = 0.4;
 		this.c.gridx = 0;
 		this.c.gridy = 1;
-		this.c.insets = new Insets(10,25,10,25);
+		this.c.insets = new Insets(5,5,5,5);
 //		build vis panel
 		this.c.ipady = 100;
 		if (this.vis == null) {
@@ -70,7 +70,7 @@ public class ExogenousEnhancementTracablity {
 //		build point analysis
 		this.c.ipady = 0;
 		this.c.gridy++;
-		this.c.weighty = 1;
+		this.c.weighty = 0.6;
 		this.analysis = ExogenousEnhancementAnalysis.builder()
 				.source(this)
 				.build()
