@@ -37,6 +37,7 @@ import org.processmining.qut.exogenousaware.gui.workers.EnhancementSmudgeGraph;
 
 import lombok.Builder;
 import lombok.Builder.Default;
+import lombok.Getter;
 import lombok.NonNull;
 
 @Builder
@@ -57,7 +58,7 @@ public class EnhancementExogenousDatasetGraphController extends JPanel {
 	@Default JTabbedPane graphPane = new JTabbedPane();
 	@Default JButton pop = new JButton("popout");
 	@Default JButton min = new JButton("maximise");
-	@Default Map<String, SwingWorker<JPanel, String>> cachedGraphs = new HashMap<String, SwingWorker<JPanel, String>>();
+	@Default @Getter Map<String, SwingWorker<JPanel, String>> cachedGraphs = new HashMap<String, SwingWorker<JPanel, String>>();
 	@Default Map<Integer, String> workerToTab = new HashMap<Integer, String>();
 	
 	
