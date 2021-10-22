@@ -1,7 +1,6 @@
 package org.processmining.qut.exogenousaware.gui.panels;
 
 import java.awt.Color;
-import java.awt.Dimension;
 import java.awt.GridBagConstraints;
 import java.awt.GridBagLayout;
 import java.awt.Insets;
@@ -84,7 +83,6 @@ public class ExogenousEnhancementAnalysis {
 		this.guard.setForeground(Color.WHITE);
 		this.guard.setBorder(BorderFactory.createEmptyBorder());
 		this.guard.setBackground(Color.DARK_GRAY);
-		this.guard.setPreferredSize(new Dimension(650,200));
 		this.guard.setLineWrap(true);
 		this.guard.setWrapStyleWord(true);
 		this.guard.setFont(this.focusedTrans.getFont());
@@ -111,7 +109,7 @@ public class ExogenousEnhancementAnalysis {
 		this.c.anchor = GridBagConstraints.CENTER;
 		this.c.weightx = 1;
 		this.c.weighty = 0.1;
-		this.c.ipadx = 600;
+		this.c.ipadx = 300;
 		return this;
 	}
 	
