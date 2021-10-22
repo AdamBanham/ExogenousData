@@ -11,11 +11,21 @@ import java.awt.event.MouseEvent;
 import java.awt.event.MouseListener;
 import java.awt.geom.NoninvertibleTransformException;
 import java.awt.geom.Point2D;
+import java.beans.PropertyChangeEvent;
+import java.beans.PropertyChangeListener;
+import java.util.ArrayList;
+import java.util.List;
 import java.util.stream.Collectors;
+import java.util.stream.IntStream;
 
+import javax.swing.BorderFactory;
 import javax.swing.JButton;
+import javax.swing.JLabel;
 import javax.swing.JPanel;
+import javax.swing.JProgressBar;
+import javax.swing.SwingWorker;
 
+import org.jfree.data.xy.YIntervalSeries;
 import org.processmining.framework.util.ui.widgets.ProMList;
 import org.processmining.plugins.graphviz.dot.Dot;
 import org.processmining.plugins.graphviz.dot.Dot.GraphDirection;
@@ -24,6 +34,11 @@ import org.processmining.plugins.graphviz.visualisation.DotPanel;
 import org.processmining.qut.exogenousaware.gui.ExogenousDiscoveryInvestigator;
 import org.processmining.qut.exogenousaware.gui.dot.DotGraphVisualisation;
 import org.processmining.qut.exogenousaware.gui.dot.ExoDotTransition;
+import org.processmining.qut.exogenousaware.gui.workers.EnhancementGraphSearchRankedList;
+import org.processmining.qut.exogenousaware.gui.workers.EnhancementMedianGraph;
+import org.processmining.qut.exogenousaware.ml.clustering.distance.DynamicTimeWarpingDistancer;
+import org.processmining.qut.exogenousaware.ml.data.FeatureVector;
+import org.processmining.qut.exogenousaware.ml.data.FeatureVectorImpl;
 
 import com.kitfox.svg.SVGElement;
 
@@ -31,6 +46,7 @@ import lombok.Builder;
 import lombok.Builder.Default;
 import lombok.Getter;
 import lombok.NonNull;
+import lombok.Setter;
 import prefuse.data.query.ListModel;
 
 @Builder
@@ -47,8 +63,12 @@ public class ExogenousEnhancementGraphInvestigator {
 	@Default private JPanel rankingPanel = new JPanel();
 	
 	@Default private ProMList<RankedListItem> rankList = null;
+	@Default private EnhancementGraphSearchRankedList rankerWorker = null;
 	@Default private DotPanel vis = new DotPanel(new Dot());
 	@Default private EnhancementExogenousDatasetGraphController currentGraphController = null;
+	@Default private JPanel progressPanel = new JPanel();
+	@Default private JProgressBar progresser = new JProgressBar();
+	@Default private JLabel progressLabel = new JLabel("Ranking progress :");
 	
 	public ExogenousEnhancementGraphInvestigator setup() {
 		createPanels();
@@ -82,7 +102,7 @@ public class ExogenousEnhancementGraphInvestigator {
 		c.gridwidth = 1;
 		c.weightx = 0.3;
 		c.gridx = 2;
-		main.add(rankingPanel, c);
+		main.add(progressPanel, c);
 		// add back button
 		c.gridx = 0;
 		c.gridy++;
@@ -95,21 +115,80 @@ public class ExogenousEnhancementGraphInvestigator {
 		return this;
 	}
 	
+	
+	
 	public void createPanels() {
-		// set up ranking panel
+		// setup progress panel
+		progressPanel.setLayout(new BorderLayout());
+		progressPanel.setBorder(BorderFactory.createLineBorder(Color.GRAY));
+		progressPanel.setBackground(Color.DARK_GRAY);
+		progressPanel.add(progressLabel,BorderLayout.NORTH);
+		progressPanel.add(progresser, BorderLayout.SOUTH);
+		progresser.setMaximum(this.source.getExoCharts().keySet().size());
+		progresser.setValue(0);
+		// set up ranking worker
+		rankerWorker = EnhancementGraphSearchRankedList.builder()
+				.data(this.source.getExoCharts())
+				.progress(progresser)
+				.build();
+		rankerWorker.execute();
+		rankerWorker.addPropertyChangeListener(new rankedListener(this));
 		rankingPanel.setLayout( new BorderLayout());
-		// create list of possible items
+		// set up  model panel 
+		vis.setDirection(GraphDirection.leftRight);
+		vis.changeDot( 
+			createDotVis(),
+			true);
+		modelPanel.setPreferredSize(new Dimension(600,250));
+		modelPanel.setBorder(BorderFactory.createLineBorder(Color.GRAY, 2, true));
+		modelPanel.setLayout(new BorderLayout());
+		modelPanel.add(vis);
+		modelPanel.validate();
+		// set up graph panel
+		graphPanel.setLayout(new BorderLayout());
+		graphPanel.setPreferredSize(new Dimension(900,600));
+		graphPanel.setBackground(Color.DARK_GRAY);
+		graphPanel.setBorder(BorderFactory.createLineBorder(Color.GRAY, 2, true));
+//		currentGraphController = ((EnhancementExogenousDatasetGraphController) this.source.getExoCharts().get(this.source.getExoCharts().keySet().iterator().next()))
+//				.createCopy();
+//		graphPanel.add(
+//				currentGraphController
+//		);
+		graphPanel.validate();
+		// add mouse listener to back button
+		back.addMouseListener(new BackListener(back, controller));
+	}
+	
+	private void swapGraphController(RankedListItem cont) {
+		if (currentGraphController != null) {
+			this.graphPanel.remove(currentGraphController);
+		}
+		currentGraphController = cont.getController()
+				.createCopy();
+		graphPanel.add(
+				currentGraphController
+		);
+		graphPanel.validate();
+	}
+	
+	private void changeToRankedList() {
+		createRankPanel();
+		c.gridwidth = 1;
+		c.weightx = 0.3;
+		c.gridx = 2;
+		c.gridy = 1;
+		c.anchor = GridBagConstraints.LINE_START;
+		c.fill = GridBagConstraints.BOTH;
+		main.remove(progressPanel);
+		main.add(rankingPanel, c);
+		main.validate();
+	}
+	
+	private void createRankPanel() {
 		rankList = new ProMList<RankedListItem>(
 				"Exogenous Ranked Charts", 
-				new ListModel(
-						this.source.getExoCharts().entrySet().stream()
-						.map( entry -> { return RankedListItem.builder()
-												.controller((EnhancementExogenousDatasetGraphController)entry.getValue())
-												.id(entry.getKey())
-												.build();})
-						.collect(Collectors.toList())
-						.toArray()
-		));	
+				new ListModel(rankerWorker.getOutcome().toArray())
+		);	
 		rankList.setSelectionMode(ListModel.SINGLE_SELECTION);
 		rankList.setSelectedIndex(0);
 		rankList.setBackground(Color.GRAY);
@@ -121,37 +200,6 @@ public class ExogenousEnhancementGraphInvestigator {
 		rankingPanel.add(rankList);
 		rankingPanel.setBackground(Color.DARK_GRAY);
 		rankingPanel.validate();
-		// set up  model panel 
-		vis.setDirection(GraphDirection.leftRight);
-		vis.changeDot( 
-			createDotVis(),
-			true);
-		modelPanel.setPreferredSize(new Dimension(600,250));
-		modelPanel.setLayout(new BorderLayout());
-		modelPanel.add(vis);
-		modelPanel.validate();
-		// set up graph panel
-		graphPanel.setLayout(new BorderLayout());
-		graphPanel.setPreferredSize(new Dimension(900,600));
-		graphPanel.setBackground(Color.BLUE);
-		currentGraphController = ((EnhancementExogenousDatasetGraphController) this.source.getExoCharts().get(this.source.getExoCharts().keySet().iterator().next()))
-				.createCopy();
-		graphPanel.add(
-				currentGraphController
-		);
-		graphPanel.validate();
-		// add mouse listener to back button
-		back.addMouseListener(new BackListener(back, controller));
-	}
-	
-	private void swapGraphController(RankedListItem cont) {
-		this.graphPanel.remove(currentGraphController);
-		currentGraphController = cont.getController()
-				.createCopy();
-		graphPanel.add(
-				currentGraphController
-		);
-		graphPanel.validate();
 	}
 
 	private void changeDotFocus(RankedListItem item) {
@@ -226,7 +274,7 @@ public class ExogenousEnhancementGraphInvestigator {
 		for(DotNode node : dot.getNodes()) {
 			if (node.getClass().equals(ExoDotTransition.class)) {
 				exNode = (ExoDotTransition) node;
-				System.out.println("checking node="+exNode.getControlFlowId());
+//				System.out.println("checking node="+exNode.getControlFlowId());
 				if (transId.contains(exNode.getControlFlowId())) {
 					exNode.highlightNode();
 					break;
@@ -255,15 +303,148 @@ public class ExogenousEnhancementGraphInvestigator {
 		return newDot;
 	}
 	
+	
 	@Builder
-	private static class RankedListItem {
+	public static class RankedListItem {
 		
 		@Getter private EnhancementExogenousDatasetGraphController controller;
 		@Getter private String id;
 		
-		public String toString() {
-			return "Rank=N/A || Transition="+controller.transName+" || Subseries="+controller.datasetName + "|| Distance=N/A";
+		@Default @Getter private double rankDistance =0.0;
+		@Default @Getter private boolean ranked = false;
+		@Default @Getter @Setter private int rank = 1;
+		
+		public RankedListItem rank() {
+			System.out.println("[RankedItem] Starting ranking");
+			double distance = 0.0;
+			try {
+//			check that the median graph has been computed
+			if (controller.getCachedGraphs().containsKey("Median")) {
+				EnhancementMedianGraph source = (EnhancementMedianGraph) controller.getCachedGraphs().get("Median");
+				// check that the graph has been computed
+				if (!source.isDone()) {
+					source.make();
+				}
+//				once computed then collect data from median outcome
+				List<YIntervalSeries> datasets = new ArrayList<YIntervalSeries>();
+				if (source.getTrueMedianDataset() != null && source.getTrueMedianDataset().getItemCount() > 0) {
+					datasets.add(source.getTrueMedianDataset());
+				}
+				if (source.getFalseMedianDataset() != null && source.getFalseMedianDataset().getItemCount() > 0) {
+					datasets.add(source.getFalseMedianDataset());
+				}
+				if (source.getNullMedianDataset() != null && source.getNullMedianDataset().getItemCount() > 0) {
+					datasets.add(source.getNullMedianDataset());
+				}
+//				compute distance between all datasets
+				for (YIntervalSeries data : datasets) {
+					System.out.println("[RankedItem] building source vector");
+//					create vector the source
+					final double highY = IntStream.range(0, data.getItemCount())
+							.sequential()
+							.mapToDouble(data::getYValue)
+							.reduce(Double.MIN_VALUE, Double::max);
+					final double lowY = 
+							IntStream.range(0, data.getItemCount())
+							.sequential()
+							.mapToDouble(data::getYValue)
+							.reduce(Double.MAX_VALUE, Double::min);
+					FeatureVector dataVector = FeatureVectorImpl.builder()
+							.values(
+									IntStream.range(0, data.getItemCount())
+									.sequential()
+									.mapToDouble(data::getYValue)
+									.map(val -> (val - lowY)/(lowY - highY)) // min-max feature scaling
+//									.map(val -> Math.log(val)) // log scaling
+//									.map(val -> { return ((val -lowY)/(lowY - highY)) / (Math.log(val)) ;})
+									.boxed()
+									.collect(Collectors.toList())
+							)
+							.columns(
+									IntStream.range(0, data.getItemCount())
+									.mapToDouble(idx -> data.getX(idx).doubleValue())
+									.boxed()
+									.map(item -> item.toString())
+									.collect(Collectors.toList())
+							).build();
+					for(YIntervalSeries other: datasets) {
+						if (other.equals(data)) {
+							continue;
+						}
+//						create vector for other datasets
+						System.out.println("[RankedItem] building other vector");
+						final double otherHighY = 
+								IntStream.range(0, other.getItemCount())
+								.sequential()
+								.mapToDouble(other::getYValue)
+								.reduce(Double.MIN_VALUE, Double::max);
+						final double otherLowY = 
+								IntStream.range(0, other.getItemCount())
+								.sequential()
+								.mapToDouble(other::getYValue)
+								.reduce(Double.MAX_VALUE, Double::min);
+						FeatureVector otherVector = FeatureVectorImpl.builder()
+								.values(
+										IntStream.range(0, other.getItemCount())
+										.mapToDouble(other::getYValue)
+										.map(val -> (val - otherLowY)/(otherLowY - otherHighY)) // min-max scaling
+//										.map(val -> Math.log(val)) // log scaling
+//										.map(val -> { return ((val -otherLowY)/(otherLowY - otherHighY)) / (Math.log(val)) ;})
+										.boxed()
+										.collect(Collectors.toList())
+								)
+								.columns(
+										IntStream.range(0, other.getItemCount())
+										.mapToDouble(idx -> other.getX(idx).doubleValue())
+										.boxed()
+										.map(item -> item.toString())
+										.collect(Collectors.toList())
+								).build();
+//						compute dynamic time warping distance between data and other
+						System.out.println("[RankedItem] computing distance");
+						distance = distance + DynamicTimeWarpingDistancer.builder()
+							.build()
+							.distance(dataVector, otherVector);
+					}
+				}
+				
+			}
+			} catch (Exception e) {
+				System.out.println("[ExogenousEnhancementGraphInvestigator-RankedItem] Unable to compute rank");
+				e.printStackTrace();
+			}
+			System.out.println("[RankedItem] ranked computed :: "+distance);
+			this.ranked = true;
+			this.rankDistance = distance;
+			return this;
 		}
+		
+		public String toString() {
+			return "Rank=" + (this.ranked ? this.rank : "N/A") +
+				   " || Transition="+ controller.transName +
+				   " || Subseries=" + controller.datasetName +
+				   " || Distance="  + (this.ranked ? String.format("%.2f",this.rankDistance) : "N/A");
+		}
+	}
+	
+	private class rankedListener implements PropertyChangeListener {
+
+		private ExogenousEnhancementGraphInvestigator source;
+		
+		public rankedListener(ExogenousEnhancementGraphInvestigator source) {
+			this.source = source;
+		}
+		
+		public void propertyChange(PropertyChangeEvent evt) {
+			if (evt.getPropertyName().toString().equals("state")) {
+//				System.out.println("state change");
+				if(evt.getNewValue().equals(SwingWorker.StateValue.DONE)) {
+//					System.out.println("work is done");
+					this.source.changeToRankedList();
+				}
+			}
+		}
+		
 	}
 	
 	private class SelectionListener implements MouseListener {
