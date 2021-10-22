@@ -73,9 +73,9 @@ public class Slicing {
 //			create a list of periods to use
 			long hour = 1000 * 60 * 60;
 			List<Long> periods = new ArrayList<Long>();
-			periods.add(hour*2);
-			periods.add(hour*4);
-			periods.add(hour*6);
+//			periods.add(hour*2);
+//			periods.add(hour*4);
+//			periods.add(hour*6);
 			periods.add(hour*12);
 			for(long period: periods) {
 	//			get slicing points for this piece of the exogenous dataset
