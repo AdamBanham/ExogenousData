@@ -13,42 +13,33 @@ import java.util.stream.Collectors;
 
 import org.deckfour.xes.classification.XEventClassifier;
 import org.deckfour.xes.extension.XExtension;
-import org.deckfour.xes.factory.XFactory;
-import org.deckfour.xes.factory.XFactoryBufferedImpl;
 import org.deckfour.xes.factory.XFactoryNaiveImpl;
 import org.deckfour.xes.info.XLogInfo;
 import org.deckfour.xes.model.XAttribute;
-import org.deckfour.xes.model.XAttributeCollection;
 import org.deckfour.xes.model.XAttributeMap;
 import org.deckfour.xes.model.XEvent;
 import org.deckfour.xes.model.XLog;
 import org.deckfour.xes.model.XTrace;
 import org.deckfour.xes.model.XVisitor;
-import org.deckfour.xes.model.impl.XAttributeCollectionImpl;
-import org.deckfour.xes.model.impl.XAttributeListImpl;
 import org.deckfour.xes.model.impl.XAttributeLiteralImpl;
 import org.deckfour.xes.model.impl.XAttributeMapImpl;
-import org.deckfour.xes.model.impl.XTraceImpl;
 import org.processmining.contexts.uitopia.UIPluginContext;
 import org.processmining.framework.plugin.Progress;
-import org.processmining.framework.util.ui.widgets.traceview.ProMTraceList.TraceBuilder;
-import org.processmining.log.utils.XLogBuilder;
-import org.processmining.qut.exogenousaware.data.storage.ExogenousAttribute;
 import org.processmining.qut.exogenousaware.steps.Linking;
 import org.processmining.qut.exogenousaware.steps.Slicing;
 import org.processmining.qut.exogenousaware.steps.Transforming;
 import org.processmining.qut.exogenousaware.steps.slicing.data.SubSeries;
 import org.processmining.qut.exogenousaware.steps.transform.data.TransformedAttribute;
 
-import lombok.Singular;
+import lombok.AllArgsConstructor;
 import lombok.Builder;
 import lombok.Builder.Default;
 import lombok.Data;
-import lombok.NoArgsConstructor;
-import lombok.AllArgsConstructor;
 import lombok.Getter;
-import lombok.Setter;
+import lombok.NoArgsConstructor;
 import lombok.NonNull;
+import lombok.Setter;
+import lombok.Singular;
 
 /**
  * Data Construct for storing both endogenous and exogenous data within a event log structure
@@ -177,7 +168,9 @@ public class ExogenousAnnotatedLog implements XLog {
 				} 
 //				else update keys
 				else {
-					this.linkedSubseries.get(evId).putAll(subseries.get(evId));;
+					if (this.linkedSubseries.containsKey(evId) && subseries.containsKey(evId)) {
+						this.linkedSubseries.get(evId).putAll(subseries.get(evId));
+					}
 				}
 //				addd number of links to each event
 				Optional<XEvent> ev = endo.stream()
