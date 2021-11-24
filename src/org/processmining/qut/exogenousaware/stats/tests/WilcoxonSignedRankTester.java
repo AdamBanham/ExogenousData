@@ -1,7 +1,11 @@
 package org.processmining.qut.exogenousaware.stats.tests;
+import java.util.ArrayList;
 import java.util.List;
+import java.util.stream.Collectors;
+import java.util.stream.IntStream;
 
 import org.apache.commons.math3.stat.inference.WilcoxonSignedRankTest;
+import org.processmining.qut.exogenousaware.ml.data.FeatureVector;
 
 /**
  * The test is named for Frank Wilcoxon (1892–1965) who, in a single paper, proposed both it and the rank-sum test for two independent samples. <br>
@@ -39,5 +43,40 @@ public class WilcoxonSignedRankTester {
 				X2.stream().mapToDouble(d -> d).toArray()
 		);
 		return rank;
+	}
+	
+	public static List<Integer> findLongestMatchingVector(FeatureVector x1, FeatureVector x2){
+		List<Integer> matchingZone = new ArrayList<Integer>();
+		// go through columns of x1 and find longest matching
+		for(int start: IntStream.range(0, x1.getSize()).boxed().collect(Collectors.toList())) {
+			if (start >= x2.getSize()) {
+				break;
+			}
+			int end = 0;
+			for (int id: IntStream.range(start, x1.getSize()).boxed().collect(Collectors.toList())) {
+				if (id >= x2.getSize()) {
+					break;
+				}
+				String key = x1.getColumns().get(id);
+				String compKey = x2.getColumns().get(id);
+	//			System.out.println("[CommonLength] comparing between "+key +" and  "+compKey+"::"+key.compareTo(compKey));
+				if (key.compareTo(compKey) == 0) {
+					end++;
+				} else {
+					break;
+				}
+			}
+			// edge case (1) we didn't ever set length or we need to close a length
+			List<Integer> temp = IntStream.range(start, end).boxed().collect(Collectors.toList());
+			if (temp.size() > matchingZone.size()) {
+//				System.out.println("[CommonLength] new length::"+temp.size());
+				matchingZone = temp;
+			}
+			if (temp.size() >= x1.getSize() - start) {
+				break;
+			}
+		}
+		
+		return matchingZone;
 	}
 }
