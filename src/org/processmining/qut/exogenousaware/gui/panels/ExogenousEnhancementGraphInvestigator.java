@@ -39,6 +39,7 @@ import org.processmining.qut.exogenousaware.gui.workers.EnhancementMedianGraph;
 import org.processmining.qut.exogenousaware.ml.clustering.distance.DynamicTimeWarpingDistancer;
 import org.processmining.qut.exogenousaware.ml.data.FeatureVector;
 import org.processmining.qut.exogenousaware.ml.data.FeatureVectorImpl;
+import org.processmining.qut.exogenousaware.stats.tests.WilcoxonSignedRankTester;
 
 import com.kitfox.svg.SVGElement;
 
@@ -314,6 +315,9 @@ public class ExogenousEnhancementGraphInvestigator {
 		@Default @Getter private boolean ranked = false;
 		@Default @Getter @Setter private int rank = 1;
 		
+		@Default private List<Integer> common = new ArrayList();
+		@Default private double wilcoxonP;
+		
 		public RankedListItem rank() {
 			System.out.println("[RankedItem] Starting ranking");
 			double distance = 0.0;
@@ -338,6 +342,9 @@ public class ExogenousEnhancementGraphInvestigator {
 				}
 //				compute distance between all datasets
 				for (YIntervalSeries data : datasets) {
+					if (data.getItemCount() < 1) {
+						continue;
+					}
 					System.out.println("[RankedItem] building source vector");
 //					create vector the source
 					final double highY = IntStream.range(0, data.getItemCount())
@@ -349,26 +356,8 @@ public class ExogenousEnhancementGraphInvestigator {
 							.sequential()
 							.mapToDouble(data::getYValue)
 							.reduce(Double.MAX_VALUE, Double::min);
-					FeatureVector dataVector = FeatureVectorImpl.builder()
-							.values(
-									IntStream.range(0, data.getItemCount())
-									.sequential()
-									.mapToDouble(data::getYValue)
-									.map(val -> (val - lowY)/(lowY - highY)) // min-max feature scaling
-//									.map(val -> Math.log(val)) // log scaling
-//									.map(val -> { return ((val -lowY)/(lowY - highY)) / (Math.log(val)) ;})
-									.boxed()
-									.collect(Collectors.toList())
-							)
-							.columns(
-									IntStream.range(0, data.getItemCount())
-									.mapToDouble(idx -> data.getX(idx).doubleValue())
-									.boxed()
-									.map(item -> item.toString())
-									.collect(Collectors.toList())
-							).build();
 					for(YIntervalSeries other: datasets) {
-						if (other.equals(data)) {
+						if (other.equals(data) || other.getItemCount() < 1) {
 							continue;
 						}
 //						create vector for other datasets
@@ -383,13 +372,29 @@ public class ExogenousEnhancementGraphInvestigator {
 								.sequential()
 								.mapToDouble(other::getYValue)
 								.reduce(Double.MAX_VALUE, Double::min);
+						final double lowlowY = Math.min(lowY, otherLowY);
+						final double highhighY = Math.max(highY, otherHighY);
+						FeatureVector dataVector = FeatureVectorImpl.builder()
+								.values(
+										IntStream.range(0, data.getItemCount())
+										.sequential()
+										.mapToDouble(data::getYValue)
+										.map(val -> (val - lowlowY)/(lowlowY - highhighY)) // min-max feature scaling
+										.boxed()
+										.collect(Collectors.toList())
+								)
+								.columns(
+										IntStream.range(0, data.getItemCount())
+										.mapToDouble(idx -> data.getX(idx).doubleValue())
+										.boxed()
+										.map(item -> item.toString())
+										.collect(Collectors.toList())
+								).build();
 						FeatureVector otherVector = FeatureVectorImpl.builder()
 								.values(
 										IntStream.range(0, other.getItemCount())
 										.mapToDouble(other::getYValue)
-										.map(val -> (val - otherLowY)/(otherLowY - otherHighY)) // min-max scaling
-//										.map(val -> Math.log(val)) // log scaling
-//										.map(val -> { return ((val -otherLowY)/(otherLowY - otherHighY)) / (Math.log(val)) ;})
+										.map(val -> (val - lowlowY)/(lowlowY - highhighY)) // min-max feature scaling
 										.boxed()
 										.collect(Collectors.toList())
 								)
@@ -400,6 +405,19 @@ public class ExogenousEnhancementGraphInvestigator {
 										.map(item -> item.toString())
 										.collect(Collectors.toList())
 								).build();
+//						work out the longest common length between vectors
+						common = WilcoxonSignedRankTester.findLongestMatchingVector(otherVector, dataVector);
+						System.out.println("[RankedItem] longest common length :: "+common.size());
+						List<Double> X1 = common.stream()
+								.map(i -> dataVector.getValues().get(i))
+								.map(i -> (i * (lowlowY - highhighY))+ lowlowY)
+								.collect(Collectors.toList());
+						List<Double> X2 = common.stream()
+								.map(i -> otherVector.getValues().get(i))
+								.map(i -> (i * (lowlowY - highhighY))+ lowlowY)
+								.collect(Collectors.toList());
+						wilcoxonP = WilcoxonSignedRankTester.computeTest(X1, X2);
+						System.out.println("[RankedItem] wilcoxon p-value ::" +wilcoxonP);
 //						compute dynamic time warping distance between data and other
 						System.out.println("[RankedItem] computing distance");
 						distance = distance + DynamicTimeWarpingDistancer.builder()
@@ -421,9 +439,9 @@ public class ExogenousEnhancementGraphInvestigator {
 		
 		public String toString() {
 			return "Rank=" + (this.ranked ? this.rank : "N/A") +
-				   " || Transition="+ controller.transName +
-				   " || Subseries=" + controller.datasetName +
-				   " || Distance="  + (this.ranked ? String.format("%.2f",this.rankDistance) : "N/A");
+				   " || Common="+ common.size() +
+				   " || Distance="  + (this.ranked ? String.format("%.3f",this.rankDistance) : "N/A") +
+				   " || wilcoxon="  + (this.ranked ? String.format("%.3f",this.wilcoxonP) : "N/A");
 		}
 	}
 	
