@@ -27,13 +27,24 @@ public class EnhancementGraphSearchRankedList extends SwingWorker<List<RankedLis
 	@NonNull private JProgressBar progress;
 	@Default @Getter private List<RankedListItem> outcome = new ArrayList<RankedListItem>();
 
+	@Default String agreementStatement = "[ExogenousDiscoveryInvestigator] Overall agreement between rank vs wrank :: %.2f%%";
+	
 	protected List<RankedListItem> doInBackground() throws Exception {
 		outcome = data.entrySet().stream()
 				  .map((entry) -> this.processItem(entry))
 				  .collect(Collectors.toList());
+		outcome.sort(new wilcoxonSorter());
+		IntStream.range(0, outcome.size())
+			.forEach(rank -> outcome.get(rank).setWrank(rank+1));
 		outcome.sort(new distanceSorter());
 		IntStream.range(0, outcome.size())
 			.forEach(rank -> outcome.get(rank).setRank(rank+1));
+		int agreement = outcome.stream()
+			.map(o -> o.getRank() == o.getWrank())
+			.mapToInt(o -> o ? 1 : 0)
+			.reduce(0, Integer::sum);
+		
+		System.out.println(String.format(agreementStatement,(agreement*1.0)/outcome.size()*100));
 		return outcome;
 	}
 	
@@ -48,6 +59,15 @@ public class EnhancementGraphSearchRankedList extends SwingWorker<List<RankedLis
 		this.progress.setValue(progress.getValue()+1);
 		return out;
 	}
+	
+	private class wilcoxonSorter implements Comparator<RankedListItem>{
+
+		public int compare(RankedListItem o1, RankedListItem o2) {
+			return Double.compare(o1.getWilcoxonP(), o2.getWilcoxonP());
+		}
+	
+	}
+	
 	
 	private class distanceSorter implements Comparator<RankedListItem>{
 
