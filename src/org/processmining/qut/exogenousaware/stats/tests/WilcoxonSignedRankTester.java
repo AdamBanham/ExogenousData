@@ -49,31 +49,30 @@ public class WilcoxonSignedRankTester {
 		List<Integer> matchingZone = new ArrayList<Integer>();
 		// go through columns of x1 and find longest matching
 		for(int start: IntStream.range(0, x1.getSize()).boxed().collect(Collectors.toList())) {
-			if (start >= x2.getSize()) {
-				break;
-			}
-			int end = 0;
-			for (int id: IntStream.range(start, x1.getSize()).boxed().collect(Collectors.toList())) {
-				if (id >= x2.getSize()) {
-					break;
-				}
-				String key = x1.getColumns().get(id);
+			int end = start-1;
+			int starter = start;
+			for (int id: IntStream.range(0, x2.getSize()).boxed().collect(Collectors.toList())) {
+				String key = x1.getColumns().get(starter);
 				String compKey = x2.getColumns().get(id);
 	//			System.out.println("[CommonLength] comparing between "+key +" and  "+compKey+"::"+key.compareTo(compKey));
-				if (key.compareTo(compKey) == 0) {
+				if (key.compareTo(compKey) == 0 && (end+1) < Math.min(x1.getSize(), x2.getSize())) {
 					end++;
+				} else {
+					break;
+				}
+				if (starter+1 < x1.getSize()) {
+					starter++;
 				} else {
 					break;
 				}
 			}
 			// edge case (1) we didn't ever set length or we need to close a length
-			List<Integer> temp = IntStream.range(start, end).boxed().collect(Collectors.toList());
-			if (temp.size() > matchingZone.size()) {
-//				System.out.println("[CommonLength] new length::"+temp.size());
-				matchingZone = temp;
-			}
-			if (temp.size() >= x1.getSize() - start) {
-				break;
+			if (start < end) {
+				List<Integer> temp = IntStream.range(start, end).boxed().collect(Collectors.toList());
+				if (temp.size() > matchingZone.size() && temp.size() <= Math.min(x1.getSize(), x2.getSize()) ) {
+	//				System.out.println("[CommonLength] new length::"+temp.size());
+					matchingZone = temp;
+				}
 			}
 		}
 		
