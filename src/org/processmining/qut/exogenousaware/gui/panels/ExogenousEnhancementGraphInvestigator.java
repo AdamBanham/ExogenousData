@@ -314,9 +314,11 @@ public class ExogenousEnhancementGraphInvestigator {
 		@Default @Getter private double rankDistance =0.0;
 		@Default @Getter private boolean ranked = false;
 		@Default @Getter @Setter private int rank = 1;
+		@Default @Getter @Setter private int wrank = 1;
 		
 		@Default private List<Integer> common = new ArrayList();
-		@Default private double wilcoxonP;
+		@Default private int commonLength = -1;
+		@Default @Getter private double wilcoxonP = Double.MAX_VALUE;
 		
 		public RankedListItem rank() {
 			System.out.println("[RankedItem] Starting ranking");
@@ -408,16 +410,43 @@ public class ExogenousEnhancementGraphInvestigator {
 //						work out the longest common length between vectors
 						common = WilcoxonSignedRankTester.findLongestMatchingVector(otherVector, dataVector);
 						System.out.println("[RankedItem] longest common length :: "+common.size());
-						List<Double> X1 = common.stream()
-								.map(i -> dataVector.getValues().get(i))
-								.map(i -> (i * (lowlowY - highhighY))+ lowlowY)
-								.collect(Collectors.toList());
-						List<Double> X2 = common.stream()
-								.map(i -> otherVector.getValues().get(i))
-								.map(i -> (i * (lowlowY - highhighY))+ lowlowY)
-								.collect(Collectors.toList());
-						wilcoxonP = WilcoxonSignedRankTester.computeTest(X1, X2);
-						System.out.println("[RankedItem] wilcoxon p-value ::" +wilcoxonP);
+						if (common.size() > 0) {
+							commonLength = common.size();
+//							find 20 samples over interval
+							if (common.size() > 20) {
+								int start = common.get(0);
+								int end = common.get(common.size()-1);
+								double spacing = (end-start)/19.0;
+								double counter = start;
+								List<Integer> temp = new ArrayList<Integer>();
+								temp.add(start);
+								counter += spacing; 
+								start = (int) Math.ceil(counter);
+								while (counter < end) {
+									temp.add(start);
+									counter += spacing; 
+									start = (int) Math.ceil(counter);
+								}
+								temp.add(end);
+								common = temp;
+							}
+							List<Double> X1 = common.stream()
+									.map(i -> dataVector.getValues().get(i))
+									.map(i -> (i * (lowlowY - highhighY))+ lowlowY)
+									.collect(Collectors.toList());
+							List<Double> X2 = common.stream()
+									.map(i -> otherVector.getValues().get(i))
+									.map(i -> (i * (lowlowY - highhighY))+ lowlowY)
+									.collect(Collectors.toList());
+							if (wilcoxonP == Double.MAX_VALUE) {
+								wilcoxonP = WilcoxonSignedRankTester.computeTest(X1, X2);
+							} else {
+								wilcoxonP += WilcoxonSignedRankTester.computeTest(X1, X2);
+							}
+							System.out.println("[RankedItem] wilcoxon p-value ::" +wilcoxonP);
+						} else {
+//							wilcoxonP = -1;
+						}
 //						compute dynamic time warping distance between data and other
 						System.out.println("[RankedItem] computing distance");
 						distance = distance + DynamicTimeWarpingDistancer.builder()
@@ -438,10 +467,10 @@ public class ExogenousEnhancementGraphInvestigator {
 		}
 		
 		public String toString() {
-			return "Rank=" + (this.ranked ? this.rank : "N/A") +
-				   " || Common="+ common.size() +
+			return "Rank=" + (this.ranked ? "("+this.rank+"-"+this.wrank+")" : "N/A") +
+				   " || Common="+ commonLength +
 				   " || Distance="  + (this.ranked ? String.format("%.3f",this.rankDistance) : "N/A") +
-				   " || wilcoxon="  + (this.ranked ? String.format("%.3f",this.wilcoxonP) : "N/A");
+				   " || wilcoxon="  + (this.wilcoxonP != Double.MAX_VALUE ? String.format("%.3f",this.wilcoxonP) : "N/A");
 		}
 	}
 	
