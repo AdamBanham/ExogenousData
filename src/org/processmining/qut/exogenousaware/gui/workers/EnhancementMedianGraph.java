@@ -5,7 +5,6 @@ import java.awt.BorderLayout;
 import java.awt.Color;
 import java.awt.Dimension;
 import java.awt.geom.Ellipse2D;
-import java.util.Arrays;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
@@ -16,7 +15,7 @@ import javax.swing.JPanel;
 import javax.swing.JProgressBar;
 import javax.swing.SwingWorker;
 
-import org.apache.commons.math3.stat.descriptive.moment.StandardDeviation;
+import org.apache.commons.math3.stat.StatUtils;
 import org.jfree.chart.ChartFactory;
 import org.jfree.chart.ChartPanel;
 import org.jfree.chart.JFreeChart;
@@ -43,6 +42,8 @@ import lombok.NonNull;
 @Builder
 public class EnhancementMedianGraph extends SwingWorker<JPanel, String> {
 	
+	
+	//params for builder
 	@NonNull XYSeriesCollection graphData;
 	@NonNull List<Map<String,Object>> dataState;
 	@NonNull Boolean hasExpression;
@@ -50,6 +51,9 @@ public class EnhancementMedianGraph extends SwingWorker<JPanel, String> {
 	@NonNull String xlabel;
 	@NonNull String ylabel;
 	
+	@Default ShadingType shadingType = ShadingType.STD;
+	
+	// internal variables
 	@Default boolean useGroups = false;
 	@Default List<Integer> groups = null;
 	@Default GuardExpressionHandler expression = null;
@@ -165,8 +169,8 @@ public class EnhancementMedianGraph extends SwingWorker<JPanel, String> {
         axis.setLowerBound(this.lowerDomainBound);
         axis.setUpperBound(this.upperDomainBound);
         axis = plot.getRangeAxis();
-        axis.setLowerBound(45.0); // should be this.lowerRangeBound
-        axis.setUpperBound(205.0); // should be this.upperRangeBound
+        axis.setLowerBound(this.lowerRangeBound); // should be this.lowerRangeBound
+        axis.setUpperBound(this.upperRangeBound); // should be this.upperRangeBound
 //		chart.removeLegend();
 //		remake the graph 
 		this.graph = new ChartPanel(
@@ -197,17 +201,7 @@ public class EnhancementMedianGraph extends SwingWorker<JPanel, String> {
 	
 	public void createMedianSeries(XYSeries series, Map<Double, List<Double>> data) {
 		for(Entry<Double, List<Double>> entry : data.entrySet()) {
-			int middle =entry.getValue().size() / 2;
-			Object[] values = entry.getValue().toArray();
-			Arrays.sort(values);
-			double median =0;
-			if (middle%2 == 1) {
-				median = ((double) values[middle]);
-			} else if (middle == 0) {
-				median = (double) values[middle];
-			} else { 
-				median = ((double) values[middle-1] + (double) values[middle]) / 2.0;
-			}
+			double median = StatUtils.percentile(entry.getValue().stream().mapToDouble(d -> d).toArray(), 50);
 			series.add((double) entry.getKey(), median);
 		}
 	}
@@ -292,24 +286,51 @@ public class EnhancementMedianGraph extends SwingWorker<JPanel, String> {
 	}
 	
 	public void createIntervalSeries(YIntervalSeries series, Map<Double, List<Double>> data, XYSeries medians) {
-		StandardDeviation std = new StandardDeviation();
-		int medianCounter = 0;
 		for(Entry<Double, List<Double>> entry : data.entrySet()) {
-			double mean = entry.getValue().stream()
-					.reduce(0.0, (c,n) -> c+n );
-			mean = mean/entry.getValue().size();
-			final double fmean = mean;
-			double stdValue = entry.getValue().stream()
-					.reduce(0.0, (c,u) -> { return c+Math.pow((u-fmean),2);});
-			stdValue = stdValue / entry.getValue().size();
-			stdValue = Math.sqrt(stdValue);
-			double median = (double) medians.getY(medianCounter);
-			series.add( (double) medians.getX(medianCounter), median, median-stdValue, median+stdValue);
+			double stdValue =0;
+			double x =entry.getKey();
+			double median = StatUtils.percentile(entry.getValue().stream().mapToDouble(d -> d).toArray(), 50);
+			double lowy = 0;
+			double highy = 200;
+			// workflow for std shading
+			if (shadingType.equals(ShadingType.STD)) {
+			//// find std
+				double mean = entry.getValue().stream()
+						.reduce(0.0, (c,n) -> c+n );
+				mean = mean/entry.getValue().size();
+				final double fmean = mean;
+				stdValue = entry.getValue().stream()
+						.reduce(0.0, (c,u) -> { return c+Math.pow((u-fmean),2);});
+				stdValue = stdValue / entry.getValue().size();
+				stdValue = Math.sqrt(stdValue);
+	//			set series values
+				series.add( x, median, median-stdValue, median+stdValue);
+//				set bounding values
+				lowy = median-(stdValue * 1.05);
+				highy = median+(stdValue * 1.05);
+			} else if (shadingType.equals(ShadingType.Quartile)) {
+				// workflow for q1 (25%) and q3 (75%)
+				List<Double> values = entry.getValue();
+				if (values.size() > 4) {
+					double q1 = StatUtils.percentile(entry.getValue().stream().mapToDouble(d -> d).toArray(), 25);
+					double q3 = StatUtils.percentile(entry.getValue().stream().mapToDouble(d -> d).toArray(), 75);
+	//				set series values
+					series.add( x, median, q1, q3);
+	//				set bounding values
+					lowy = (q1 * 0.95);
+					highy = (q3 * 1.05);
+				} else {
+//					set series values
+					series.add( x, median, median, median);
+					lowy = median;
+					highy = median;
+				}
+			} else {
+				throw new UnsupportedOperationException("Shading type not implemented :: "+shadingType.getType());
+			}
+
 //			check bounds for given point
 			try {
-			double x = medians.getX(medianCounter).doubleValue();
-			double lowy = median-stdValue;
-			double highy = median+stdValue;
 			this.lowerDomainBound = x < this.lowerDomainBound ? x : this.lowerDomainBound;
 			this.upperDomainBound = x > this.upperDomainBound ? x : this.upperDomainBound;
 			this.lowerRangeBound = lowy < this.lowerRangeBound ? lowy : this.lowerRangeBound;
@@ -317,7 +338,6 @@ public class EnhancementMedianGraph extends SwingWorker<JPanel, String> {
 			} catch (Exception e) {
 				System.out.println("["+title+"] Error in bound comparision :: "+e.getMessage());
 			}
-			medianCounter++;
 		}
 	}
 	
@@ -356,5 +376,20 @@ public class EnhancementMedianGraph extends SwingWorker<JPanel, String> {
 			System.out.println("["+title+"] "+e.getCause());
 		}
 		return work;
+	}
+	
+	public enum ShadingType {
+		STD("+- 1 standard deviation"),
+		Quartile("q1 vs q3");
+		
+		private String type;
+		
+		private ShadingType(String type) {
+			this.type = type;
+		}
+		
+		public String getType() {
+			return this.type;
+		}
 	}
 }
