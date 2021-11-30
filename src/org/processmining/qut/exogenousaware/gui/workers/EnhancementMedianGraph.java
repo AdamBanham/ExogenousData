@@ -92,9 +92,10 @@ public class EnhancementMedianGraph extends SwingWorker<JPanel, String> {
 		Map<Double, List<Double>> falseMedians = new HashMap<Double, List<Double>>();
 		Map<Double, List<Double>> nullMedians = new HashMap<Double, List<Double>>();
 		int seriescount = 0;
+		List<Double> timeline = TimeSeriesSampling.findTimeline(graphData);
 		for(XYSeries series: (List<XYSeries>) this.graphData.getSeries()) {
 			Map<Double, List<Double>> medians = chooseMap(seriescount, trueMedians, falseMedians, nullMedians);
-			TimeSeriesSampling.resampleSeries(series, medians, this.segmentInterval, this.segmentWindow);
+			TimeSeriesSampling.resampleSeries(series, medians, timeline);
 			seriescount++;
 			this.progress.setValue(seriescount);
 		}
@@ -373,7 +374,7 @@ public class EnhancementMedianGraph extends SwingWorker<JPanel, String> {
 			work = this.make();
 		} catch (Exception e) {
 			System.out.println("["+title+"] failed to do work :: "+e.getLocalizedMessage());
-			System.out.println("["+title+"] "+e.getCause());
+			e.printStackTrace();
 		}
 		return work;
 	}
