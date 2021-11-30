@@ -322,7 +322,7 @@ public class ExogenousEnhancementGraphInvestigator {
 		
 		public RankedListItem rank() {
 			System.out.println("[RankedItem] Starting ranking");
-			double distance = 0.0;
+			double distance = Double.MIN_NORMAL;
 			try {
 //			check that the median graph has been computed
 			if (controller.getCachedGraphs().containsKey("Median")) {
@@ -466,11 +466,15 @@ public class ExogenousEnhancementGraphInvestigator {
 			return this;
 		}
 		
+		public Boolean rankable() {
+			return this.rankDistance != Double.MIN_NORMAL && this.wilcoxonP != Double.MAX_VALUE && commonLength != -1;
+		}
+		
 		public String toString() {
 			return "Rank=" + (this.ranked ? "("+this.rank+"-"+this.wrank+")" : "N/A") +
 				   " || Common="+ commonLength +
-				   " || Distance="  + (this.ranked ? String.format("%.3f",this.rankDistance) : "N/A") +
-				   " || wilcoxon="  + (this.wilcoxonP != Double.MAX_VALUE ? String.format("%.3f",this.wilcoxonP) : "N/A");
+				   " || Distance="  + (rankable() ? String.format("%.3f",this.rankDistance) : "N/A") +
+				   " || wilcoxon="  + (rankable() ? String.format("%.3f",this.wilcoxonP) : "N/A");
 		}
 	}
 	
