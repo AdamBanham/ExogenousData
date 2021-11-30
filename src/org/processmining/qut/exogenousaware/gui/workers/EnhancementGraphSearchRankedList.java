@@ -40,6 +40,7 @@ public class EnhancementGraphSearchRankedList extends SwingWorker<List<RankedLis
 		IntStream.range(0, outcome.size())
 			.forEach(rank -> outcome.get(rank).setRank(rank+1));
 		int agreement = outcome.stream()
+			.filter(o -> o.rankable())
 			.map(o -> o.getRank() == o.getWrank())
 			.mapToInt(o -> o ? 1 : 0)
 			.reduce(0, Integer::sum);
