@@ -52,9 +52,9 @@ public class TimeSeriesSampling {
 			List<XYDataItem> rightmostItems = windowedItems.stream()
 					.filter(it -> it.getX().doubleValue() > sampleMiddle)
 					.collect(Collectors.toList());
-			if (leftmostItems.size()==0 || rightmostItems.size()==0) {
+			if (leftmostItems.size() < 1 || rightmostItems.size() < 1) {
 //				case(2)(a) need to find either a leftmost or a rightmost to complete pair
-				if (leftmostItems.size() == 0) {
+				if (leftmostItems.size() < 1) {
 //					case(2)(a)(i) find a possible left else throw
 					List<XYDataItem> possibleLeft = items.stream()
 							.filter(it -> it.getX().doubleValue() < sampleMiddle)
@@ -76,10 +76,11 @@ public class TimeSeriesSampling {
 						throw new ArithmeticException("Unable to find a rightmost element for this sample window.");
 					}
 				}
+			} else {
+	//			case(3) we can make a pair
+				pairLeft = leftmostItems.get(leftmostItems.size()-1);
+				pairRight = rightmostItems.get(0);
 			}
-//			case(3) we can make a pair
-			pairLeft = leftmostItems.get(leftmostItems.size()-1);
-			pairRight = rightmostItems.get(0);
 		} else {
 //			case (1)(b) no data points within window, need to right leftmost and rightmost
 			List<XYDataItem> possibleLeft = items.stream()
