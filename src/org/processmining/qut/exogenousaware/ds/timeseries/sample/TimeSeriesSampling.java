@@ -62,10 +62,10 @@ public class TimeSeriesSampling {
 					if (possibleLeft.size() > 0) {
 						leftmostItems.add(possibleLeft.get(possibleLeft.size()-1));
 					} else {
-						
 						throw new ArithmeticException("Unable to find a leftmost element for this sample window.");
 					}
-				} else {
+				} 
+				if (rightmostItems.size() < 1){
 //					case(2)(a)(ii) find a possible right else throw
 					List<XYDataItem> possibleRight = items.stream()
 							.filter(it -> it.getX().doubleValue() > sampleMiddle)
@@ -75,6 +75,12 @@ public class TimeSeriesSampling {
 					} else {
 						throw new ArithmeticException("Unable to find a rightmost element for this sample window.");
 					}
+				}
+				if (leftmostItems.size() > 0 && rightmostItems.size() > 0) {
+					pairLeft = leftmostItems.get(leftmostItems.size()-1);
+					pairRight = rightmostItems.get(0);
+				} else {
+					throw new ArithmeticException("Unable to find suitable pair witin sample window");
 				}
 			} else {
 	//			case(3) we can make a pair
@@ -90,7 +96,7 @@ public class TimeSeriesSampling {
 					.filter(it -> it.getX().doubleValue() > sampleMiddle)
 					.collect(Collectors.toList());
 //			case (4) only items to one side of middle
-			if (possibleLeft.size() == 0 || possibleRight.size() == 0) {
+			if (possibleLeft.size() < 1 || possibleRight.size() < 1) {
 				throw new ArithmeticException("Unable to find suitable pair witin sample window");
 			} else {
 				pairLeft = possibleLeft.get(possibleLeft.size()-1);
@@ -190,38 +196,38 @@ public class TimeSeriesSampling {
 	 * @param timeline to be used for sample points
 	 */
 	public static void resampleSeries(XYSeries series, Map<Double, List<Double>> binMap, List<Double> timeline) {
-try {
-	//		setup interval space
-			double min = series.getMinX();
-			double max = series.getMaxX();
-			double interval = timeline.get(1) - timeline.get(0);
-			List<Double> intervalSpace = timeline.stream()
-					.filter(i -> i >= min && i <= max)
-					.collect(Collectors.toList());
-	//		edge case (1) interval space is too small to sample from
-			if (timeline.size() < 1) {
-				return;
-			}
-	//		sample at each point in interval space
-			for(double point: intervalSpace) {
-				double sample;
-				try {
-					sample = findSample(series, point-interval, point+interval);
-				} catch (ArithmeticException | CloneNotSupportedException e) {
-					// skip interval point if sample cannot be computed
-					// e.printStackTrace();
-					continue;
-				}
-				if (!binMap.containsKey(point)) {
-					binMap.put(point, new ArrayList<Double>());
-				}
-				binMap.get(point).add(sample);
-			}
-} catch (Exception e) {
-	// TODO Auto-generated catch block
-	e.printStackTrace();
-	
-}
+		try {
+			//		setup interval space
+					double min = series.getMinX();
+					double max = series.getMaxX();
+					double interval = timeline.get(1) - timeline.get(0);
+					List<Double> intervalSpace = timeline.stream()
+							.filter(i -> i >= min && i <= max)
+							.collect(Collectors.toList());
+			//		edge case (1) interval space is too small to sample from
+					if (timeline.size() < 1) {
+						return;
+					}
+			//		sample at each point in interval space
+					for(double point: intervalSpace) {
+						double sample;
+						try {
+							sample = findSample(series, point-interval, point+interval);
+						} catch (ArithmeticException | CloneNotSupportedException e) {
+							// skip interval point if sample cannot be computed
+							// e.printStackTrace();
+							continue;
+						}
+						if (!binMap.containsKey(point)) {
+							binMap.put(point, new ArrayList<Double>());
+						}
+						binMap.get(point).add(sample);
+					}
+		} catch (Exception e) {
+			// TODO Auto-generated catch block
+			e.printStackTrace();
+			
+		}
 	}
 	
 	/**
