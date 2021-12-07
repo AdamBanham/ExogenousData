@@ -28,6 +28,7 @@ import org.jfree.chart.plot.XYPlot;
 import org.jfree.chart.renderer.xy.XYLineAndShapeRenderer;
 import org.jfree.data.xy.XYSeries;
 import org.jfree.data.xy.XYSeriesCollection;
+import org.processmining.qut.exogenousaware.data.ExogenousDatasetType;
 import org.processmining.qut.exogenousaware.gui.ExogenousTraceView;
 import org.processmining.qut.exogenousaware.steps.transform.data.TransformedAttribute;
 
@@ -114,7 +115,10 @@ public class TraceVisOverviewChart extends SwingWorker<JPanel, String> {
 			for(Entry<String, XAttribute> entry : ev.getAttributes().entrySet()) {
 				if (entry.getValue().getClass().equals(TransformedAttribute.class)) {
 					TransformedAttribute xattr = (TransformedAttribute) entry.getValue();
-					exogenousTimeSeries.add(xattr.getSource().getSource());
+//					can only visualisation numerical traces
+					if (xattr.getSource().getDatatype().equals(ExogenousDatasetType.NUMERICAL)) {
+						exogenousTimeSeries.add(xattr.getSource().getSource());
+					}
 				}
 			}
 		}
