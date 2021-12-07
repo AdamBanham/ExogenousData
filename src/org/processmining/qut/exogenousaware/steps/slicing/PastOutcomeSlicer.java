@@ -29,14 +29,14 @@ import lombok.Builder.Default;
 public class PastOutcomeSlicer implements Slicer {
 	
 	@Default private String shortName = "POS";
-	@Default private String identifer = "pastoutcomeslicer";
+	@Default private String identifier = "pastoutcomeslicer";
 	
 	public void createUserChoices() {
 		// TODO Auto-generated method stub
 	}
 
 	public String getName() {
-		return this.identifer;
+		return this.identifier;
 	}
 
 	public String getShortenName() {
@@ -54,7 +54,7 @@ public class PastOutcomeSlicer implements Slicer {
 					.collect(Collectors.toList());
 			// create subseries for event
 			SubSeries subtimeseries = SubSeries.builder()
-					.slicingName(this.identifer)
+					.slicingName(this.identifier)
 					.abvSlicingName(this.shortName)
 					.dataset(datasetName)
 					.source(exogenous)
@@ -66,7 +66,7 @@ public class PastOutcomeSlicer implements Slicer {
 			// add to map 
 			points.put(ev, subtimeseries);
 		}
-		return null;
+		return points;
 	}
 
 }
