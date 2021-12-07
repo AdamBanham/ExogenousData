@@ -33,6 +33,7 @@ import org.processmining.qut.exogenousaware.data.dot.GuardExpressionHandler;
 import org.processmining.qut.exogenousaware.ds.linear.BestFittingLine;
 import org.processmining.qut.exogenousaware.ds.timeseries.sample.TimeSeriesSampling;
 import org.processmining.qut.exogenousaware.gui.panels.Colours;
+import org.processmining.qut.exogenousaware.gui.workers.helpers.ExogenousObserverGrouper;
 
 import lombok.Builder;
 import lombok.Builder.Default;
@@ -56,6 +57,7 @@ public class EnhancementMedianGraph extends SwingWorker<JPanel, String> {
 	// internal variables
 	@Default boolean useGroups = false;
 	@Default List<Integer> groups = null;
+	@Default ExogenousObserverGrouper grouper = null;
 	@Default GuardExpressionHandler expression = null;
 	@Default Color passColour = Colours.getGraphPaletteColour(1);
 	@Default Color passColourBg = Colours.getGraphPaletteColour(2);
@@ -92,7 +94,7 @@ public class EnhancementMedianGraph extends SwingWorker<JPanel, String> {
 		Map<Double, List<Double>> falseMedians = new HashMap<Double, List<Double>>();
 		Map<Double, List<Double>> nullMedians = new HashMap<Double, List<Double>>();
 		int seriescount = 0;
-		List<Double> timeline = TimeSeriesSampling.findTimeline(graphData);
+		List<Double> timeline = TimeSeriesSampling.findTimeline(graphData,250);
 		for(XYSeries series: (List<XYSeries>) this.graphData.getSeries()) {
 			Map<Double, List<Double>> medians = chooseMap(seriescount, trueMedians, falseMedians, nullMedians);
 			TimeSeriesSampling.resampleSeries(series, medians, timeline);
@@ -124,11 +126,19 @@ public class EnhancementMedianGraph extends SwingWorker<JPanel, String> {
 		seriescount++;
 //		create intervals 
 		YIntervalSeriesCollection intervalDataset = new YIntervalSeriesCollection();
-		YIntervalSeries seriesInt = new YIntervalSeries("true");
+		YIntervalSeries seriesInt = new YIntervalSeries(
+				this.grouper != null ?
+				this.grouper.getGroupName(1) : 
+				"true"
+		);
 		createIntervalSeries(seriesInt, trueMedians, dataset.getSeries(0));
 		this.trueMedianDataset = seriesInt;
 		intervalDataset.addSeries(seriesInt);
-		seriesInt = new YIntervalSeries("false");
+		seriesInt = new YIntervalSeries(
+				this.grouper != null ?
+				this.grouper.getGroupName(0) : 
+				"false"
+		);
 		createIntervalSeries(seriesInt, falseMedians, dataset.getSeries(1));
 		this.falseMedianDataset = seriesInt;
 		intervalDataset.addSeries(seriesInt);
