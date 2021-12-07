@@ -30,6 +30,7 @@ import org.jfree.chart.renderer.xy.XYLineAndShapeRenderer;
 import org.jfree.data.xy.XYSeries;
 import org.jfree.data.xy.XYSeriesCollection;
 import org.processmining.qut.exogenousaware.data.ExogenousAnnotatedLog;
+import org.processmining.qut.exogenousaware.data.ExogenousDatasetType;
 import org.processmining.qut.exogenousaware.gui.ExogenousTraceView;
 import org.processmining.qut.exogenousaware.steps.slicing.data.SubSeries;
 import org.processmining.qut.exogenousaware.steps.transform.data.TransformedAttribute;
@@ -110,6 +111,9 @@ public class TraceVisEventChart {
 		String exoSet = entry.getKey();
 //		cycle through subseries and plot each
 		for(SubSeries subtimeseries: entry.getValue()) {
+			if (subtimeseries.getDatatype().equals(ExogenousDatasetType.DISCRETE)) {
+				continue;
+			}
 			// check for non-empty sub-sequences
 			List<Long> xseries = subtimeseries.getXSeries(true);
 			List<Double> yseries = subtimeseries.getYSeries();
