@@ -6,6 +6,7 @@ import java.util.List;
 import org.deckfour.xes.model.XAttributeTimestamp;
 import org.deckfour.xes.model.XEvent;
 import org.deckfour.xes.model.XTrace;
+import org.processmining.qut.exogenousaware.data.ExogenousDatasetType;
 
 import lombok.Builder;
 import lombok.Data;
@@ -33,6 +34,7 @@ public class SubSeries {
 	@NonNull String abvSlicingName;
 	@NonNull String dataset;
 	@NonNull XTrace source;
+	@NonNull ExogenousDatasetType datatype;
 	@NonNull XEvent endogenous;
 	@Singular List<XEvent> subEvents;
 	XTrace endoSource;
