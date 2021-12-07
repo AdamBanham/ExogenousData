@@ -25,7 +25,7 @@ import org.deckfour.xes.model.impl.XAttributeLiteralImpl;
 import org.deckfour.xes.model.impl.XAttributeMapImpl;
 import org.processmining.contexts.uitopia.UIPluginContext;
 import org.processmining.framework.plugin.Progress;
-import org.processmining.qut.exogenousaware.steps.Linking;
+import org.processmining.qut.exogenousaware.exceptions.LinkNotFoundException;
 import org.processmining.qut.exogenousaware.steps.Slicing;
 import org.processmining.qut.exogenousaware.steps.Transforming;
 import org.processmining.qut.exogenousaware.steps.slicing.data.SubSeries;
@@ -53,7 +53,7 @@ import lombok.Singular;
 public class ExogenousAnnotatedLog implements XLog {
 
 	@Getter @NonNull XLog endogenousLog;
-	@Singular @Getter List<XLog> exogenousDatasets;
+	@Singular @Getter List<ExogenousDataset> exogenousDatasets;
 	@Singular List<XEventClassifier> classifiers;
 	@Singular List<XAttribute> globalTraceAttributes;
 	@Singular List<XAttribute> globalEventAttributes;
@@ -140,12 +140,21 @@ public class ExogenousAnnotatedLog implements XLog {
 			return subseriesTraces;
 		}
 //		the work
-		for(XLog elog: this.exogenousDatasets) {
-			ArrayList<XTrace> linked = Linking.findLinkedExogenousSignals(endo, elog);
+		for(ExogenousDataset elog: this.exogenousDatasets) {
+//			if (elog.dataType.equals(ExogenousDatasetType.DISCRETE)) {
+//				continue;
+//			}
+			List<XTrace> linked;
+			try {
+				linked = elog.findLinkage(endo); //Linking.findLinkedExogenousSignals(endo, elog);
+			} catch (LinkNotFoundException e) {
+				// if no link can be found then move on
+				continue;
+			}
 //			#2 perform slicing and annotate subseries on each event 
 			Map<String, Map<String, List<SubSeries>>> subseries;
 			try {
-				subseries = Slicing.naiveEventSlicing(endo, linked);
+				subseries = Slicing.naiveEventSlicing(endo, linked, elog);
 			} catch (UnsupportedOperationException err) {
 				System.out.println(
 						"For endogenous trace ("
