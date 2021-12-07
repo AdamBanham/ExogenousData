@@ -1,7 +1,5 @@
 package org.processmining.qut.exogenousaware.steps.slicing;
 
-import java.util.ArrayList;
-import java.util.List;
 import java.util.Map;
 import java.util.NoSuchElementException;
 
@@ -10,6 +8,7 @@ import javax.xml.crypto.KeySelectorException;
 import org.deckfour.xes.model.XAttributeTimestamp;
 import org.deckfour.xes.model.XEvent;
 import org.deckfour.xes.model.XTrace;
+import org.processmining.qut.exogenousaware.data.ExogenousDataset;
 import org.processmining.qut.exogenousaware.steps.slicing.data.SubSeries;
 
 
@@ -124,7 +123,7 @@ public interface Slicer {
 	 * @param exogenous an exogenous time series, with measurement events
 	 * @return a mapping of endogenous events to a sub-timeseries from the exogenous time series
 	 */
-	public Map<XEvent,SubSeries> slice (XTrace endogenous, XTrace exogenous);
+	public Map<XEvent,SubSeries> slice (XTrace endogenous, XTrace exogenous, ExogenousDataset dataset);
 	
 	/**
 	 * Creates a gui widget to allow for users to specify any needed parameters

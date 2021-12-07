@@ -9,6 +9,7 @@ import java.util.stream.Collectors;
 
 import org.deckfour.xes.model.XEvent;
 import org.deckfour.xes.model.XTrace;
+import org.processmining.qut.exogenousaware.data.ExogenousDataset;
 import org.processmining.qut.exogenousaware.steps.slicing.data.SubSeries;
 
 import lombok.Builder;
@@ -38,7 +39,7 @@ public class TimeAwareSlicer implements Slicer{
 	@Default String identifier = "timeawareslicer";
 	
 	@Override
-	public Map<XEvent, SubSeries> slice(XTrace endogenous, XTrace exogenous) {
+	public Map<XEvent, SubSeries> slice(XTrace endogenous, XTrace exogenous, ExogenousDataset edataset) {
 		Map<XEvent,SubSeries> points = new HashMap<XEvent,SubSeries>();
 		String dataset = exogenous.getAttributes().get("exogenous:name").toString();
 //		#1 : find endogenous before exogenous signal starts
@@ -110,6 +111,7 @@ public class TimeAwareSlicer implements Slicer{
 						.abvSlicingName(this.getShortenName())
 						.dataset(dataset)
 						.source(exogenous)
+						.datatype(edataset.getDataType())
 						.endogenous(ev)
 						.subEvents(subseries)
 						.endoSource(endogenous)
