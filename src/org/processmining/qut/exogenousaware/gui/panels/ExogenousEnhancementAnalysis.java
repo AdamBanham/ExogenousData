@@ -26,6 +26,8 @@ import org.processmining.qut.exogenousaware.gui.ExogenousEnhancementTracablity;
 import org.processmining.qut.exogenousaware.gui.dot.ExoDotTransition;
 import org.processmining.qut.exogenousaware.gui.workers.ExogenousObservedUniverse;
 import org.processmining.qut.exogenousaware.gui.workers.helpers.ActivitySearchGrouper;
+import org.processmining.qut.exogenousaware.gui.workers.helpers.ExogenousObserverGrouper;
+import org.processmining.qut.exogenousaware.gui.workers.helpers.TransformerSearchGrouper;
 
 import lombok.Builder;
 import lombok.Builder.Default;
@@ -57,6 +59,14 @@ public class ExogenousEnhancementAnalysis {
 	@Default private Color expressionFailedColor = new Color(128,0,0,25);
 	@Default private Color expressionPassedColor = new Color(0,102,51,25);
 	@Default private Color expressionNullColor = new Color(0,0,0,25);
+	
+	@Default private ExogenousObserverGrouper bloodCultureGrouper = ActivitySearchGrouper.builder()
+			.activityName("blood cultured")
+			.build();
+	@Default private ExogenousObserverGrouper sepsisInfectionGrouper = TransformerSearchGrouper.builder()
+			.transformedAttributeName("exogenous:blood_test:FOS:transform:POT")
+			.value(1.0)
+			.build();
 	
 	public ExogenousEnhancementAnalysis setup() {
 //		link main and scroll
@@ -178,7 +188,7 @@ public class ExogenousEnhancementAnalysis {
 				.focus(this.focus)
 				.progress(this.progress)
 				.label(this.progressLabel)
-				.grouper(ActivitySearchGrouper.builder().activityName("blood cultured").build())
+				.grouper(this.bloodCultureGrouper)
 				.build()
 				.setup();
 			this.task.addPropertyChangeListener(new ObservedListener(this));
@@ -209,6 +219,7 @@ public class ExogenousEnhancementAnalysis {
 						.guardExpression(this.focus.getGuardExpression())
 						.transName(this.focus.getTransLabel())
 						.useGroups(true)
+						.grouper(this.bloodCultureGrouper)
 						.groups(this.task.getSeriesGroups().get(entry.getKey()))
 						.build()
 						.setup();
