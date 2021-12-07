@@ -6,6 +6,7 @@ import java.util.List;
 import org.deckfour.xes.model.XTrace;
 
 import lombok.Builder;
+import lombok.Getter;
 import lombok.NonNull;
 
 /**
@@ -19,7 +20,7 @@ import lombok.NonNull;
 @Builder
 public class AttributeLinker implements Linker {
 	
-	@NonNull String attributeName;
+	@NonNull @Getter String attributeName;
 	
 
 	public List<XTrace> link(XTrace endogenous, List<XTrace> exoDataset) {
@@ -31,15 +32,25 @@ public class AttributeLinker implements Linker {
 		}
 //		check for each exogenous trace that it has the attribute and matches the endogenous trace
 		for(XTrace exo: exoDataset) {
-			Object exoAttr = exo.getAttributes().get(this.attributeName);
-			if (exoAttr == null) {
-				continue;
-			}
-			if (exoAttr.equals(endoAttr)) {
+			if (linkedTo(endogenous,exo)) {
 				linkedSubset.add(exo);
 			}
 		}
 		return linkedSubset;
+	}
+
+
+	public Boolean linkedTo(XTrace endogenous, XTrace exogenous) {
+		//	check that endogenous trace has attribute of focus
+		Object endoAttr = endogenous.getAttributes().get(this.attributeName);
+		if (endoAttr == null) {
+			return false;
+		}
+		Object exoAttr = exogenous.getAttributes().get(this.attributeName);
+		if (exoAttr == null) {
+			return false;
+		}
+		return exoAttr.toString().equals(endoAttr.toString());
 	}
 
 }
