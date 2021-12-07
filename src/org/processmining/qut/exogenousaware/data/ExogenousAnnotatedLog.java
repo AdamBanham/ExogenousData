@@ -165,6 +165,7 @@ public class ExogenousAnnotatedLog implements XLog {
 				return subseriesTraces;
 			} catch (Exception err) {
 				System.out.println("Unexpected error occured with naiveEventSlicing");
+				err.printStackTrace();
 				return subseriesTraces;
 			}
 			for(String evId: subseries.keySet()) {
