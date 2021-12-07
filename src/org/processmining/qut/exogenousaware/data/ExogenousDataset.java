@@ -1,10 +1,11 @@
 package org.processmining.qut.exogenousaware.data;
 
-import java.util.ArrayList;
 import java.util.List;
 
 import org.deckfour.xes.model.XLog;
 import org.deckfour.xes.model.XTrace;
+import org.processmining.qut.exogenousaware.exceptions.CannotConvertException;
+import org.processmining.qut.exogenousaware.exceptions.ExogenousAttributeNotFoundException;
 import org.processmining.qut.exogenousaware.exceptions.LinkNotFoundException;
 import org.processmining.qut.exogenousaware.steps.linking.Linker;
 
@@ -21,10 +22,34 @@ public class ExogenousDataset {
 	@Default @Getter ExogenousDatasetLinkType linkType = null;
 	@Default @Getter ExogenousDatasetType dataType = null;
 	@Default @Getter Linker linker = null;
+	@Default private Boolean setupCompleted = false;
 	
-	public ExogenousDataset setup() {
-		
-		
+	public ExogenousDataset setup() throws CannotConvertException {
+		if (ExogenousUtils.isExogenousLog(source)) {
+			// attempt to determine data type for measurements in log
+			try {
+				dataType = ExogenousUtils.findDataType(source);
+				System.out.println("[ExogenousDataset] data type set as :: "+dataType.toString());
+			} catch (ExogenousAttributeNotFoundException e) {
+				System.out.println("[ExogenousDataset] Unable to determine datatype of log :: "+this.source.getAttributes().get("concept:name").toString());
+				throw new CannotConvertException(source, this);
+			}
+			// attempt to determine link type for data set
+			try {
+				linkType = ExogenousUtils.findLinkType(source);
+				System.out.println("[ExogenousDataset] link type set as :: "+linkType.toString());
+			} catch (ExogenousAttributeNotFoundException e) {
+				System.out.println("[ExogenousDataset] Unable to determine datatype of log :: "+this.source.getAttributes().get("concept:name").toString());
+				throw new CannotConvertException(source, this);
+			}
+			// attempt to construct a linker for data set
+			linker = ExogenousUtils.constructLinker(source, this);
+			System.out.println("[ExogenousDataset] linker created as :: "+linker.getClass().getSimpleName());
+			
+		} else {
+			throw new CannotConvertException(source, this);
+		}
+		this.setupCompleted = true;
 		return this;
 	}
 	
@@ -34,7 +59,7 @@ public class ExogenousDataset {
 	 * @return whether linkage was found.
 	 */
 	public boolean checkLink(XTrace trace) {
-		return false;
+		return linker.link(trace, source).size() > 0;
 	}
 	
 	
@@ -45,13 +70,11 @@ public class ExogenousDataset {
 	 */
 	public List<XTrace> findLinkage(XTrace trace) throws LinkNotFoundException {
 //		check for link
-		if (!checkLink(trace)) {
-			throw new LinkNotFoundException();
-		}
+//		if (!checkLink(trace)) {
+//			throw new LinkNotFoundException();
+//		}
 //		otherwise, find links
-		List<XTrace> links = new ArrayList<XTrace>();
-		
-		return links;
+		return linker.link(trace, source);
 	}
 	
 }
