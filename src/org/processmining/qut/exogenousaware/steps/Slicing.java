@@ -14,6 +14,8 @@ import org.deckfour.xes.model.XEvent;
 import org.deckfour.xes.model.XTrace;
 import org.processmining.qut.exogenousaware.data.ExogenousDataset;
 import org.processmining.qut.exogenousaware.data.ExogenousDatasetType;
+import org.processmining.qut.exogenousaware.steps.slicing.FutureOutcomeSlicer;
+import org.processmining.qut.exogenousaware.steps.slicing.Slicer;
 import org.processmining.qut.exogenousaware.steps.slicing.TimeAwareSlicer;
 import org.processmining.qut.exogenousaware.steps.slicing.data.SubSeries;
 
@@ -74,20 +76,46 @@ public class Slicing {
 			}
 //			(1) numerical case
 			if (edataset.getDataType().equals(ExogenousDatasetType.NUMERICAL)) {
-//			create a list of periods to use
-			long hour = 1000 * 60 * 60;
-			List<Long> periods = new ArrayList<Long>();
-			periods.add(hour*2);
-			periods.add(hour*4);
-			periods.add(hour*6);
-			periods.add(hour*12);
-			for(long period: periods) {
-	//			get slicing points for this piece of the exogenous dataset
-	//			Map<String,ArrayList<XEvent>> slicePoints = naiveSlicingPoints(endogenous, exoTrace);
-				Map<XEvent, SubSeries> slicePoints = TimeAwareSlicer
-						.builder().timePeriod(period).build()
-						.slice(endogenous, exoTrace, edataset);
-	//			update each event with matching sub-series 
+	//			create a list of periods to use
+				long hour = 1000 * 60 * 60;
+				List<Long> periods = new ArrayList<Long>();
+//				periods.add(hour*2);
+//				periods.add(hour*4);
+//				periods.add(hour*6);
+				periods.add(hour*12);
+				for(long period: periods) {
+		//			get slicing points for this piece of the exogenous dataset
+		//			Map<String,ArrayList<XEvent>> slicePoints = naiveSlicingPoints(endogenous, exoTrace);
+					Map<XEvent, SubSeries> slicePoints = TimeAwareSlicer
+							.builder().timePeriod(period).build()
+							.slice(endogenous, exoTrace, edataset);
+		//			update each event with matching sub-series 
+					for(XEvent endoEvent: slicePoints.keySet()) {
+						Map<String, List<SubSeries>> endoMap = eventSlices.get(endoEvent.getID().toString());
+						String endoKey = exoTrace.getAttributes().get("exogenous:name").toString();
+						if (endoMap.containsKey(endoKey)) {
+							endoMap.get(endoKey).add(slicePoints.get(endoEvent));
+						} else {
+							List<SubSeries> lister = new ArrayList<SubSeries>();
+							lister.add(slicePoints.get(endoEvent));
+							endoMap.put(endoKey,lister);
+						}
+					}
+				}
+			} 
+//			(2) discrete case
+			else if (edataset.getDataType().equals(ExogenousDatasetType.DISCRETE)) {
+//				setup params
+				long hour = 1000 * 60 * 60;
+				long period = hour * 48;
+//				create slicer
+				Slicer slicer = FutureOutcomeSlicer.builder()
+						.timePeriod(period)
+						.build();
+//				perform slice
+				Map<XEvent, SubSeries> slicePoints = slicer.slice(endogenous, exoTrace, edataset);
+//				store slices 
+//				update each event with matching sub-series 
 				for(XEvent endoEvent: slicePoints.keySet()) {
 					Map<String, List<SubSeries>> endoMap = eventSlices.get(endoEvent.getID().toString());
 					String endoKey = exoTrace.getAttributes().get("exogenous:name").toString();
@@ -100,12 +128,7 @@ public class Slicing {
 					}
 				}
 			}
-			} else if (edataset.getDataType().equals(ExogenousDatasetType.DISCRETE)) {
-				
-			}
-//			(2) discrete case
 		}
-		
 		return eventSlices;
 	}
 	
