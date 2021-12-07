@@ -5,8 +5,10 @@ import java.util.List;
 import java.util.NoSuchElementException;
 
 import org.deckfour.xes.model.XEvent;
+import org.processmining.qut.exogenousaware.data.ExogenousDatasetType;
 import org.processmining.qut.exogenousaware.data.storage.ExogenousAttribute;
 import org.processmining.qut.exogenousaware.steps.slicing.data.SubSeries;
+import org.processmining.qut.exogenousaware.steps.transform.PossibleOutcomeTransformer;
 import org.processmining.qut.exogenousaware.steps.transform.SlopeTransformer;
 import org.processmining.qut.exogenousaware.steps.transform.data.TransformedAttribute;
 
@@ -36,8 +38,12 @@ public class Transforming {
 	
 	public static List<TransformedAttribute> applySlopeTransform(SubSeries subtimeseries,String dataset){
 		List<TransformedAttribute> attrs = new ArrayList<TransformedAttribute>();
-		if (subtimeseries.getSubEvents().size() > 1) {
-			attrs.add(SlopeTransformer.builder().dataset(dataset).build().transform(subtimeseries));
+		if (subtimeseries.getDatatype().equals(ExogenousDatasetType.NUMERICAL)) {
+			if (subtimeseries.getSubEvents().size() > 1) {
+				attrs.add(SlopeTransformer.builder().dataset(dataset).build().transform(subtimeseries));
+			}
+		} else if (subtimeseries.getDatatype().equals(ExogenousDatasetType.DISCRETE)) {
+			attrs.add(PossibleOutcomeTransformer.builder().Outcome("SEPSIS INFECTION").build().transform(subtimeseries));
 		}
 		return attrs;
 	}
