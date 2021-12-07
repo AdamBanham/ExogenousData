@@ -1,6 +1,7 @@
 package org.processmining.qut.exogenousaware;
 
 import java.util.ArrayList;
+import java.util.List;
 
 import javax.swing.JComponent;
 
@@ -12,6 +13,8 @@ import org.processmining.framework.plugin.annotations.Plugin;
 import org.processmining.framework.plugin.annotations.PluginLevel;
 import org.processmining.models.graphbased.directed.petrinetwithdata.newImpl.PetriNetWithData;
 import org.processmining.qut.exogenousaware.data.ExogenousAnnotatedLog;
+import org.processmining.qut.exogenousaware.data.ExogenousDataset;
+import org.processmining.qut.exogenousaware.exceptions.CannotConvertException;
 import org.processmining.qut.exogenousaware.gui.ExogenousDiscoveryInvestigator;
 import org.processmining.qut.exogenousaware.gui.ExogenousTraceExplorer;
 import org.processmining.qut.exogenousaware.gui.ExogenousTraceView;
@@ -35,10 +38,6 @@ import org.processmining.qut.exogenousaware.gui.ExogenousTraceView;
 */
 public class ExogenousAwareDiscoveryPlugin {
 	
-	
-	
-	
-	
 	@Plugin(
 			name = "Exogenous Aware Log Preperation",
 			parameterLabels = {"Process Log", "Exogenous Data Sources"},
@@ -52,9 +51,20 @@ public class ExogenousAwareDiscoveryPlugin {
 			email = "adam.banham@hdr.qut.edu.au"
 	)
 	public ExogenousAnnotatedLog preperation(UIPluginContext context, XLog endogenous, XLog[] exogenous) throws Throwable{
-		ArrayList<XLog> exoLogs = new ArrayList<XLog>();
+		List<ExogenousDataset> exoLogs = new ArrayList<ExogenousDataset>();
 		for(XLog elog: exogenous) {
-			exoLogs.add(elog);
+			ExogenousDataset temp;
+			try {
+				temp = ExogenousDataset.builder()
+						.source(elog)
+						.build()
+						.setup();
+			} catch (CannotConvertException e) {
+				// if log cannot naively be convert to dataset then move on
+				System.out.println("[ExogenousAnnotatedLog] Cannot convert log='"+ elog.getAttributes().get("concept:name").toString()+"' to an exogenous dataset.");
+				continue;
+			}
+			exoLogs.add(temp);
 		}
 		ExogenousAnnotatedLog annotated = ExogenousAnnotatedLog
 				.builder()
