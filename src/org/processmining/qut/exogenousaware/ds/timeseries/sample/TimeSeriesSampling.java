@@ -263,4 +263,33 @@ public class TimeSeriesSampling {
 		}
 		return timeline;
 	}
+	
+	public static List<Double> findTimeline(XYSeriesCollection data, int NumberOfIntervals) {
+//		step one: find leftmost and rightmost across series
+		double last = Double.MAX_VALUE;
+		double first = Double.MIN_VALUE;
+		for(XYSeries series: (List<XYSeries>) data.getSeries()) {
+			double checklast = series.getMinX();
+			double checkfirst = series.getMaxX();
+			last = checklast < last ? checklast : last;
+			first = checkfirst > first ? checkfirst : first;
+		}
+//		step two: create timeline such that each point at most 1% away from its neighbours
+		List<Double> timeline = new ArrayList<Double>();
+		double timespan = Math.abs(Math.min(0, last)) + Math.abs(Math.max(0, first));
+		double interval = timespan / NumberOfIntervals;
+		double current = last + interval;
+//		System.out.println("[TimeSeriesSampling] Computing timespan with the following :: last="+last+" first="+first+" interval="+interval+" timespan="+timespan);
+//		build timeline
+		timeline.add(last);
+		while(current < first) {
+			timeline.add(current);
+			current += interval;
+		}
+		timeline.add(first);
+		if (timeline.size() < NumberOfIntervals) {
+			throw new UnsupportedOperationException("[TimeSeriesSampling] Unable to compute a timeline :: Reason :: timeline was shorter than 100 intervals :: "+timeline.size());
+		}
+		return timeline;
+	}
 }
