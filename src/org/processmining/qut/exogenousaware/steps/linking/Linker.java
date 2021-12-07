@@ -24,5 +24,14 @@ public interface Linker {
 	 */
 	public List<XTrace> link(XTrace endogenous, List<XTrace> exoDataset);
 	
+	/**
+	 * This function checks for a link between an endogenous and exogenous trace.<br>
+	 *
+	 * @param endogenous The trace under consideration for linkage 
+	 * @param exogenous The exogenous trace that could be linked.
+	 * @return whether these two traces are linked.
+	 */
+	public Boolean linkedTo(XTrace endogenous, XTrace exogenous);
+	
 	
 }
