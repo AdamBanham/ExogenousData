@@ -32,6 +32,7 @@ import org.processmining.qut.exogenousaware.data.dot.GuardExpressionHandler;
 import org.processmining.qut.exogenousaware.gui.workers.EnhancementAllGraph;
 import org.processmining.qut.exogenousaware.gui.workers.EnhancementMedianGraph;
 import org.processmining.qut.exogenousaware.gui.workers.EnhancementMedianGraph.ShadingType;
+import org.processmining.qut.exogenousaware.gui.workers.helpers.ExogenousObserverGrouper;
 
 import lombok.Builder;
 import lombok.Builder.Default;
@@ -50,6 +51,7 @@ public class EnhancementExogenousDatasetGraphController extends JPanel {
 	
 	@Default boolean useGroups = false;
 	@Default List<Integer> groups = null;
+	@Default ExogenousObserverGrouper grouper = null;
 	@Default GuardExpressionHandler guardExpression = null;
 	@Default GridBagLayout layout = new GridBagLayout();
 	@Default GridBagConstraints layoutcc = new GridBagConstraints();
@@ -148,6 +150,7 @@ public class EnhancementExogenousDatasetGraphController extends JPanel {
 					.dataState(seriesStates)
 					.useGroups(this.useGroups && this.groups != null)
 					.groups(this.groups)
+					.grouper(this.grouper)
 					.hasExpression(hasExpression)
 					.expression(guardExpression)
 					.graphData(universe)
@@ -172,6 +175,7 @@ public class EnhancementExogenousDatasetGraphController extends JPanel {
 					.dataState(seriesStates)
 					.useGroups(this.useGroups && this.groups != null)
 					.groups(this.groups)
+					.grouper(this.grouper)
 					.hasExpression(hasExpression)
 					.expression(guardExpression)
 					.graphData(universe)
@@ -309,6 +313,7 @@ public class EnhancementExogenousDatasetGraphController extends JPanel {
 						.transName(this.source.transName)
 						.useGroups(true)
 						.groups(this.source.groups)
+						.grouper(this.source.grouper)
 						.build()
 						.setup()
 						.maximise();
@@ -342,6 +347,7 @@ public class EnhancementExogenousDatasetGraphController extends JPanel {
 				.transName(this.transName)
 				.useGroups(true)
 				.groups(this.groups)
+				.grouper(this.grouper)
 				.build()
 				.setup()
 				.maximise();
