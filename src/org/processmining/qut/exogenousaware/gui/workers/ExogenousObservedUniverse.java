@@ -23,6 +23,7 @@ import org.processmining.plugins.petrinet.replayresult.PNRepResult;
 import org.processmining.plugins.petrinet.replayresult.StepTypes;
 import org.processmining.plugins.replayer.replayresult.SyncReplayResult;
 import org.processmining.qut.exogenousaware.data.ExogenousAnnotatedLog;
+import org.processmining.qut.exogenousaware.data.ExogenousDatasetType;
 import org.processmining.qut.exogenousaware.gui.dot.ExoDotTransition;
 import org.processmining.qut.exogenousaware.gui.workers.helpers.ExogenousObserverGrouper;
 import org.processmining.qut.exogenousaware.steps.slicing.data.SubSeries;
@@ -148,6 +149,9 @@ public class ExogenousObservedUniverse extends SwingWorker<Map<String,XYSeriesCo
 		int counter = 0;
 		for(Map<String, TransformedAttribute> xattrs : lastupdate) {
 			for(Entry<String, TransformedAttribute> xattr : xattrs.entrySet()) {
+				if (xattr.getValue().getSource().getDatatype().equals(ExogenousDatasetType.DISCRETE)) {
+					continue;
+				}
 				String dataset = xattr.getValue().getSource().buildPrefix(true);
 				if (datasetValues.containsKey(dataset)) {
 					datasetValues.get(dataset).add(xattr.getValue().getSource());
@@ -193,6 +197,9 @@ public class ExogenousObservedUniverse extends SwingWorker<Map<String,XYSeriesCo
 			XYSeriesCollection dataset = this.observed.get(entry.getKey());
 //			add all series to the same dataset for visualisation later
 			for(SubSeries subseries : entry.getValue()) {
+				if (subseries.getDatatype().equals(ExogenousDatasetType.DISCRETE)) {
+					continue;
+				}
 				XYSeries series = new XYSeries(subseries.getDataset()+"-"+seriescount,true);
 				List<Long> xseries = subseries.getXSeries();
 				List<Double> yseries = subseries.getYSeries();
