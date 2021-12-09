@@ -52,6 +52,12 @@ public class ExoDotTransition extends DotNode {
 		return this.transLabel;
 	}
 	
+	public void setTransLabel(String label) {
+		this.highlightLabel = this.highlightLabel.replace(this.transLabel, label);
+		this.oldLabel = this.oldLabel.replace(this.transLabel, label);
+		this.transLabel = label;
+	}
+	
 	public String makeHighlightLabel(String label) {
 		return label.replaceFirst("BGCOLOR=\".*?\"","COLOR=\"YELLOW\" BGCOLOR=\"YELLOW\"");
 	}
