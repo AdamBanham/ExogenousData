@@ -64,7 +64,7 @@ public class EnhancementMedianGraph extends SwingWorker<JPanel, String> {
 	@Default Color failColour = Colours.getGraphPaletteColour(7);
 	@Default Color failColourBg = Colours.getGraphPaletteColour(6);
 	@Default Color nullColour = Colours.getGraphPaletteColour(4);
-	@Default ChartPanel graph = null;
+	@Default @Getter ChartPanel graph = null;
 	@Default double segmentInterval = 0.05;
 	@Default double segmentWindow = 0.2;
 	@Default @Getter JPanel main = new JPanel();
@@ -126,18 +126,28 @@ public class EnhancementMedianGraph extends SwingWorker<JPanel, String> {
 		seriescount++;
 //		create intervals 
 		YIntervalSeriesCollection intervalDataset = new YIntervalSeriesCollection();
+		int groupsize = groups.stream()
+				.filter(g -> g == 1)
+				.collect(Collectors.toList())
+				.size();
 		YIntervalSeries seriesInt = new YIntervalSeries(
-				this.grouper != null ?
+				(this.grouper != null ?
 				this.grouper.getGroupName(1) : 
-				"true"
+				"true") + 
+				" ("+groupsize+")"
 		);
 		createIntervalSeries(seriesInt, trueMedians, dataset.getSeries(0));
 		this.trueMedianDataset = seriesInt;
 		intervalDataset.addSeries(seriesInt);
+		groupsize = groups.stream()
+				.filter(g -> g == 0)
+				.collect(Collectors.toList())
+				.size();
 		seriesInt = new YIntervalSeries(
-				this.grouper != null ?
+				(this.grouper != null ?
 				this.grouper.getGroupName(0) : 
-				"false"
+				"false") + 
+				" ("+groupsize+")"
 		);
 		createIntervalSeries(seriesInt, falseMedians, dataset.getSeries(1));
 		this.falseMedianDataset = seriesInt;
