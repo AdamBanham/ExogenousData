@@ -6,6 +6,8 @@ import java.awt.GridBagLayout;
 import java.awt.Insets;
 import java.awt.event.MouseEvent;
 import java.awt.event.MouseListener;
+import java.io.File;
+import java.nio.file.Path;
 
 import javax.swing.JButton;
 import javax.swing.JPanel;
@@ -16,6 +18,7 @@ import org.processmining.qut.exogenousaware.data.storage.ExogenousDiscoveryInves
 import org.processmining.qut.exogenousaware.gui.dot.ExoDotTransition;
 import org.processmining.qut.exogenousaware.gui.panels.ExogenousEnhancementAnalysis;
 import org.processmining.qut.exogenousaware.gui.panels.ExogenousEnhancementDotPanel;
+import org.processmining.qut.exogenousaware.gui.workers.EnhancementGraphExporter;
 
 import lombok.Builder;
 import lombok.Builder.Default;
@@ -39,6 +42,7 @@ public class ExogenousEnhancementTracablity {
 	@Default private ExogenousEnhancementAnalysis analysis = null;
 	@Default @Getter private JButton back = new JButton("back");
 	@Default @Getter private JButton right = new JButton("search");
+	@Default @Getter private JButton export = new JButton("export");
 	
 	
 	public ExogenousEnhancementTracablity setup() {
@@ -48,7 +52,7 @@ public class ExogenousEnhancementTracablity {
 //		configure constraints
 		this.c.fill = GridBagConstraints.BOTH;
 		this.c.gridheight = 1;
-		this.c.gridwidth = 2;
+		this.c.gridwidth = 3;
 		this.c.weightx = 1;
 		this.c.weighty = 0.4;
 		this.c.gridx = 0;
@@ -80,7 +84,7 @@ public class ExogenousEnhancementTracablity {
 //		add back button to investigator panel
 		this.c.fill = GridBagConstraints.NONE;
 		this.c.weighty = 0.1;
-		this.c.weightx = 0.5;
+		this.c.weightx = 0.70;
 		this.c.gridwidth = 1;
 		this.c.gridy++;
 		this.c.gridx = 0;
@@ -89,7 +93,14 @@ public class ExogenousEnhancementTracablity {
 		this.main.add(this.back, this.c);
 //		add button to go right ?
 		this.c.gridx++;
+		this.c.weightx = 0.15;
 		this.c.anchor = GridBagConstraints.FIRST_LINE_END;
+//		add export  button
+		this.export.setEnabled(true);
+		this.export.addMouseListener(new ExportListener(this, this.export));
+		this.main.add(this.export, this.c);
+		this.c.gridx++;
+//		add search button
 		this.right.setEnabled(true);
 		this.right.addMouseListener(new SearchListener(right, this.source));
 		this.main.add(this.right, this.c);
@@ -199,4 +210,51 @@ public class ExogenousEnhancementTracablity {
 		
 	}
 	
+	public class ExportListener implements MouseListener {
+
+		private ExogenousEnhancementTracablity source;
+		private JButton button;
+		private EnhancementGraphExporter worker;
+		
+		public ExportListener(ExogenousEnhancementTracablity source, JButton button) {
+			this.source = source;
+			this.button = button;
+		}
+				
+		public void mouseClicked(MouseEvent e) {
+//			create worker to start building out export dumps
+			Path dirPath = new File("C:\\Users\\n7176546\\OneDrive - Queensland University of Technology\\Desktop\\narratives\\dump_temp").toPath();
+			worker = EnhancementGraphExporter.builder()
+					.gui(source)
+					.datacontroller(this.source.analysis)
+					.dirPath(dirPath)
+					.build();
+			worker.execute();
+			this.button.setEnabled(false);
+			this.button.setText("Exporting...");
+			this.source.back.setEnabled(false);
+			this.source.right.setEnabled(false);
+		}
+
+		public void mousePressed(MouseEvent e) {
+			// TODO Auto-generated method stub
+			
+		}
+
+		public void mouseReleased(MouseEvent e) {
+			// TODO Auto-generated method stub
+			
+		}
+
+		public void mouseEntered(MouseEvent e) {
+			// TODO Auto-generated method stub
+			
+		}
+
+		public void mouseExited(MouseEvent e) {
+			// TODO Auto-generated method stub
+			
+		}
+		
+	}
 }
