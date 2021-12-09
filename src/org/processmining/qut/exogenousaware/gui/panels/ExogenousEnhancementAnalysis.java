@@ -67,8 +67,10 @@ public class ExogenousEnhancementAnalysis {
 			.transformedAttributeName("exogenous:blood_test:FOS:transform:POT")
 			.value(1.0)
 			.build();
+	@Default private ExogenousObserverGrouper selectedGrouper = null;
 	
 	public ExogenousEnhancementAnalysis setup() {
+		this.selectedGrouper = sepsisInfectionGrouper;
 //		link main and scroll
 		this.scroll.setViewportView(this.main);
 		this.scroll.setBorder(BorderFactory.createEmptyBorder());
@@ -188,7 +190,7 @@ public class ExogenousEnhancementAnalysis {
 				.focus(this.focus)
 				.progress(this.progress)
 				.label(this.progressLabel)
-				.grouper(this.bloodCultureGrouper)
+				.grouper(this.selectedGrouper)
 				.build()
 				.setup();
 			this.task.addPropertyChangeListener(new ObservedListener(this));
@@ -219,7 +221,7 @@ public class ExogenousEnhancementAnalysis {
 						.guardExpression(this.focus.getGuardExpression())
 						.transName(this.focus.getTransLabel())
 						.useGroups(true)
-						.grouper(this.bloodCultureGrouper)
+						.grouper(this.selectedGrouper)
 						.groups(this.task.getSeriesGroups().get(entry.getKey()))
 						.build()
 						.setup();
