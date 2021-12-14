@@ -64,7 +64,15 @@ public class EnhancementGraphSearchRankedList extends SwingWorker<List<RankedLis
 	private class wilcoxonSorter implements Comparator<RankedListItem>{
 
 		public int compare(RankedListItem o1, RankedListItem o2) {
-			return Double.compare(o1.getWilcoxonP(), o2.getWilcoxonP());
+			if (!o1.rankable() && !o2.rankable()) {
+				return 0;
+			} else if (!o1.rankable()) {
+				return 1;
+			} else if (!o2.rankable()) {
+				return -1;
+			} else {
+				return Double.compare(o1.getWilcoxonP(), o2.getWilcoxonP());
+			}
 		}
 	
 	}
@@ -73,7 +81,15 @@ public class EnhancementGraphSearchRankedList extends SwingWorker<List<RankedLis
 	private class distanceSorter implements Comparator<RankedListItem>{
 
 		public int compare(RankedListItem o1, RankedListItem o2) {
-			return Double.compare(o1.getRankDistance(), o2.getRankDistance()) * -1;
+			if (!o1.rankable() && !o2.rankable()) {
+				return 0;
+			} else if (!o1.rankable()) {
+				return 1;
+			} else if (!o2.rankable()) {
+				return -1;
+			} else {
+				return Double.compare(o1.getRankDistance(), o2.getRankDistance()) * -1;
+			}
 		}
 		
 	}
