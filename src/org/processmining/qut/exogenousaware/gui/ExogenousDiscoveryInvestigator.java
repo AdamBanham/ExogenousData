@@ -113,7 +113,8 @@ public class ExogenousDiscoveryInvestigator extends JPanel{
 		CostBasedCompleteParam parameters = new CostBasedCompleteParam(
 				logInfo.getEventClasses().getClasses(), mapping.getDummyEventClass(),  net.getTransitions(), 1, 1
 		);
-		parameters.setGUIMode(false);
+		parameters.setGUIMode(true);
+		parameters.setUsePartialOrderedEvents(true);
 		parameters.setCreateConn(false);
 		parameters.setInitialMarking(this.controlflow.getInitialMarking());
 		parameters.setFinalMarkings(this.controlflow.getFinalMarkings());
