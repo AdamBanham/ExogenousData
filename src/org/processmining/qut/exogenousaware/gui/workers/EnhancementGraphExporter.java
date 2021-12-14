@@ -72,7 +72,7 @@ public class EnhancementGraphExporter extends SwingWorker<Boolean, Integer> {
 					System.out.println("[EnhancementGraphExporter] creating graph="+filename);
 					File f = new File(filename);
 					f.createNewFile();
-					ChartUtils.saveChartAsPNG(f, grapher.getGraph().getChart(), 1800, 1200);
+					ChartUtils.saveChartAsPNG(f, grapher.getGraph().getChart(), 3600, 1200);
 				}
 			} catch (InterruptedException e) {
 				// TODO Auto-generated catch block
