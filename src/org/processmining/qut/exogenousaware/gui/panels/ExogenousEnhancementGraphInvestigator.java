@@ -36,6 +36,7 @@ import org.processmining.qut.exogenousaware.gui.dot.DotGraphVisualisation;
 import org.processmining.qut.exogenousaware.gui.dot.ExoDotTransition;
 import org.processmining.qut.exogenousaware.gui.workers.EnhancementGraphSearchRankedList;
 import org.processmining.qut.exogenousaware.gui.workers.EnhancementMedianGraph;
+import org.processmining.qut.exogenousaware.gui.workers.EnhancementRankExporter;
 import org.processmining.qut.exogenousaware.ml.clustering.distance.DynamicTimeWarpingDistancer;
 import org.processmining.qut.exogenousaware.ml.data.FeatureVector;
 import org.processmining.qut.exogenousaware.ml.data.FeatureVectorImpl;
@@ -58,7 +59,8 @@ public class ExogenousEnhancementGraphInvestigator {
 	
 	@Default @Getter private JPanel main = new JPanel();
 	@Default private GridBagConstraints c = new GridBagConstraints();
-	@Default private JButton back = new JButton("back");
+	@Default @Getter private JButton back = new JButton("back");
+	@Default @Getter private JButton export = new JButton("export");
 	@Default private JPanel modelPanel = new JPanel();
 	@Default private JPanel graphPanel = new JPanel();
 	@Default private JPanel rankingPanel = new JPanel();
@@ -112,6 +114,10 @@ public class ExogenousEnhancementGraphInvestigator {
 		c.weightx = 0.0;
 		c.weighty = 0.0;
 		main.add(back, c);
+		// add export button, of RHS of screen space.
+		c.gridx++;
+		c.anchor = GridBagConstraints.FIRST_LINE_END;
+		main.add(export,c);
 		main.validate();
 		return this;
 	}
@@ -119,6 +125,7 @@ public class ExogenousEnhancementGraphInvestigator {
 	
 	
 	public void createPanels() {
+		progressLabel.setForeground(Color.WHITE);
 		// setup progress panel
 		progressPanel.setLayout(new BorderLayout());
 		progressPanel.setBorder(BorderFactory.createLineBorder(Color.GRAY));
@@ -156,8 +163,11 @@ public class ExogenousEnhancementGraphInvestigator {
 //				currentGraphController
 //		);
 		graphPanel.validate();
-		// add mouse listener to back button
+// 		add mouse listener to back button
 		back.addMouseListener(new BackListener(back, controller));
+//		add export listener to export button
+		export.addMouseListener(new ExportListener(this));
+		export.setEnabled(false);
 	}
 	
 	private void swapGraphController(RankedListItem cont) {
@@ -172,7 +182,7 @@ public class ExogenousEnhancementGraphInvestigator {
 		graphPanel.validate();
 	}
 	
-	private void changeToRankedList() {
+	public void changeToRankedList() {
 		createRankPanel();
 		c.gridwidth = 1;
 		c.weightx = 0.3;
@@ -182,6 +192,19 @@ public class ExogenousEnhancementGraphInvestigator {
 		c.fill = GridBagConstraints.BOTH;
 		main.remove(progressPanel);
 		main.add(rankingPanel, c);
+		this.export.setEnabled(true);
+		main.validate();
+	}
+	
+	public void changeToProgress() {
+		c.gridwidth = 1;
+		c.weightx = 0.3;
+		c.gridx = 2;
+		c.gridy = 1;
+		c.anchor = GridBagConstraints.LINE_START;
+		c.fill = GridBagConstraints.BOTH;
+		main.remove(rankingPanel);
+		main.add(progressPanel,c);
 		main.validate();
 	}
 	
@@ -317,7 +340,7 @@ public class ExogenousEnhancementGraphInvestigator {
 		@Default @Getter @Setter private int wrank = 1;
 		
 		@Default private List<Integer> common = new ArrayList();
-		@Default private int commonLength = -1;
+		@Default @Getter private int commonLength = -1;
 		@Default @Getter private double wilcoxonP = Double.MAX_VALUE;
 		
 		public RankedListItem rank() {
@@ -492,6 +515,7 @@ public class ExogenousEnhancementGraphInvestigator {
 				if(evt.getNewValue().equals(SwingWorker.StateValue.DONE)) {
 //					System.out.println("work is done");
 					this.source.changeToRankedList();
+					
 				}
 			}
 		}
@@ -576,5 +600,54 @@ public class ExogenousEnhancementGraphInvestigator {
 			// TODO Auto-generated method stub
 			
 		}
+	}
+
+	private class ExportListener implements MouseListener {
+
+		private ExogenousEnhancementGraphInvestigator gui;
+		private JButton button;
+		
+		public ExportListener(ExogenousEnhancementGraphInvestigator gui) {
+			this.gui = gui;
+			this.button = this.gui.export;
+		}
+		
+		public void mouseClicked(MouseEvent e) {
+			if (this.button.isEnabled()) {
+//				create worker and move to progress panel
+				progressLabel.setText("Exporting graphs in ranked order...");
+				this.gui.changeToProgress();
+				EnhancementRankExporter.builder()
+					.gui(gui)
+					.ranks(gui.rankerWorker.getOutcome())
+					.progress(gui.progresser)
+					.build()
+					.execute();
+				this.button.setEnabled(false);
+				this.gui.getBack().setEnabled(false);
+			}
+			
+		}
+
+		public void mousePressed(MouseEvent e) {
+			// TODO Auto-generated method stub
+			
+		}
+
+		public void mouseReleased(MouseEvent e) {
+			// TODO Auto-generated method stub
+			
+		}
+
+		public void mouseEntered(MouseEvent e) {
+			// TODO Auto-generated method stub
+			
+		}
+
+		public void mouseExited(MouseEvent e) {
+			// TODO Auto-generated method stub
+			
+		}
+		
 	}
 }
