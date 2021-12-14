@@ -45,13 +45,13 @@ public class EnhancementExogenousDatasetGraphController extends JPanel {
 	@NonNull XYSeriesCollection universe;
 	@NonNull List<Map<String,Object>> states;
 	@NonNull List<Map<String,Object>> seriesStates;
-	@NonNull String datasetName;
+	@NonNull @Getter String datasetName;
 	@NonNull Boolean hasExpression;
-	@NonNull String transName;
+	@NonNull @Getter String transName;
 	
-	@Default boolean useGroups = false;
-	@Default List<Integer> groups = null;
-	@Default ExogenousObserverGrouper grouper = null;
+	@Default @Getter boolean useGroups = false;
+	@Default @Getter List<Integer> groups = null;
+	@Default @Getter ExogenousObserverGrouper grouper = null;
 	@Default GuardExpressionHandler guardExpression = null;
 	@Default GridBagLayout layout = new GridBagLayout();
 	@Default GridBagConstraints layoutcc = new GridBagConstraints();
