@@ -14,6 +14,8 @@ import javax.swing.JSpinner;
 import javax.swing.SpinnerModel;
 import javax.swing.SpinnerNumberModel;
 
+import org.processmining.qut.exogenousaware.steps.slicing.Slicer;
+
 import lombok.Builder;
 import lombok.Builder.Default;
 import lombok.Singular;
@@ -82,6 +84,10 @@ public class DialogSlicerSelector extends JPanel {
 		add(remove, c);
 		this.validate();
 		return this;
+	}
+	
+	public Slicer makeSlicer() {
+		return null;
 	}
 	
 	private enum SlicerChoices {
