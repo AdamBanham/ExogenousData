@@ -11,6 +11,7 @@ import java.util.Optional;
 import java.util.Set;
 import java.util.stream.Collectors;
 
+import org.deckfour.uitopia.api.event.TaskListener.InteractionResult;
 import org.deckfour.xes.classification.XEventClassifier;
 import org.deckfour.xes.extension.XExtension;
 import org.deckfour.xes.factory.XFactoryNaiveImpl;
@@ -28,7 +29,9 @@ import org.processmining.framework.plugin.Progress;
 import org.processmining.qut.exogenousaware.exceptions.LinkNotFoundException;
 import org.processmining.qut.exogenousaware.steps.Slicing;
 import org.processmining.qut.exogenousaware.steps.Transforming;
+import org.processmining.qut.exogenousaware.steps.slicing.data.SlicingConfiguration;
 import org.processmining.qut.exogenousaware.steps.slicing.data.SubSeries;
+import org.processmining.qut.exogenousaware.steps.slicing.gui.SlicingConfigurationDialog;
 import org.processmining.qut.exogenousaware.steps.transform.data.TransformedAttribute;
 
 import lombok.AllArgsConstructor;
@@ -63,6 +66,11 @@ public class ExogenousAnnotatedLog implements XLog {
 	@Default XLog exoSubseries = null;
 	@NonNull Boolean parsed;
 	
+//	configuration setup for exogenous aware log
+	@Default @Getter private SlicingConfiguration slicingConfig = null; 
+	
+	
+	
 	/**
 	 * Creates an identical copy of this element.
 	 * 
@@ -80,11 +88,29 @@ public class ExogenousAnnotatedLog implements XLog {
 				this.extensions,
 				this.linkedSubseries,
 				this.exoSubseries,
-				false
+				false,
+				this.slicingConfig
 		);
 	}
 	
+	private void handleConfigurationSetup(UIPluginContext context) {
+//		TODO #2 ask for user setup if no configuration is given
+		if (slicingConfig == null) {
+			SlicingConfigurationDialog sdialog = SlicingConfigurationDialog.builder()
+					.datasets(exogenousDatasets)
+					.build()
+					.setup();
+			context.showWizard("Create your slicing configuration", true, false, sdialog);
+			InteractionResult result = context.showWizard("Create your transforming configuration", false, true, sdialog);
+			if (result == InteractionResult.FINISHED) {
+				this.slicingConfig = sdialog.generateConfig();
+			}
+		}
+	}
+	
 	public ExogenousAnnotatedLog setup(UIPluginContext context) {
+//		check that configuration is setup
+		handleConfigurationSetup(context);
 		if (!this.parsed) {
 			this.exoSubseries = new XFactoryNaiveImpl().createLog();
 //			#1 for each endogenous trace, search each exogenous dataset for linked signals
@@ -154,6 +180,7 @@ public class ExogenousAnnotatedLog implements XLog {
 //			#2 perform slicing and annotate subseries on each event 
 			Map<String, Map<String, List<SubSeries>>> subseries;
 			try {
+//				TODO #1 handle to slicing configuration
 				subseries = Slicing.naiveEventSlicing(endo, linked, elog);
 			} catch (UnsupportedOperationException err) {
 				System.out.println(
