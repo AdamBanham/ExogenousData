@@ -77,4 +77,17 @@ public class ExogenousDataset {
 		return linker.link(trace, source);
 	}
 	
+	public String getName() {
+		String name = "Exogenous Data Set";
+		if (this.source.getAttributes().containsKey("concept:name")) {
+			name = this.source.getAttributes().get("concept:name").toString();
+		}
+		return name;
+	}
+	
+	@Override
+	public String toString() {
+		return getName() + "(" + this.dataType.getLabel() + ")";
+	}
+	
 }
