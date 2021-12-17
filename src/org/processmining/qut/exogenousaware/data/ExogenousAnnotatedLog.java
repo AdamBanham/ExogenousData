@@ -67,6 +67,7 @@ public class ExogenousAnnotatedLog implements XLog {
 	@NonNull Boolean parsed;
 	
 //	configuration setup for exogenous aware log
+	@Default private Boolean useDefaultConfiguration = false;
 	@Default @Getter private SlicingConfiguration slicingConfig = null; 
 	
 	
@@ -88,6 +89,7 @@ public class ExogenousAnnotatedLog implements XLog {
 				this.extensions,
 				this.linkedSubseries,
 				this.exoSubseries,
+				false,
 				false,
 				this.slicingConfig
 		);
@@ -181,7 +183,11 @@ public class ExogenousAnnotatedLog implements XLog {
 			Map<String, Map<String, List<SubSeries>>> subseries;
 			try {
 //				TODO #1 handle to slicing configuration
-				subseries = Slicing.naiveEventSlicing(endo, linked, elog);
+				if (this.useDefaultConfiguration) {
+					subseries = Slicing.naiveEventSlicing(endo, linked, elog);
+				} else {
+					subseries = this.slicingConfig.slice(endo, linked, elog);
+				}
 			} catch (UnsupportedOperationException err) {
 				System.out.println(
 						"For endogenous trace ("
