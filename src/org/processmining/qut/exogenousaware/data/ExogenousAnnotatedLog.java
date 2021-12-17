@@ -183,7 +183,7 @@ public class ExogenousAnnotatedLog implements XLog {
 			Map<String, Map<String, List<SubSeries>>> subseries;
 			try {
 //				TODO #1 handle to slicing configuration
-				if (this.useDefaultConfiguration) {
+				if (this.useDefaultConfiguration || this.slicingConfig == null) {
 					subseries = Slicing.naiveEventSlicing(endo, linked, elog);
 				} else {
 					subseries = this.slicingConfig.slice(endo, linked, elog);
