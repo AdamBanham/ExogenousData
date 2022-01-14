@@ -177,6 +177,7 @@ public class ExogenousInvestigatorDotPanel  {
 			curr.addAll(next.stream().sorted(Comparator.comparing(PetrinetNode::getLabel)).collect(Collectors.toList()));
 			curr.addAll(nextEdges);
 		}
+		System.out.println(update.toString());
 		return update;
 	}
 	
@@ -477,10 +478,19 @@ public class ExogenousInvestigatorDotPanel  {
 		String formattedlabel = String.format(labelFortmat, 
 				label.toLowerCase().contains("tau ") ? "BLACK" : "WHITE",
 				label.toLowerCase().contains("tau ") ? "WHITE" : "BLACK",
-				label.toLowerCase().contains("tau ") ? "&tau;" : label
+				label.toLowerCase().contains("tau ") ? "&tau;" : handleLabelString(label)
 		);
 		formattedlabel = formattedlabel + end;
 		return new ExoDotNode(formattedlabel, panel, label);
+	}
+	
+	public String handleLabelString(String label) {
+		return label
+				.replace("@", "-")
+				.replace("[", "")
+				.replace("]", "")
+				.replace("<", "")
+				.replace(">", "");
 	}
 	
 	public ExoDotPlace buildPlaceNode(String label) {
