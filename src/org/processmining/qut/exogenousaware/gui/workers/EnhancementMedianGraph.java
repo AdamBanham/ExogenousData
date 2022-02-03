@@ -385,6 +385,14 @@ public class EnhancementMedianGraph extends SwingWorker<JPanel, String> {
 	@Override
     protected void done() {
 		this.progress.setVisible(false);
+		if (this.graph == null) {
+			System.out.println("[EnhancementMedianGraph] ERROR :: '"+title+"' :: Unable to make graph.");
+			return;
+		}
+		if (this.main == null) {
+			System.out.println("[EnhancementMedianGraph] ERROR :: '"+title+"' :: Parent panel dereferenced??? cannot add chart panel.");
+			return;
+		}
 		this.main.add(this.graph, BorderLayout.CENTER);
 	}
 
@@ -393,7 +401,8 @@ public class EnhancementMedianGraph extends SwingWorker<JPanel, String> {
 		try {
 			work = this.make();
 		} catch (Exception e) {
-			System.out.println("["+title+"] failed to do work :: "+e.getLocalizedMessage());
+			System.out.println("["+title+"] failed to do work :: "+e.getCause().getMessage());
+			e.getCause().printStackTrace();
 			e.printStackTrace();
 		}
 		return work;
