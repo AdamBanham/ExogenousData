@@ -177,7 +177,6 @@ public class ExogenousInvestigatorDotPanel  {
 			curr.addAll(next.stream().sorted(Comparator.comparing(PetrinetNode::getLabel)).collect(Collectors.toList()));
 			curr.addAll(nextEdges);
 		}
-		System.out.println(update.toString());
 		return update;
 	}
 	
