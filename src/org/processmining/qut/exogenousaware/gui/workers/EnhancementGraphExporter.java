@@ -31,7 +31,7 @@ public class EnhancementGraphExporter extends SwingWorker<Boolean, Integer> {
 	@NonNull private ExogenousEnhancementAnalysis datacontroller;
 	@NonNull private Path dirPath;
 	
-	protected Boolean doInBackground() throws Exception {
+	private boolean work() {
 //		loop through all transitions on controlflow model
 		List<ExoDotTransition> trans = walkGraph();
 		int transCounter = 1;
@@ -48,9 +48,14 @@ public class EnhancementGraphExporter extends SwingWorker<Boolean, Integer> {
 //			wait for graphs to be ready
 			Boolean waiting = true;
 			while (waiting) {
+				try {
+					Thread.sleep(1500);
+				} catch (InterruptedException e) {
+					// TODO Auto-generated catch block
+					e.printStackTrace();
+				}
 				if (datacontroller.getCacheUniverse().containsKey(tran)) {
 					waiting = false;
-					Thread.sleep(250);
 				}
 			}
 			System.out.println("[EnhancementGraphExporter]-"+transCounter+" graphs built");
@@ -60,26 +65,34 @@ public class EnhancementGraphExporter extends SwingWorker<Boolean, Integer> {
 			
 			try {
 				for(String graphkey: graphkeys) {
+					if (!this.datacontroller.getExoCharts().containsKey(graphkey)) {
+						System.out.println("[EnhancementGraphExporter] cannot find graphkey="+graphkey+ " in controller, moving on...");
+						continue;
+					}
 					EnhancementExogenousDatasetGraphController graphcontroller = (EnhancementExogenousDatasetGraphController) this.datacontroller.getExoCharts().get(graphkey);
 					EnhancementMedianGraph grapher = (EnhancementMedianGraph) graphcontroller.getCachedGraphs().get("Median-S");
-					while (!grapher.isDone()) {
+					
+					if (!grapher.isDone()) {
 						grapher.execute();
-						Thread.sleep(250);
 					}
+					while (!grapher.isDone()) {
+							Thread.sleep(1500);
+					}					
+					
 					String filename = tran.getTransLabel()+"__"+ grapher.getTitle();
 					filename = filename.replace("-", "_").replace(":", "_").replace("/", "").replace(" ", "_");
 					filename = this.dirPath.toAbsolutePath() + File.separator + filename +".png";
 					System.out.println("[EnhancementGraphExporter] creating graph="+filename);
 					File f = new File(filename);
 					f.createNewFile();
-					ChartUtils.saveChartAsPNG(f, grapher.getGraph().getChart(), 3600, 1200);
+					ChartUtils.saveChartAsPNG(f, grapher.getGraph().getChart(), 1800, 600);
 				}
-			} catch (InterruptedException e) {
-				// TODO Auto-generated catch block
-				e.printStackTrace();
 			} catch (IOException e) {
-				// TODO Auto-generated catch block
-				e.printStackTrace();
+				System.out.println("[EnhancementGraphExporter] Graph Exporter ran into IO exception from writing chart");
+				e.getCause().printStackTrace();
+			} catch (Exception e) {
+				System.out.println("[EnhancementGraphExporter] Graph Exporter had unexpected error");
+				e.getCause().printStackTrace();
 			}
 //			number exports sequentially 
 			transCounter++;
@@ -87,6 +100,18 @@ public class EnhancementGraphExporter extends SwingWorker<Boolean, Integer> {
 //		if all exports work return true, else return false
 		System.out.println("[EnhancementGraphExporter] finished exporting to "+this.dirPath.toString());
 		return true;
+	}
+	
+	protected Boolean doInBackground() throws Exception {
+		boolean result = false;
+		try {
+			result = work();
+		} catch (Exception e) {
+			System.out.println("[EnhancementGraphExporter] ERROR :: failed to complete work.");
+			e.getCause().printStackTrace();
+			e.printStackTrace();
+		}
+		return result;
 	}
 	
 	private List<ExoDotTransition> walkGraph(){
