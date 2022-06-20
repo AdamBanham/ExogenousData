@@ -1,6 +1,7 @@
 package org.processmining.qut.exogenousaware.gui;
 
 
+import java.awt.BasicStroke;
 import java.awt.Color;
 import java.awt.Dimension;
 import java.awt.Font;
@@ -232,8 +233,9 @@ public class ExogenousTraceView extends JPanel {
 				
 				)
 				.collect(Collectors.toSet());
+		exoTraceBuilder builder = new exoTraceBuilder(evKeySet);
 		ProMTraceList<XTrace> traceView = new ProMTraceList<XTrace>(
-				new exoTraceBuilder(evKeySet)
+				builder
 		);
 		traceView.addAll(this.source.getEndogenousLog());
 		traceView.addTraceClickListener(
@@ -264,14 +266,21 @@ public class ExogenousTraceView extends JPanel {
 		if (this.traceOverviewChart != null) {
 			if (!this.lastEventSliceHiglighted) {
 				this.traceOverviewChart.getChart().getXYPlot().getRenderer(0).setSeriesPaint(eventIndex, Color.orange);
+				this.traceOverviewChart.getChart().getXYPlot().getRenderer(0).setSeriesStroke(eventIndex, new BasicStroke(5));
 				this.traceOverviewChart.validate();
 				this.lastEventSliceHiglighted = true;
 				this.lastEventSliceTouched = eventIndex;
 			} else {
 				this.traceOverviewChart.getChart().getXYPlot().getRenderer(0).setSeriesPaint(this.lastEventSliceTouched, new Color(0F, 0F, 0F, 0.33F));
-				this.traceOverviewChart.getChart().getXYPlot().getRenderer(0).setSeriesPaint(eventIndex, Color.orange);
+				this.traceOverviewChart.getChart().getXYPlot().getRenderer(0).setSeriesStroke(this.lastEventSliceTouched, new BasicStroke(1));
+				if (eventIndex != this.lastEventSliceTouched) {
+					this.traceOverviewChart.getChart().getXYPlot().getRenderer(0).setSeriesPaint(eventIndex, Color.orange);
+					this.traceOverviewChart.getChart().getXYPlot().getRenderer(0).setSeriesStroke(eventIndex, new BasicStroke(5));
+					this.lastEventSliceHiglighted = true;
+				} else {
+					this.lastEventSliceHiglighted = false;
+				}
 				this.traceOverviewChart.validate();
-				this.lastEventSliceHiglighted = true;
 				this.lastEventSliceTouched = eventIndex;
 			}
 		}
@@ -330,7 +339,13 @@ public class ExogenousTraceView extends JPanel {
 	}
 	
 	public void updateTraceBreakdownEvent(XEvent ev) {
-		this.traceBreakdownView.setViewportView(this.buildIndividualEventBreakdown(ev));
+		if (ev != null) {
+			this.traceBreakdownView.setViewportView(this.buildIndividualEventBreakdown(ev));
+		} else {
+			JPanel p = new JPanel();
+			stylePanel(p);
+			this.traceBreakdownView.setViewportView(p);
+		}
 		this.traceBreakdownView.validate();
 		this.traceBreakdownView.getParent().validate();
 		this.rightTopBottom.validate();
@@ -387,6 +402,8 @@ public class ExogenousTraceView extends JPanel {
 	public static class exoTraceBuilder implements TraceBuilder<XTrace> {
 
 		private Set<String> exoEvents;
+		private boolean highlight = false;
+		private int eventid = -1;
 		
 		public exoTraceBuilder(Set<String> exoEvents) {
 			this.exoEvents = exoEvents;
@@ -400,10 +417,28 @@ public class ExogenousTraceView extends JPanel {
 			if (element.getAttributes().keySet().contains("exogenous:exist")) {
 				hasExo = ((XAttributeLiteralImpl) element.getAttributes().get("exogenous:exist") ).getValue().contentEquals("True");
 			}
-			return new exoTrace(element, 
-					hasExo,
-					exoEvents
-			);
+			if (this.highlight) {
+				return new exoTrace(element, 
+						hasExo,
+						exoEvents,
+						this.eventid
+				);
+			} else {
+				return new exoTrace(element, 
+						hasExo,
+						exoEvents
+				);
+			}
+		}
+		
+		public void setHighlight(int eventid) {
+			this.highlight = true;
+			this.eventid = eventid;
+		}
+		
+		public void dehighlight() {
+			this.highlight = false;
+			this.eventid = -1;
 		}
 		
 		
@@ -412,11 +447,17 @@ public class ExogenousTraceView extends JPanel {
 			private XTrace source;
 			private Boolean hasExo;
 			private Set<String> exoEvents;
+			private int highlightevent = -1;
 			
 			public exoTrace(XTrace source, Boolean hasExo, Set<String> exoEvents) {
+				this(source,hasExo,exoEvents,-1);
+			}
+			
+			public exoTrace(XTrace source, Boolean hasExo, Set<String> exoEvents, int highlightevent) {
 				this.source = source;
 				this.hasExo = hasExo;
 				this.exoEvents = exoEvents;
+				this.highlightevent = highlightevent;
 			}
 			
 			@Override
@@ -425,7 +466,8 @@ public class ExogenousTraceView extends JPanel {
 				List<String> evSet = this.source.stream().map(ev -> ev.getID().toString()).collect(Collectors.toList());
 				return new exoIterator(
 						this.source.iterator(), 
-						this.hasExo ? this.exoEvents.stream().filter(s -> evSet.contains(s)).collect(Collectors.toSet()) : new HashSet<String>() 
+						this.hasExo ? this.exoEvents.stream().filter(s -> evSet.contains(s)).collect(Collectors.toSet()) : new HashSet<String>(), 
+						this.highlightevent
 						);
 			}
 
@@ -463,10 +505,13 @@ public class ExogenousTraceView extends JPanel {
 
 			Iterator<XEvent> source;
 			private Set<String> exoEvents;
+			private int highlightevent = -1;
+			private int counter = -1;
 			
-			public exoIterator(Iterator<XEvent> source, Set<String> exoEvents) {
+			public exoIterator(Iterator<XEvent> source, Set<String> exoEvents, int highlightevent) {
 				this.source = source;
 				this.exoEvents = exoEvents;
+				this.highlightevent = highlightevent;
 			}
 			
 			@Override
@@ -478,10 +523,13 @@ public class ExogenousTraceView extends JPanel {
 			@Override
 			public Event next() {
 				// TODO Auto-generated method stub
+				this.counter++;
 				XEvent ev = this.source.next();
 				return new exoEvent(
 						ev,
-						ev.getAttributes().keySet().stream().anyMatch(s -> s.contains("exogenous:dataset"))
+						counter,
+						ev.getAttributes().keySet().stream().anyMatch(s -> s.contains("exogenous:dataset")),
+						this.counter == this.highlightevent
 						);
 			}
 			
@@ -490,17 +538,31 @@ public class ExogenousTraceView extends JPanel {
 		public static class exoEvent implements Event {
 			
 			private XEvent source;
-			private Boolean hasExo;
+			private boolean hasExo;
+			private boolean highlight;
+			public int eventID;
 			
-			public exoEvent(XEvent source, Boolean hasExo) {
-				this.source = source;
-				this.hasExo = hasExo;
+			public exoEvent(XEvent source, int eventID, boolean hasExo) {
+				this(source, eventID, hasExo, false);
 			}
 			
-
+			public exoEvent(XEvent source, int eventID, boolean hasExo, boolean highlight) {
+				this.source = source;
+				this.hasExo = hasExo;
+				this.highlight = highlight;
+				this.eventID = eventID;
+			}
+			
+			public void setHighlight(boolean highlight) {
+				this.highlight = highlight;
+			}
+			
 			@Override
 			public Color getWedgeColor() {
-				if (this.hasExo) {
+				if (this.highlight) {
+					return Color.orange;
+				}
+				else if (this.hasExo) {
 					return new Color(65,150,98);
 				} else {
 					return Color.red;

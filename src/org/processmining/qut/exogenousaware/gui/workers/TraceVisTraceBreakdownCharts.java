@@ -13,6 +13,7 @@ import javax.swing.JLabel;
 import javax.swing.JPanel;
 import javax.swing.JProgressBar;
 import javax.swing.JScrollPane;
+import javax.swing.ScrollPaneConstants;
 import javax.swing.SwingWorker;
 
 import org.deckfour.xes.model.XEvent;
@@ -80,16 +81,20 @@ public class TraceVisTraceBreakdownCharts extends SwingWorker<JPanel, String> {
 		evKeySet = evKeySet.stream()
 				.filter(s -> this.source.getSource().getLinkedSubseries().get(s).keySet().size() > 0)
 				.collect(Collectors.toSet());
+		exoTraceBuilder builder = new exoTraceBuilder(evKeySet);
 		ProMTraceList<XTrace> traceController = new ProMTraceList<XTrace>(
-				new exoTraceBuilder(evKeySet)
+				builder
 		);
 //		add selected trace and setup listener on wedge click
 		traceController.add(endo);
-		traceController.addTraceClickListener(TraceBreakdownEventListener.builder().source(this.source).build());
+		traceController.addTraceClickListener(TraceBreakdownEventListener.builder().source(this.source).builder(builder).controller(traceController).build());
 //		set size of controller
-		traceController.setMaximumSize(new Dimension(2000,115));
-		traceController.setMinimumSize(new Dimension(800,115));
-		traceController.setPreferredSize(new Dimension(1200,115));
+		traceController.setMaximumSize(new Dimension(2000,85));
+		traceController.setMinimumSize(new Dimension(800,85));
+		traceController.setPreferredSize(new Dimension(1200,85));
+		traceController.getScrollPane().getHorizontalScrollBar().setBackground(Color.LIGHT_GRAY);
+		traceController.getScrollPane().getHorizontalScrollBar().setForeground(Color.gray);
+		traceController.getScrollPane().setVerticalScrollBarPolicy(ScrollPaneConstants.VERTICAL_SCROLLBAR_NEVER);
 		bottomLeft.add(traceController, c);
 		c.gridy++;
 		c.weighty = 1.0;
