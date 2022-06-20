@@ -29,7 +29,9 @@ public class PossibleOutcomeTransformer implements Transformer {
 
 	@NonNull Object Outcome; 
 	
+	
 	@Default private String transformName = "POT";
+	@Default private long dayMs = 1000 * 60 * 60 * 24; 
 	
 	public TransformedAttribute transform(SubSeries subtimeseries) {		
 		double outcomeFound = -1.0;
@@ -48,22 +50,28 @@ public class PossibleOutcomeTransformer implements Transformer {
 		List<XEvent> datapoints = subtimeseries.getSubEvents();
 		Optional<XEvent> left = datapoints.stream()
 				.filter(e -> getEventTimeMillis(e) < eventTime)
-				.reduce((c,n) -> { 
+				.filter(e -> e.equals(this.Outcome))
+				.reduce( (c,n) -> {
 					if (getEventTimeMillis(c) < getEventTimeMillis(n)) {
 						return n;
-					} else {
-						return c;
 					}
+					return c;
 				});
 //		get all rightside data points
 		List<XEvent> right = datapoints.stream()
 				.filter(e -> getEventTimeMillis(e) >= eventTime)
 				.collect(Collectors.toList());
-		if (left.isPresent()) {
-			right.add(left.get());
-		}
+		
 //		check for outcome
 		Boolean outcomeSeen = false;
+//		check that the left outcome is within 7 days of current 
+		if (left.isPresent()) {
+			long leftMs = getEventTimeMillis(left.get());
+			if (Math.abs(leftMs - eventTime) < dayMs * 7) {
+				outcomeSeen = true;
+			}
+		}
+//		check right for an outcome
 		for(XEvent ev: right) {
 			Object value = getExogenousValue(ev);
 			outcomeSeen = outcomeSeen || this.Outcome.equals(value);

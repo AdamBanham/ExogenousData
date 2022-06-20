@@ -59,9 +59,14 @@ public class EnhancementRankExporter extends SwingWorker<Boolean, Integer> {
 	
 	private String saveMedianChart(RankedListItem item, String dumpFolder) throws InterruptedException, IOException {
 		EnhancementMedianGraph grapher = (EnhancementMedianGraph) item.getController().getCachedGraphs().get("Median-S");
+		try {
 		while (!grapher.isDone()) {
 			grapher.execute();
-			Thread.sleep(250);
+			Thread.sleep(1500);
+		}
+		} catch (Exception e) {
+			System.out.println("[EnhancementRankExporter] ERROR :: unable to make graph.");
+			return "failed";
 		}
 		String chartFilenameFormat = "r%04d_d%.6f_p%.6f_%s.png";
 		int rank = item.getRank();
@@ -74,7 +79,7 @@ public class EnhancementRankExporter extends SwingWorker<Boolean, Integer> {
 				String.format(chartFilenameFormat, rank, distance, wilcoxon, name)
 		);
 		f.createNewFile();
-		ChartUtils.saveChartAsPNG(f, grapher.getGraph().getChart(), 3600, 1200);
+		ChartUtils.saveChartAsPNG(f, grapher.getGraph().getChart(), 1800, 600);
 		return f.getName();
 	}
 	
