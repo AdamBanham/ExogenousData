@@ -19,6 +19,7 @@ import javax.swing.JComponent;
 import javax.swing.JLabel;
 import javax.swing.JPanel;
 import javax.swing.JProgressBar;
+import javax.swing.JScrollBar;
 import javax.swing.JScrollPane;
 import javax.swing.SwingConstants;
 
@@ -31,6 +32,7 @@ import org.processmining.contexts.uitopia.UIPluginContext;
 import org.processmining.contexts.uitopia.annotations.Visualizer;
 import org.processmining.framework.plugin.annotations.Plugin;
 import org.processmining.framework.plugin.annotations.PluginLevel;
+import org.processmining.framework.util.ui.widgets.ProMScrollPane;
 import org.processmining.framework.util.ui.widgets.ProMSplitPane;
 import org.processmining.framework.util.ui.widgets.traceview.ProMTraceList;
 import org.processmining.framework.util.ui.widgets.traceview.ProMTraceList.ClickListener;
@@ -42,6 +44,8 @@ import org.processmining.qut.exogenousaware.gui.listeners.EndoTraceListener;
 import org.processmining.qut.exogenousaware.gui.workers.TraceVisEventChart;
 import org.processmining.qut.exogenousaware.gui.workers.TraceVisOverviewChart;
 import org.processmining.qut.exogenousaware.gui.workers.TraceVisTraceBreakdownCharts;
+
+import com.fluxicon.slickerbox.ui.SlickerScrollBarUI;
 
 import lombok.AllArgsConstructor;
 import lombok.Builder;
@@ -83,7 +87,7 @@ public class ExogenousTraceView extends JPanel {
 	@Builder.Default private int lastEventSliceTouched = 0;
 	@Builder.Default private boolean lastEventSliceHiglighted = false;
 	
-	@Builder.Default private JScrollPane traceBreakdownView = new JScrollPane();
+	@Builder.Default private JScrollPane traceBreakdownView = new ProMScrollPane(new JPanel());
 
 	public ExogenousTraceView setup() {
 		this.setAlignmentX(JPanel.CENTER_ALIGNMENT);
@@ -95,7 +99,8 @@ public class ExogenousTraceView extends JPanel {
 //		layout managers
 		this.rightTopBottom.setLayout(new GridLayout(0,1));
 		this.rightTopBottom.validate();
-		this.leftRight.setLayout( new GridLayout(1,2));
+		this.leftRight.setLayout(new GridLayout(1,2));
+		this.leftRight.setResizeWeight(0);
 		this.leftRight.validate();
 		this.setLayout(new GridLayout(1,1));
 //		new setup, trace list on left, spliting to
@@ -241,7 +246,13 @@ public class ExogenousTraceView extends JPanel {
 		traceView.addTraceClickListener(
 				new endoClickListener(this)
 		);
-		
+//		style trace list
+		JScrollBar bar = traceView.getScrollPane().getVerticalScrollBar();
+		bar.setUI(new SlickerScrollBarUI(bar, Color.LIGHT_GRAY, Color.GRAY,Color.DARK_GRAY, 4, 12));
+		bar = traceView.getScrollPane().getHorizontalScrollBar();
+		bar.setUI(new SlickerScrollBarUI(bar, Color.LIGHT_GRAY, Color.GRAY,Color.DARK_GRAY, 4, 12));
+		traceView.getScrollPane().validate();
+		traceView.validate();
 //		ordering of elements and styling
 		bottomRight.add(
 				new JLabel("Avaliable Endogenous Traces:") 

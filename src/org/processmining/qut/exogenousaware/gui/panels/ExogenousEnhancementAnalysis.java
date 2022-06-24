@@ -161,7 +161,7 @@ public class ExogenousEnhancementAnalysis {
 	}
 	
 	public void hideCharts() {
-//		loop through previous charts and hide all charts
+//		loop through previous chartDict and hide all chartDict
 		for(Entry<String, JPanel> entry : this.exoCharts.entrySet()) {
 			entry.getValue().setVisible(false);
 		}

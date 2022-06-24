@@ -38,6 +38,7 @@ import org.processmining.qut.exogenousaware.steps.transform.data.TransformedAttr
 import lombok.Builder;
 import lombok.Builder.Default;
 import lombok.Data;
+import lombok.Getter;
 import lombok.NonNull;
 
 @Builder
@@ -49,9 +50,11 @@ public class TraceVisEventChart {
 	
 	@Default JScrollPane chartPanel = new JScrollPane();
 	@Default JPanel view = new JPanel();
-	@Default Map<String, ChartPanel> charts = new HashMap<String, ChartPanel>();
+	@Default @Getter Map<String, Map<String, List<ChartPanel>>> chartDict = new HashMap<String, Map<String, List<ChartPanel>>>();
+	@Default @Getter Map<String, Map<String, List<ChartSeriesController>>> seriesControllers = new HashMap<String, Map<String, List<ChartSeriesController>>>();
+	@Default @Getter List<ChartPanel> charts= new ArrayList();
 	
-	
+	@Default @Getter int graphs = 0;
 	
 	public void setup() {
 //	setup defaults for layout manager
@@ -65,13 +68,7 @@ public class TraceVisEventChart {
 	c.insets = new Insets(10,0,10,0);
 	c.anchor = GridBagConstraints.WEST;
 //	add label to higlight what event was clicked
-	JLabel label;
-	String eventString = "<html><p>Event Breakdown of ''%s'' @ %s</p></html>";
-	eventString = String.format(eventString,
-		endogenous.getAttributes().get("concept:name").toString(),
-		endogenous.getAttributes().get("time:timestamp").toString()
-	);
-	label = ExogenousTraceView.createLeftAlignedLabel(eventString, true, 18);
+	JLabel label = makeTitle();
 	this.view.add(label, c);
 //	reset layout settings
 	c.weightx = 0;
@@ -79,7 +76,6 @@ public class TraceVisEventChart {
 	c.ipady = 0;
 	c.gridy += 1;
 	c.insets = new Insets(25,0,25,0);
-	int graphs = 0;
 	// find all transformed attributes for this event
 	List<TransformedAttribute> xattrs = new ArrayList<TransformedAttribute>();
 	for(Entry<String, XAttribute> entry : endogenous.getAttributes().entrySet()) {
@@ -103,16 +99,33 @@ public class TraceVisEventChart {
 //	create a graph for each linked dataset, 
 //	keep reference for each graph
 	for( Entry<String, Set<SubSeries>> entry : linkedDatasets.entrySet()) {
+		String datasetkey = entry.getKey();
 		XYSeriesCollection dataset = new XYSeriesCollection();
 		double high = 0.0;
 		double low = 0.0;
 		int exoSeries= 0;
 		boolean started = false;
 		String exoSet = entry.getKey();
+		String slicekey = "foo";
+		List<String> slicers = new ArrayList();
 //		cycle through subseries and plot each
 		for(SubSeries subtimeseries: entry.getValue()) {
 			if (subtimeseries.getDatatype().equals(ExogenousDatasetType.DISCRETE)) {
 				continue;
+			}
+//			setup chart dict if needed
+			slicekey = subtimeseries.getAbvSlicingName();
+			slicers.add(slicekey);
+			if (this.chartDict.containsKey(datasetkey)) {
+				Map<String, List<ChartPanel>> dbmap = this.chartDict.get(datasetkey);
+				if (!dbmap.containsKey(slicekey)) {
+					dbmap.put(slicekey, new ArrayList<ChartPanel>());
+				}
+			}
+			else {
+				this.chartDict.put(datasetkey, new HashMap<String, List<ChartPanel>>());
+				Map<String, List<ChartPanel>> dbmap = this.chartDict.get(datasetkey);
+				dbmap.put(slicekey, new ArrayList<ChartPanel>());
 			}
 			// check for non-empty sub-sequences
 			List<Long> xseries = subtimeseries.getXSeries(true);
@@ -146,6 +159,18 @@ public class TraceVisEventChart {
 			// add series and move on
 			dataset.addSeries(series);
 			exoSeries++;
+			// prepare exo series controller dict
+			if (this.seriesControllers.containsKey(datasetkey)) {
+				Map<String, List<ChartSeriesController>> dbmap = this.seriesControllers.get(datasetkey);
+				if (!dbmap.containsKey(slicekey)) {
+					dbmap.put(slicekey, new ArrayList<ChartSeriesController>());
+				}
+			}
+			else {
+				this.seriesControllers.put(datasetkey, new HashMap<String, List<ChartSeriesController>>());
+				Map<String, List<ChartSeriesController>> dbmap = this.seriesControllers.get(datasetkey);
+				dbmap.put(slicekey, new ArrayList<ChartSeriesController>());
+			}
 		}
 //		add when the event occured
 		XYSeries evSeries = new XYSeries("event occurance");
@@ -173,6 +198,9 @@ public class TraceVisEventChart {
 			exoRender.setSeriesShape(xseries, new Ellipse2D.Double(-2.5,-2.5,5,5));
 			exoRender.setSeriesShapesVisible(xseries, true);
 			exoRender.setSeriesFillPaint(xseries, Color.white);
+			this.seriesControllers.get(datasetkey)
+				.get(slicers.get(xseries))
+				.add(new ChartSeriesController(datasetkey, slicers.get(xseries), xseries, exoRender));
 		}
 		exoRender.setSeriesShape(exoSeries, new Ellipse2D.Double(-5,-5,10,10));
 		exoRender.setSeriesShapesVisible(exoSeries, true);
@@ -191,6 +219,7 @@ public class TraceVisEventChart {
 				chart
 		);
 		chart.setBackgroundPaint(Color.LIGHT_GRAY);
+		chart.getLegend().setBackgroundPaint(Color.LIGHT_GRAY);
 		// add graph to viewport
 		c.gridy += 1;
 		c.weightx = 0.8;
@@ -199,16 +228,49 @@ public class TraceVisEventChart {
 		c.weightx = 0.0;
 		c.weighty =1;
 //		keep reference to chartpanel
-		this.charts.put(entry.getKey(), graph);
+		for(String sliceopt : new HashSet<String>(slicers)) {
+			this.chartDict.get(datasetkey).get(sliceopt).add(graph);
+		}
+		charts.add(graph);
+		
 	}
 //	tidy up panel and validate sub-compontents
 	this.view.setBorder(BorderFactory.createLineBorder(Color.BLACK, 2, true));
 	this.view.validate();
+	}
+
+
+	public JLabel makeTitle() {
+		JLabel label;
+		String eventString = "<html><p>Event Breakdown of ''%s'' @ %s</p></html>";
+		eventString = String.format(eventString,
+			endogenous.getAttributes().get("concept:name").toString(),
+			endogenous.getAttributes().get("time:timestamp").toString()
+		);
+		label = ExogenousTraceView.createLeftAlignedLabel(eventString, true, 18);
+		return label;
 	}
 	
 	
 	public double getEventTimestampMillis(XEvent ev) {
 		double time = (double) ((XAttributeTimestamp) ev.getAttributes().get("time:timestamp")).getValueMillis();
 		return time / (1000.0 * 60.0 * 60.0);
+	}
+	
+	class ChartSeriesController {
+		
+		String panel;
+		String slice;
+		int renderItem;
+		XYLineAndShapeRenderer renderer;
+		
+		public ChartSeriesController(String panel, String slice, Integer renderItem, XYLineAndShapeRenderer render) {
+			this.panel = panel;
+			this.slice = slice;
+			this.renderItem = renderItem;
+			this.renderer = render;
+		}
+		
+		
 	}
 }
