@@ -86,5 +86,7 @@ To get in contact, see https://www.adambanham.io/#/contact for my current email 
 # References
 
 [1] F. Mannhardt, M. de Leoni, H. A. Reijers, and W. M. P. van der Aalst, “Decision Mining Revisited - Discovering Overlapping Rules,” in Advanced Information Systems Engineering, Cham, 2016, pp. 377–392.
+<br>
 or 
+<br>
 F. Mannhardt, M. De Leoni, and H. A. Reijers, “The multi-perspective process explorer,” in CEUR Workshop Proceedings, Innsbruck, Austria, Sep. 2015, vol. 1418, pp. 130–134.
