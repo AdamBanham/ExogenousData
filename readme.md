@@ -10,7 +10,6 @@ The following features have been implemented and can be accessed within ProM via
 
 To explore an exogenous annotated log, where you can explore how exogenous data was linked to endogenous traces, view slices attached to events and see an overview of exogenous data intertwined with events, use the following steps to create an xlog and view the outcome.
 
-#### Step One
 To create an exogenous annotated log (xlog), use the following plugin called "Exogenous Annotated Log Preparation". Where you supply an event log (XES formatted) and several exo-panels.
 Next, an interface for making determinations is presented to user. A user can define generic determinations to apply to all exo-panels or may target transforms or slices for a given exo-panel.
 
