@@ -39,8 +39,8 @@ import org.processmining.qut.exogenousaware.gui.ExogenousTraceView;
 public class ExogenousAwareDiscoveryPlugin {
 	
 	@Plugin(
-			name = "Exogenous Aware Log Preperation",
-			parameterLabels = {"Process Log", "Exogenous Data Sources"},
+			name = "Exogenous Annotated Log Preparation",
+			parameterLabels = {"Event Log", "Exo-Panels"},
 			returnLabels = {"Exogenous Annotated Log"},
 			returnTypes = {ExogenousAnnotatedLog.class},
 			userAccessible = true
@@ -72,6 +72,7 @@ public class ExogenousAwareDiscoveryPlugin {
 				.exogenousDatasets(exoLogs)
 				.classifiers(endogenous.getClassifiers())
 				.extensions(endogenous.getExtensions())
+				.useDefaultConfiguration(true)
 				.globalEventAttributes(endogenous.getGlobalEventAttributes())
 				.globalTraceAttributes(endogenous.getGlobalTraceAttributes())
 				.attributes(endogenous.getAttributes())
@@ -83,8 +84,8 @@ public class ExogenousAwareDiscoveryPlugin {
 	}
 	
 	@Plugin(
-			name = "Exogenous Trace Visualisation",
-			parameterLabels = {"Endogenous Annotated Log"},
+			name = "Exogenous Annotated Log Explorer",
+			parameterLabels = {"Exogenous Annotated Log"},
 			returnLabels = {"ExogenousTraceExplorer"}, 
 			returnTypes = {ExogenousTraceView.class}, 
 			userAccessible = true
@@ -107,7 +108,7 @@ public class ExogenousAwareDiscoveryPlugin {
 		);
 	}
 	
-	@Plugin(name = "Exogenous Aware Discovery", parameterLabels = {"Endogenous Annotated Log","Control Flow DPN"}, returnLabels = {"Exogenous Discovery Investigator"}, returnTypes = {ExogenousDiscoveryInvestigator.class}, userAccessible = true)
+	@Plugin(name = "Exogenous Aware Discovery", parameterLabels = {"Exogenous Annotated Log(xlog)","Control Flow DPN"}, returnLabels = {"Exogenous Discovery Investigator"}, returnTypes = {ExogenousDiscoveryInvestigator.class}, userAccessible = true)
 	@UITopiaVariant(affiliation = "QUT", author = "A. Banham", email = "adam.banham@hdr.qut.edu.au")
 	public ExogenousDiscoveryInvestigator exogenousDiscovery(UIPluginContext context, ExogenousAnnotatedLog exogenous, PetriNetWithData dpn) throws Throwable{
 		
