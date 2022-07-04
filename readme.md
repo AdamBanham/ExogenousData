@@ -1,8 +1,6 @@
 # Exogenous Data ProM Plugin
 
-This package for the ProM framework, implements several features around the xPM framework for process mining with exogenous data.
-The main feature of this plugin is a interface for viewing the output from several steps of the framework. i.e. viewing a xlog, performing decision mining with exogenous data and generating EESA visualisation (and ranking a collection).
-While this plugin creates a user friendly way to interface with xPM, the inputs and outputs (exo-panels and their creation) are still unstable and require a complete formalisation. Furthermore, only a limited set of transformers and slicers are supported. Thus, customised implementations are required for non-trival slices or transforms. Please get in contact with me if you require assistance with the creation of exo-panels or exo-descriptions, or non-trival options for creating determines in a xPM instantiation.
+This package for the ProM framework, implements several features around the xPM framework for process mining with exogenous data. The main feature of this plugin is an interface for viewing the output from several steps of the framework. i.e. viewing an xlog, performing decision mining with exogenous data and generating EESA visualisation (and ranking a collection). While this plugin creates a user-friendly way to interface with xPM, the inputs and outputs (exo-panels and their creation) are still unstable and require a complete formalisation. Furthermore, only a limited set of transformers and slicers are supported. Thus, customised implementations are required for non-trivial slices or transforms. Please get in contact with me if you require assistance with the creation of exo-panels or exo-descriptions, or non-trivial options for creating determines in a xPM instantiation.
 
 ## Features 
 
@@ -10,7 +8,7 @@ The following features have been implemented and can be accessed within ProM via
 
 ### Exogenous Annotated  Log Explorer
 
-To explore an exogenous annotated log, where you can explore how exogenous data was linked to endogenous traces, view slices attached to events and see an overview of exogenous data interwined with events, use the following steps to create an xlog and view the outcome.
+To explore an exogenous annotated log, where you can explore how exogenous data was linked to endogenous traces, view slices attached to events and see an overview of exogenous data intertwined with events, use the following steps to create an xlog and view the outcome.
 
 #### Step One
 To create an exogenous annotated log (xlog), use the following plugin called "Exogenous Annotated Log Preparation". Where you supply an event log (XES formatted) and several exo-panels.
@@ -29,7 +27,7 @@ By clicking on an endogenous trace on the left panel, an overview of the trace w
 
 ### Performing Exogenous Aware Discovery
 
-At this stage, we only have an interface for performing decision mining using the overlapping decision miner by Felix Mannhardt[1]. This interface is currently hard coded to use this miner with specific settings. In the coming developments, a more robust interface will be developed to allow users to select different decision miners and their settings. By using xlog and a Petri net with data (DPN), the plugin, "Exogenous Aware Discovery", can be used to perform decision mining and then produce EESA visualisations.
+At this stage, we only have an interface for performing decision mining using the overlapping decision miner by Felix Mannhardt[1]. This interface is currently hard coded to use this miner with specific settings. In the coming developments, a more robust interface will be developed to allow users to select different decision miners and their settings. By using an xlog and a Petri net with data (DPN), the plugin, "Exogenous Aware Discovery", can be used to perform decision mining and then produce EESA visualisations.
 
 ![Exogenous Aware Discovery - Plugin](docs/screens/Exogenous_Aware_Discovery_Plugin.png)
 
@@ -37,7 +35,7 @@ After the plugin performs an alignment with the given DPN, the user has the open
 
 ![Exogenous Aware Discovery - Landing Page](docs/screens/Exogenous_Aware_Discovery_interface.png)
 
-After a investigation (decision miner called and model updated with transition guards) is completed, the user can view the process model to investigate transition guards that have been associated with a transition by the miner.
+After an investigation (decision miner called and model updated with transition guards) is completed, the user can view the process model to investigate transition guards that have been associated with a transition by the miner.
 
 ![Exogenous Aware Discovery - Outcome](docs/screens/Exogenous_Aware_Discovery_outcome.png) 
 
