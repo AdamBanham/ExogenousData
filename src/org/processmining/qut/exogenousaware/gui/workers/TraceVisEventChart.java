@@ -1,6 +1,7 @@
 package org.processmining.qut.exogenousaware.gui.workers;
 
 import java.awt.Color;
+import java.awt.Dimension;
 import java.awt.GridBagConstraints;
 import java.awt.GridBagLayout;
 import java.awt.Insets;
@@ -14,6 +15,7 @@ import java.util.Map.Entry;
 import java.util.Set;
 
 import javax.swing.BorderFactory;
+import javax.swing.BoxLayout;
 import javax.swing.JLabel;
 import javax.swing.JPanel;
 import javax.swing.JScrollPane;
@@ -32,6 +34,7 @@ import org.jfree.data.xy.XYSeriesCollection;
 import org.processmining.qut.exogenousaware.data.ExogenousAnnotatedLog;
 import org.processmining.qut.exogenousaware.data.ExogenousDatasetType;
 import org.processmining.qut.exogenousaware.gui.ExogenousTraceView;
+import org.processmining.qut.exogenousaware.gui.panels.ExogenousTraceViewJChartFilterPanel.ChartHolder;
 import org.processmining.qut.exogenousaware.steps.slicing.data.SubSeries;
 import org.processmining.qut.exogenousaware.steps.transform.data.TransformedAttribute;
 
@@ -47,12 +50,13 @@ public class TraceVisEventChart {
 
 	@NonNull ExogenousAnnotatedLog log;
 	@NonNull XEvent endogenous; 
+	@NonNull @Default int eventIndex = -1;
 	
 	@Default JScrollPane chartPanel = new JScrollPane();
 	@Default JPanel view = new JPanel();
 	@Default @Getter Map<String, Map<String, List<ChartPanel>>> chartDict = new HashMap<String, Map<String, List<ChartPanel>>>();
 	@Default @Getter Map<String, Map<String, List<ChartSeriesController>>> seriesControllers = new HashMap<String, Map<String, List<ChartSeriesController>>>();
-	@Default @Getter List<ChartPanel> charts= new ArrayList();
+	@Default @Getter List<ChartHolder> charts= new ArrayList();
 	
 	@Default @Getter int graphs = 0;
 	
@@ -213,6 +217,11 @@ public class TraceVisEventChart {
 		domain = plot.getDomainAxis();
 		domain.setRange(domain.getLowerBound()-0.5,domain.getUpperBound()+0.5);
 //		recreate chart panel with new plot
+		JPanel mainView = new JPanel();
+		mainView.setLayout(new BoxLayout(mainView, BoxLayout.Y_AXIS));
+//		add a title for the main view
+		mainView.add(makeTitle());
+//		add a graph panel to main view
 		chart = new JFreeChart(plot);
 		chart.setTitle("Subseries for "+ exoSet);
 		ChartPanel graph = new ChartPanel(
@@ -220,18 +229,22 @@ public class TraceVisEventChart {
 		);
 		chart.setBackgroundPaint(Color.LIGHT_GRAY);
 		chart.getLegend().setBackgroundPaint(Color.LIGHT_GRAY);
-		// add graph to viewport
-		c.gridy += 1;
-		c.weightx = 0.8;
-		c.weighty =0;
-		this.view.add(graph, c);
-		c.weightx = 0.0;
-		c.weighty =1;
-//		keep reference to chartpanel
+		graph.setPreferredSize(new Dimension(800,400));
+		graph.setMinimumSize(new Dimension(800,400));
+		graph.setMaximumSize(new Dimension(800,400));
+		mainView.add(graph);
+//		do i still need this?
 		for(String sliceopt : new HashSet<String>(slicers)) {
 			this.chartDict.get(datasetkey).get(sliceopt).add(graph);
 		}
-		charts.add(graph);
+//		create holder for chart info
+		ChartHolder holder = ChartHolder.builder()
+				.eventIndex(this.eventIndex)
+				.exoPanel(datasetkey)
+				.chart(chart)
+				.panel(mainView)
+				.build();
+		charts.add(holder);
 		
 	}
 //	tidy up panel and validate sub-compontents

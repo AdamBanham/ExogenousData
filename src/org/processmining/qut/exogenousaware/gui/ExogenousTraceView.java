@@ -20,7 +20,6 @@ import javax.swing.JLabel;
 import javax.swing.JPanel;
 import javax.swing.JProgressBar;
 import javax.swing.JScrollBar;
-import javax.swing.JScrollPane;
 import javax.swing.SwingConstants;
 
 import org.deckfour.xes.model.XAttributeTimestamp;
@@ -32,7 +31,6 @@ import org.processmining.contexts.uitopia.UIPluginContext;
 import org.processmining.contexts.uitopia.annotations.Visualizer;
 import org.processmining.framework.plugin.annotations.Plugin;
 import org.processmining.framework.plugin.annotations.PluginLevel;
-import org.processmining.framework.util.ui.widgets.ProMScrollPane;
 import org.processmining.framework.util.ui.widgets.ProMSplitPane;
 import org.processmining.framework.util.ui.widgets.traceview.ProMTraceList;
 import org.processmining.framework.util.ui.widgets.traceview.ProMTraceList.ClickListener;
@@ -41,6 +39,8 @@ import org.processmining.framework.util.ui.widgets.traceview.ProMTraceView.Event
 import org.processmining.framework.util.ui.widgets.traceview.ProMTraceView.Trace;
 import org.processmining.qut.exogenousaware.data.ExogenousAnnotatedLog;
 import org.processmining.qut.exogenousaware.gui.listeners.EndoTraceListener;
+import org.processmining.qut.exogenousaware.gui.panels.ExogenousTraceViewJChartFilterPanel;
+import org.processmining.qut.exogenousaware.gui.panels.ExogenousTraceViewJChartFilterPanel.EventFilter;
 import org.processmining.qut.exogenousaware.gui.workers.TraceVisEventChart;
 import org.processmining.qut.exogenousaware.gui.workers.TraceVisOverviewChart;
 import org.processmining.qut.exogenousaware.gui.workers.TraceVisTraceBreakdownCharts;
@@ -87,7 +87,7 @@ public class ExogenousTraceView extends JPanel {
 	@Builder.Default private int lastEventSliceTouched = 0;
 	@Builder.Default private boolean lastEventSliceHiglighted = false;
 	
-	@Builder.Default private JScrollPane traceBreakdownView = new ProMScrollPane(new JPanel());
+	@Builder.Default @Getter private ExogenousTraceViewJChartFilterPanel traceBreakdownView = new ExogenousTraceViewJChartFilterPanel();
 
 	public ExogenousTraceView setup() {
 		this.setAlignmentX(JPanel.CENTER_ALIGNMENT);
@@ -349,16 +349,19 @@ public class ExogenousTraceView extends JPanel {
 		return Double.parseDouble(ev.getAttributes().get("exogenous:value").toString());
 	}
 	
-	public void updateTraceBreakdownEvent(XEvent ev) {
+	public void updateTraceBreakdownEvent(XEvent ev, int eventIndex) {
+		
+		this.traceBreakdownView.clearFilters();
 		if (ev != null) {
-			this.traceBreakdownView.setViewportView(this.buildIndividualEventBreakdown(ev));
-		} else {
-			JPanel p = new JPanel();
-			stylePanel(p);
-			this.traceBreakdownView.setViewportView(p);
-		}
-		this.traceBreakdownView.validate();
-		this.traceBreakdownView.getParent().validate();
+			this.traceBreakdownView.filter( 
+					EventFilter
+					.builder()
+					.eventIndex(eventIndex)
+					.build()
+			);
+		}		
+//		this.traceBreakdownView.validate();
+//		this.traceBreakdownView.getParent().validate();
 		this.rightTopBottom.validate();
 	}
 	

@@ -39,7 +39,7 @@ public class TraceBreakdownEventListener implements ClickListener<XTrace>{
 		if(eventIndex >= 0) {
 			XEvent ev = trace.get(eventIndex);
 	//		create breakdown of event in rightBottomBottoms
-			this.source.updateTraceBreakdownEvent(previousEvent != eventIndex ? ev : null);
+			this.source.updateTraceBreakdownEvent(previousEvent != eventIndex ? ev : null, eventIndex);
 	//		highlight this event slice in the overview chart
 			this.source.highlightEventSlice(trace, eventIndex);
 //			highlight wedge that was clicked

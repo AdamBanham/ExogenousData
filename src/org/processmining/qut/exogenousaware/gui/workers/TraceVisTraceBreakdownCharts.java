@@ -5,6 +5,9 @@ import java.awt.Dimension;
 import java.awt.GridBagConstraints;
 import java.awt.GridBagLayout;
 import java.awt.Insets;
+import java.awt.event.ActionEvent;
+import java.awt.event.ActionListener;
+import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.HashSet;
 import java.util.List;
@@ -12,7 +15,6 @@ import java.util.Map;
 import java.util.Set;
 import java.util.stream.Collectors;
 
-import javax.swing.BorderFactory;
 import javax.swing.Box;
 import javax.swing.BoxLayout;
 import javax.swing.JButton;
@@ -31,6 +33,10 @@ import org.processmining.framework.util.ui.widgets.traceview.ProMTraceList;
 import org.processmining.qut.exogenousaware.gui.ExogenousTraceView;
 import org.processmining.qut.exogenousaware.gui.ExogenousTraceView.exoTraceBuilder;
 import org.processmining.qut.exogenousaware.gui.listeners.TraceBreakdownEventListener;
+import org.processmining.qut.exogenousaware.gui.panels.ExogenousTraceViewJChartFilterPanel;
+import org.processmining.qut.exogenousaware.gui.panels.ExogenousTraceViewJChartFilterPanel.ChartFilter;
+import org.processmining.qut.exogenousaware.gui.panels.ExogenousTraceViewJChartFilterPanel.ChartHolder;
+import org.processmining.qut.exogenousaware.gui.panels.ExogenousTraceViewJChartFilterPanel.PanelFilter;
 import org.processmining.qut.exogenousaware.gui.workers.TraceVisEventChart.ChartSeriesController;
 
 import com.fluxicon.slickerbox.factory.SlickerFactory;
@@ -38,6 +44,7 @@ import com.fluxicon.slickerbox.ui.SlickerScrollBarUI;
 
 import lombok.Builder;
 import lombok.Builder.Default;
+import lombok.Getter;
 import lombok.NonNull;
 
 @Builder
@@ -53,7 +60,7 @@ public class TraceVisTraceBreakdownCharts extends SwingWorker<JPanel, String> {
 	
 	@Default Map<String, Map<String, List<ChartPanel>>> chartDict = new HashMap<String, Map<String, List<ChartPanel>>>();
 	@Default Map<String, Map<String, List<ChartSeriesController>>> seriesControllers = new HashMap<String, Map<String, List<ChartSeriesController>>>();
-	
+	@Default @Getter List<ChartHolder> chartHolders = new ArrayList<ChartHolder>();
 	
 	@Override
 	protected JPanel doInBackground() throws Exception {
@@ -162,47 +169,30 @@ public class TraceVisTraceBreakdownCharts extends SwingWorker<JPanel, String> {
 		Set<String> panels = new HashSet<String>();
 		Set<String> slices = new HashSet<String>();
 //		add event breakdowns in scroll
+		this.source.getTraceBreakdownView().clear();
+		int eventIndex = -1;
 		for(XEvent ev: endo) {
-			JPanel clickable = new JPanel();
-			clickable.setLayout(new GridBagLayout());
-			gcc.insets = new Insets(5,5,5,5);
+			eventIndex++;
 //			create graphs for this endogenous event
 			TraceVisEventChart chartbuilder = TraceVisEventChart.builder()
 					.log(this.source.getSource())
+					.eventIndex(eventIndex)
 					.endogenous(ev)
 					.build();
-//			update all references to charts, such that we can filter on them later
-			for(String dbkey : chartbuilder.getChartDict().keySet()) {
-				if (!this.chartDict.containsKey(dbkey)) {
-					this.chartDict.put(dbkey, new HashMap<String, List<ChartPanel>>());
-				}
-				for(String slicekey: chartbuilder.getChartDict().get(dbkey).keySet()) {
-					if (true) {
-//						#TODO check for instance in second dict, if not make it
-					} 
-//					#TODO add all new instances for later use.
-				}
-			}
 //			add all generated charts to panels
 			chartbuilder.setup();
-			gcc.weightx =0.5;
-			gcc.fill = GridBagConstraints.HORIZONTAL;
-			gcc.insets = new Insets(50,5,50,5);
-			clickable.add(chartbuilder.makeTitle(), gcc);
-			gcc.insets = new Insets(5,5,5,5);
-			for(JPanel chart: chartbuilder.getCharts()) {
-				this.source.stylePanel(chart, false);
-				chart.setPreferredSize(new Dimension(250,250));
-				this.source.styleChart(chart);
-				chart.validate();
-				clickable.add(chart,gcc);
+//			add title to section (might need to include this in the panelbuilder)
+//			gcc.weightx =0.5;
+//			gcc.fill = GridBagConstraints.HORIZONTAL;
+//			gcc.insets = new Insets(50,5,50,5);
+//			clickable.add(chartbuilder.makeTitle(), gcc);
+//			add chart 
+			for(ChartHolder chart: chartbuilder.getCharts()) {
+				this.source.stylePanel(chart.getPanel(), false);
+//				this.source.styleChart((JPanel) chart.getChart());
+				this.source.getTraceBreakdownView().addChart(chart);
 			}
-			gcc.fill = GridBagConstraints.HORIZONTAL;
-//			style clickable
-			this.source.stylePanel(clickable,false);
-			clickable.setBorder(BorderFactory.createLineBorder(Color.BLACK, 2, true));
-			graphView.add(clickable, gcc);
-			clickable.validate();
+//			keeping just in case
 			this.source.getRightTopBottom().validate();
 			this.progress.setValue(this.progress.getValue()+1);
 			for(String key: chartbuilder.getChartDict().keySet()) {
@@ -228,6 +218,7 @@ public class TraceVisTraceBreakdownCharts extends SwingWorker<JPanel, String> {
 			button.setAlignmentX(JButton.CENTER_ALIGNMENT);
 			button.setMargin(new Insets(5, 30, 5, 30));
 			button.setMaximumSize(new Dimension(100,25));
+			button.addActionListener(new ExoPanelFilterListener(button, this.source.getTraceBreakdownView(), panel));
 			panelHandler.add(button);
 			panelHandler.add(Box.createRigidArea(new Dimension(0,3)));
 		}
@@ -245,8 +236,8 @@ public class TraceVisTraceBreakdownCharts extends SwingWorker<JPanel, String> {
 			sliceHandler.add(button);
 			sliceHandler.add(Box.createRigidArea(new Dimension(0,3)));
 		}
-		JScrollPane graphPane = new JScrollPane();
-		graphPane.setViewportView(graphView);
+//		add scroll plane
+		JScrollPane graphPane = this.source.getTraceBreakdownView().getScroller();
 		JScrollBar vBar = graphPane.getVerticalScrollBar();
 		vBar.setUI(new SlickerScrollBarUI(vBar, Color.LIGHT_GRAY, Color.GRAY,Color.DARK_GRAY, 4, 12));
 		this.source.stylePanel(graphPane, false);
@@ -281,4 +272,33 @@ public class TraceVisTraceBreakdownCharts extends SwingWorker<JPanel, String> {
         
       
     }
+	
+	public static class ExoPanelFilterListener implements ActionListener {
+
+		JButton button;
+		ExogenousTraceViewJChartFilterPanel controller;
+		ChartFilter filter;
+		boolean added = false;
+		
+		public ExoPanelFilterListener(JButton button, ExogenousTraceViewJChartFilterPanel controller, String panel) {
+			this.button = button;
+			this.controller = controller;
+			this.filter = PanelFilter.builder()
+					.exoPanel(panel)
+					.build();
+		}
+		
+		public void actionPerformed(ActionEvent e) {
+			if (!added) {
+				controller.filter(filter);
+				button.setBackground(Color.green);
+				added = true;
+			} else {
+				controller.removeFilter(filter);
+				button.setBackground(Color.darkGray);
+				added = false;
+			}
+		}
+		
+	}
 }
