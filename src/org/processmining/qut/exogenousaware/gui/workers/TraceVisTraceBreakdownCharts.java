@@ -37,6 +37,7 @@ import org.processmining.qut.exogenousaware.gui.panels.ExogenousTraceViewJChartF
 import org.processmining.qut.exogenousaware.gui.panels.ExogenousTraceViewJChartFilterPanel.ChartFilter;
 import org.processmining.qut.exogenousaware.gui.panels.ExogenousTraceViewJChartFilterPanel.ChartHolder;
 import org.processmining.qut.exogenousaware.gui.panels.ExogenousTraceViewJChartFilterPanel.PanelFilter;
+import org.processmining.qut.exogenousaware.gui.panels.ExogenousTraceViewJChartFilterPanel.SlicerFilter;
 import org.processmining.qut.exogenousaware.gui.workers.TraceVisEventChart.ChartSeriesController;
 
 import com.fluxicon.slickerbox.factory.SlickerFactory;
@@ -233,6 +234,7 @@ public class TraceVisTraceBreakdownCharts extends SwingWorker<JPanel, String> {
 			button.setAlignmentX(JButton.CENTER_ALIGNMENT);
 			button.setMargin(new Insets(5, 30, 5, 30));
 			button.setMaximumSize(new Dimension(100,25));
+			button.addActionListener(new SlicerFilterListener(button, this.source.getTraceBreakdownView(), slice));
 			sliceHandler.add(button);
 			sliceHandler.add(Box.createRigidArea(new Dimension(0,3)));
 		}
@@ -291,14 +293,40 @@ public class TraceVisTraceBreakdownCharts extends SwingWorker<JPanel, String> {
 		public void actionPerformed(ActionEvent e) {
 			if (!added) {
 				controller.filter(filter);
-				button.setBackground(Color.green);
 				added = true;
 			} else {
 				controller.removeFilter(filter);
-				button.setBackground(Color.darkGray);
 				added = false;
 			}
+			button.setForeground(Color.red);
 		}
 		
+	}
+	
+	public static class SlicerFilterListener implements ActionListener {
+		
+		JButton button;
+		ExogenousTraceViewJChartFilterPanel controller;
+		ChartFilter filter;
+		boolean added = false;
+		
+		public SlicerFilterListener(JButton button, ExogenousTraceViewJChartFilterPanel controller, String slicer) {
+			this.button = button;
+			this.controller = controller;
+			this.filter = SlicerFilter.builder()
+					.slicer(slicer)
+					.build();
+		}
+
+		public void actionPerformed(ActionEvent arg0) {
+			if (!added) {
+				controller.filter(filter);
+				added = true;
+			} else {
+				controller.removeFilter(filter);
+				added = false;
+			}
+			button.setForeground(Color.red);
+		}
 	}
 }

@@ -113,6 +113,7 @@ public class TraceVisEventChart {
 		String slicekey = "foo";
 		List<String> slicers = new ArrayList();
 //		cycle through subseries and plot each
+		Map<String, Integer> sliceCombos = new HashMap();
 		for(SubSeries subtimeseries: entry.getValue()) {
 			if (subtimeseries.getDatatype().equals(ExogenousDatasetType.DISCRETE)) {
 				continue;
@@ -162,6 +163,7 @@ public class TraceVisEventChart {
 			}
 			// add series and move on
 			dataset.addSeries(series);
+			sliceCombos.put(slicekey, exoSeries);
 			exoSeries++;
 			// prepare exo series controller dict
 			if (this.seriesControllers.containsKey(datasetkey)) {
@@ -241,6 +243,7 @@ public class TraceVisEventChart {
 		ChartHolder holder = ChartHolder.builder()
 				.eventIndex(this.eventIndex)
 				.exoPanel(datasetkey)
+				.slicers(sliceCombos)
 				.chart(chart)
 				.panel(mainView)
 				.build();

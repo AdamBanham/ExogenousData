@@ -1,8 +1,10 @@
 package org.processmining.qut.exogenousaware.gui.panels;
 
 import java.util.ArrayList;
+import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
+import java.util.Set;
 
 import javax.swing.BoxLayout;
 import javax.swing.JPanel;
@@ -24,6 +26,7 @@ public class ExogenousTraceViewJChartFilterPanel {
 	
 	// filters
 	private List<ChartFilter> filters = new ArrayList<ChartFilter>();
+	private List<ChartFilter> sfilters = new ArrayList<ChartFilter>();
 	
 	// visibles
 	private JPanel view;
@@ -45,10 +48,6 @@ public class ExogenousTraceViewJChartFilterPanel {
 		return scroller;
 	}
 	
-	public void add() {
-		
-	}
-	
 	public boolean addChart(ChartHolder charter) {
 		try {
 			charts.add(charter);
@@ -61,11 +60,31 @@ public class ExogenousTraceViewJChartFilterPanel {
 	
 	public boolean filter(ChartFilter filter) {
 		try {
-			this.filters.add(filter);
+			if (filter instanceof SlicerFilter) {
+				System.out.println("added slicer filter");
+				this.sfilters.add(filter);
+			} else {
+				this.filters.add(filter);
+			}
 			for(ChartHolder chart: this.charts) {
+				
 				boolean visible = chart.getPanel().isVisible();
-				visible = filter.shouldFilter(chart) && visible;
-				chart.getPanel().setVisible(visible);
+				
+				if (filter instanceof SlicerFilter) {
+					if (visible) {
+						Set<String> keys = chart.getSlicers().keySet();
+						for(String key : keys) {
+							int tkey = chart.getSlicers().get(key);
+							chart.getChart().getXYPlot().getRenderer().setSeriesVisible(tkey, false);
+						}
+						for(ChartFilter cfilter: this.sfilters) {
+							cfilter.filter(chart);
+						}
+					}
+				} else {
+					visible = filter.shouldFilter(chart) && visible;
+					chart.getPanel().setVisible(visible);
+				}
 			}
 			return true;
 		} catch (Exception e) {
@@ -76,7 +95,12 @@ public class ExogenousTraceViewJChartFilterPanel {
 	
 	public boolean removeFilter(ChartFilter filter) {
 		
-		this.filters.remove(filter);
+		if (filter instanceof SlicerFilter) {
+			this.sfilters.remove(filter);
+		} else {
+			this.filters.remove(filter);
+		}
+
 		
 		for(ChartHolder chart: this.charts) {
 			boolean visible = true;
@@ -84,12 +108,32 @@ public class ExogenousTraceViewJChartFilterPanel {
 				visible = cfilter.shouldFilter(chart) && visible;
 			}
 			chart.getPanel().setVisible(visible);
+			
+			if (visible) {
+				if (this.sfilters.size() > 0) {
+					Set<String> keys = chart.getSlicers().keySet();
+					for(String key : keys) {
+						int tkey = chart.getSlicers().get(key);
+						chart.getChart().getXYPlot().getRenderer().setSeriesVisible(tkey, false);
+					}
+					for(ChartFilter cfilter: this.sfilters) {
+						cfilter.filter(chart);
+					}
+				} else {
+					Set<String> keys = chart.getSlicers().keySet();
+					for(String key : keys) {
+						int tkey = chart.getSlicers().get(key);
+						chart.getChart().getXYPlot().getRenderer().setSeriesVisible(tkey, true);
+					}
+				}
+			}
 		}
 		return true;
 	}
 	
 	public void clearFilters() {
 		this.filters.clear();
+		this.sfilters.clear();
 		for(ChartHolder chart: this.charts) {
 			chart.getPanel().setVisible(true);
 			int series = chart.getChart().getXYPlot().getRendererCount();
@@ -119,7 +163,7 @@ public class ExogenousTraceViewJChartFilterPanel {
 		
 		@Getter int eventIndex;
 		@Getter String exoPanel;
-		@Getter Map<String, Integer> slicers;
+		@Default @Getter Map<String, Integer> slicers = new HashMap();
 		@Getter JFreeChart chart;
 		@Getter JPanel panel;
 	}
@@ -205,6 +249,44 @@ public class ExogenousTraceViewJChartFilterPanel {
 			return this.exoPanel.equals(ef.exoPanel);
 		}
 		
+	}
+	
+	@Builder
+	public static class SlicerFilter implements ChartFilter {
+		
+		@NonNull String slicer;
+		
+		public boolean filter(ChartHolder chart) {
+			Set<String> keys = chart.getSlicers().keySet();
+			if (keys.contains(this.slicer)) {
+				int tkey = chart.getSlicers().get(this.slicer);
+				chart.getChart().getXYPlot().getRenderer(0).setSeriesVisible(tkey, true);
+			}
+			return true;
+		}
+
+		public boolean shouldFilter(ChartHolder chart) {
+			return chart.getExoPanel().equals(this.slicer);
+		}
+		
+		
+		@Override
+		public boolean equals(Object o) {
+			
+//			if it is the same object then return
+			if (o == this) {
+				return true;
+			}
+			
+//			check for same instance type
+			if (!(o instanceof SlicerFilter)) {
+				return false;
+			}
+			
+			SlicerFilter ef = (SlicerFilter) o;
+			
+			return this.slicer.equals(ef.slicer);
+		}
 	}
 	
 
