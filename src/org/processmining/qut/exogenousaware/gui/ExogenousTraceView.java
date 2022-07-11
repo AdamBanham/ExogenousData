@@ -88,7 +88,9 @@ public class ExogenousTraceView extends JPanel {
 	@Builder.Default private boolean lastEventSliceHiglighted = false;
 	
 	@Builder.Default @Getter private ExogenousTraceViewJChartFilterPanel traceBreakdownView = new ExogenousTraceViewJChartFilterPanel();
-
+	private EventFilter eventfilter;
+	
+	
 	public ExogenousTraceView setup() {
 		this.setAlignmentX(JPanel.CENTER_ALIGNMENT);
 		this.setAlignmentY(JPanel.CENTER_ALIGNMENT);
@@ -351,15 +353,22 @@ public class ExogenousTraceView extends JPanel {
 	
 	public void updateTraceBreakdownEvent(XEvent ev, int eventIndex) {
 		
-		this.traceBreakdownView.clearFilters();
 		if (ev != null) {
-			this.traceBreakdownView.filter( 
-					EventFilter
+			if (this.eventfilter != null) {
+				this.traceBreakdownView.removeFilter(this.eventfilter);
+			}
+			this.eventfilter = EventFilter
 					.builder()
 					.eventIndex(eventIndex)
-					.build()
+					.build();
+			
+			this.traceBreakdownView.filter( 
+					this.eventfilter
 			);
-		}		
+		} else {
+			this.traceBreakdownView.removeFilter(this.eventfilter);
+			this.eventfilter = null;
+		}
 //		this.traceBreakdownView.validate();
 //		this.traceBreakdownView.getParent().validate();
 		this.rightTopBottom.validate();
