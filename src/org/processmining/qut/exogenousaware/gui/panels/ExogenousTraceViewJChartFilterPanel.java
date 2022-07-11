@@ -10,6 +10,7 @@ import javax.swing.JScrollPane;
 
 import org.jfree.chart.JFreeChart;
 import org.processmining.framework.util.ui.widgets.ProMScrollPane;
+import org.processmining.qut.exogenousaware.gui.styles.PanelStyler;
 
 import lombok.Builder;
 import lombok.Builder.Default;
@@ -35,6 +36,7 @@ public class ExogenousTraceViewJChartFilterPanel {
 	
 	public void setup() {
 		view = new JPanel();
+		PanelStyler.StylePanel(view, false);
 		view.setLayout(new BoxLayout(view, BoxLayout.Y_AXIS));
 		scroller = new ProMScrollPane(view);
 	}
@@ -100,6 +102,7 @@ public class ExogenousTraceViewJChartFilterPanel {
 	public boolean clear() {
 		try {
 			this.view = new JPanel();
+			PanelStyler.StylePanel(view, false);
 			this.view.setLayout(new BoxLayout(view, BoxLayout.Y_AXIS));
 			this.charts.clear();
 			this.filters.clear();
