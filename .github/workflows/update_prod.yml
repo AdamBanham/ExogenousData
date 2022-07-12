@@ -13,10 +13,8 @@ jobs:
 
 
   checkout_repo:
-    
     steps:
-      - uses: 
-        actions/checkout@v3
+      - uses: actions/checkout@v3
 
   send_to_prod:
     
