@@ -15,10 +15,11 @@ jobs:
   checkout_repo:
     
     steps:
-    - uses: actions/checkout@v3
+      - uses: 
+        actions/checkout@v3
 
   send_to_prod:
     
     steps:
-    - run: |
-      svn commit -m "{{github.event.release.name}} : {{ github.event.release.body}}" --no-auth-cache --non-interactive  --username "{{ github.secrets.SVN_USERNAME }}" --password "{{ github.secrets.SVN_PASSWORD }}"
+      - run: |
+        svn commit -m "{{github.event.release.name}} : {{ github.event.release.body}}" --no-auth-cache --non-interactive  --username "{{ github.secrets.SVN_USERNAME }}" --password "{{ github.secrets.SVN_PASSWORD }}"
