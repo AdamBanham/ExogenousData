@@ -2,9 +2,9 @@ name: Update Production (tue svn) with Package Changes
 
 on:
   release:
-    - published
-    branches:
-    - master
+      types: [published]
+      branches:
+        - master
   workflow_dispatch:
 
 jobs:
