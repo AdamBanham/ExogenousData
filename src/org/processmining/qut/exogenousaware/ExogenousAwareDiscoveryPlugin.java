@@ -23,18 +23,22 @@ import org.processmining.qut.exogenousaware.gui.ExogenousTraceView;
 
 /**
  * Plugins to perform Exogenous-Aware Discovery using the framework presented in:<br>
- * <b>xPM: Process Mining with Exogenous Data [x]</b><br>
+ * <b>xPM: Process Mining with Exogenous Data [1]</b><br>
  * <br>
  * Current plugins are:<br>
  * <ul>
- * <li>Exogenous Aware Log Preperation</li>
- * <li>Exogenous Trace Visualisation (Visualiser)</li>
- * <li>Exogenous Aware Discovery</li>
+ * <li>Exogenous Aware Log Preperation [1]</li>
+ * <li>Exogenous Trace Visualisation (Visualiser) [1]</li>
+ * <li>Exogenous Aware Discovery [1]</li>
  * <li>Exogenous Discovery Investigator (Visualiser)</li>
- * <li>Exogenous Aware Enhancement (not implemented)</li>
+ * <li>Exogenous Aware Enhancement (EESA Visualisations and Ranking) [x]</li>
  *</ul>
  *<br>
- *[x]: Will add cite or reference to dblp when avaliable, expected to be presented at EDBA2021, co-located at ICPM2021.
+ *[1] 	A. Banham, S. J. J. Leemans, M. T. Wynn, R. Andrews, xPM: A framework for process mining
+		with exogenous data, in: Process Mining Workshops - ICPM 2021 International Workshops, volume 
+		433 of Lecture Notes in Business Information Processing,
+		Springer, 2021, pp. 85–97.
+ *[x]	A journal article in the coming future (under review as-of 12/07/2022).
 */
 public class ExogenousAwareDiscoveryPlugin {
 	
