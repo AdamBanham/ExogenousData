@@ -26,8 +26,15 @@ jobs:
           echo "------"
           echo "$(ls)"
           echo "------"
+          cd tmp
+          echo "$(ls)"
+          echo "------"
+          cd ../Trunk
+          echo "$(ls)"
+          echo "------"
+          cd ..
           rm -fr tmp/.svn
-          rsync -vau tmp/ ExogenousData
+          rsync -vau tmp/ Trunk
           rm -fr tmp
           echo "::endgroup::"
       - name: "svn committing to prod"
@@ -38,7 +45,7 @@ jobs:
           echo "------"
           echo "$(ls)"
           echo "------"
-          cd ExogenousData
+          cd Trunk
           echo "$(ls)"
           echo "------"
           svn add --force .
