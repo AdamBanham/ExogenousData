@@ -54,5 +54,7 @@ jobs:
           svn add --force .
           svn update
           cd ..
-          svn commit --dry-run -F ../commit.txt "${{ github.event.release.name }} : ${{ github.event.release.body }}" --no-auth-cache --non-interactive  --username "${{ github.secrets.SVN_USERNAME }}" --password "${{ github.secrets.SVN_PASSWORD }}"
+          echo "------"
+          svn status --show-updates
+          svn commit -F ../commit.txt "${{ github.event.release.name }} : ${{ github.event.release.body }}" --no-auth-cache --non-interactive  --username "${{ github.secrets.SVN_USERNAME }}" --password "${{ github.secrets.SVN_PASSWORD }}"
           echo "::endgroup::"
