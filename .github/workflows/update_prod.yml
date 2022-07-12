@@ -19,12 +19,12 @@ jobs:
             echo "::endgroup::"
       - uses: actions/checkout@v3
         with:
-          path: "tmp/Trunk"
+          path: "tmp"
       - name: "moving changes into prod dir"
         run: |
           echo "::group::getting git and copying over"
-          rm -fr tmp/Trunk/.svn
-          rsync -vau tmp ExogenousData/
+          rm -fr tmp/ExogenousData/.svn
+          rsync -vau tmp/ExogenousData ExogenousData/Trunk
           rm -fr tmp
           echo "::endgroup::"
       - name: "svn committing to prod"
@@ -32,7 +32,9 @@ jobs:
           echo "::group::sending to prod via svn"
           echo "commiting with :: ${{ github.event.release.name }} : ${{ github.event.release.body }}"
           echo "#${{ github.event.release.name }}\n${{ github.event.release.body }}" > commit.txt
+          echo "$(ls)"
           cd ExogenousData
+          echo "$(ls)"
           svn add --force .
           svn commit -F ../commit.txt "${{ github.event.release.name }} : ${{ github.event.release.body }}" --no-auth-cache --non-interactive  --username "${{ github.secrets.SVN_USERNAME }}" --password "${{ github.secrets.SVN_PASSWORD }}"
           echo "::endgroup::"
