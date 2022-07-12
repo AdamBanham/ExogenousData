@@ -69,5 +69,5 @@ jobs:
           echo "------"
           echo "$(ls -al)"
           echo "------"
-          svn commit . -F ../commit.txt "${{ github.event.release.name }} : ${{ github.event.release.body }}" --no-auth-cache --non-interactive  --username "${{ github.secrets.SVN_USERNAME }}" --password "${{ github.secrets.SVN_PASSWORD }}"
+          svn commit . -F ../commit.txt --no-auth-cache --non-interactive  --username "${{ github.secrets.SVN_USERNAME }}" --password "${{ github.secrets.SVN_PASSWORD }}"
           echo "::endgroup::"
