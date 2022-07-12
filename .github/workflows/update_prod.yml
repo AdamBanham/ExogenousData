@@ -15,7 +15,7 @@ jobs:
       - name: "svn checking out prod"
         run: |
             echo "::group::svn checkout from prod"
-            svn co --username "${{ github.secrets.SVN_USERNAME }}" --password "${{ github.secrets.SVN_PASSWORD }}" https://svn.win.tue.nl/repos/prom/Packages/ExogenousData/
+            svn co --username "${{ github.secrets.SVN_USERNAME }}" --password "${{ github.secrets.SVN_PASSWORD }}" https://svn.win.tue.nl/repos/prom/Packages/ExogenousData/Trunk
             echo "::endgroup::"
       - uses: actions/checkout@v3
         with:
@@ -27,7 +27,7 @@ jobs:
           echo "$(ls)"
           echo "------"
           rm -fr tmp/.svn
-          rsync -vau tmp/ ExogenousData/Trunk
+          rsync -vau tmp/ ExogenousData
           rm -fr tmp
           echo "::endgroup::"
       - name: "svn committing to prod"
@@ -38,9 +38,9 @@ jobs:
           echo "------"
           echo "$(ls)"
           echo "------"
-          cd ExogenousData/Trunk
+          cd ExogenousData
           echo "$(ls)"
           echo "------"
           svn add --force .
-          svn commit -F ../../commit.txt "${{ github.event.release.name }} : ${{ github.event.release.body }}" --no-auth-cache --non-interactive  --username "${{ github.secrets.SVN_USERNAME }}" --password "${{ github.secrets.SVN_PASSWORD }}"
+          svn commit -F ../commit.txt "${{ github.event.release.name }} : ${{ github.event.release.body }}" --no-auth-cache --non-interactive  --username "${{ github.secrets.SVN_USERNAME }}" --password "${{ github.secrets.SVN_PASSWORD }}"
           echo "::endgroup::"
