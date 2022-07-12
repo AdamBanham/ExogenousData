@@ -18,6 +18,7 @@ jobs:
             mkdir svn_temp
             cd svn_temp
             svn co --username "${{ github.secrets.SVN_USERNAME }}" --password "${{ github.secrets.SVN_PASSWORD }}" https://svn.win.tue.nl/repos/prom/Packages/ExogenousData
+            svn update
             cd ..
             echo "::endgroup::"
       - uses: actions/checkout@v3
