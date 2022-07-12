@@ -18,5 +18,5 @@ jobs:
         with:
           path: "tmp/Trunk"
       - run: |
-          rsync -vau --remove-source-files tmp/ ExogenousData/
+          rsync -vau tmp/ ExogenousData/
           svn commit -m "{{github.event.release.name}} : {{ github.event.release.body}}" --no-auth-cache --non-interactive  --username "{{ github.secrets.SVN_USERNAME }}" --password "{{ github.secrets.SVN_PASSWORD }}"
