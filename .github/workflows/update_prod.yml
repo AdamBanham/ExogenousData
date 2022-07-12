@@ -13,11 +13,14 @@ jobs:
     runs-on: ubuntu-latest
     steps:
       - name: "svn checking out prod"
+        env:
+          user: ${{ secrets.SVN_USERNAME }}
+          pass: ${{ secrets.SVN_PASSWORD }}
         run: |
             echo "::group::svn checkout from prod"
             mkdir svn_temp
             cd svn_temp
-            svn co --username "${{ secrets.SVN_USERNAME }}" --password "${{ secrets.SVN_PASSWORD }}" https://svn.win.tue.nl/repos/prom/Packages/ExogenousData
+            svn co --username "$user" --password "$pass" https://svn.win.tue.nl/repos/prom/Packages/ExogenousData
             echo "------"
             echo "$(ls -al)"
             echo "------"
@@ -52,6 +55,9 @@ jobs:
           rm -fr tmp
           echo "::endgroup::"
       - name: "svn committing to prod"
+        env:
+          user: ${{ secrets.SVN_USERNAME }}
+          pass: ${{ secrets.SVN_PASSWORD }}
         run: |
           echo "::group::sending to prod via svn"
           echo "commiting with :: ${{ github.event.release.name }} : ${{ github.event.release.body }}"
@@ -69,5 +75,5 @@ jobs:
           echo "------"
           echo "$(ls -al)"
           echo "------"
-          svn commit -F ../../commit.txt --no-auth-cache --non-interactive  --username ${{ secrets.SVN_USERNAME }} --password ${{ secrets.SVN_PASSWORD }}
+          svn commit -F ../../commit.txt --no-auth-cache --non-interactive  --username "$user" --password "$pass"
           echo "::endgroup::"
