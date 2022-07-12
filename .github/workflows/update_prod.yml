@@ -69,5 +69,5 @@ jobs:
           echo "------"
           echo "$(ls -al)"
           echo "------"
-          svn commit . -F ../../commit.txt --no-auth-cache --non-interactive  --username "${{ secrets.SVN_USERNAME }}" --password "${{ secrets.SVN_PASSWORD }}"
+          svn commit -F ../../commit.txt --no-auth-cache --non-interactive  --username "${{ secrets.SVN_USERNAME }}" --password "${{ secrets.SVN_PASSWORD }}"
           echo "::endgroup::"
