@@ -23,8 +23,9 @@ jobs:
       - name: "moving changes into prod dir"
         run: |
           echo "::group::getting git and copying over"
-          rm -fr tmp/ExogenousData/.svn
-          rsync -vau tmp/ExogenousData ExogenousData/Trunk
+          echo "$(ls)"
+          rm -fr tmp/.svn
+          rsync -vau tmp/ ExogenousData/Trunk
           rm -fr tmp
           echo "::endgroup::"
       - name: "svn committing to prod"
