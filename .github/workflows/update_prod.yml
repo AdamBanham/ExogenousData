@@ -13,7 +13,7 @@ jobs:
     runs-on: ubuntu-latest
     steps:
       - run: |
-          svn co --username "{{ github.secrets.SVN_USERNAME }}" --password "{{ github.secrets.SVN_PASSWORD }}" https://svn.win.tue.nl/repos/prom/Packages/ExogenousData/
+          svn co --username "${{ github.secrets.SVN_USERNAME }}" --password "${{ github.secrets.SVN_PASSWORD }}" https://svn.win.tue.nl/repos/prom/Packages/ExogenousData/
       - uses: actions/checkout@v3
         with:
           path: "tmp/Trunk"
@@ -23,4 +23,5 @@ jobs:
           rm -fr tmp
       - run: |
           cd ExogenousData
-          svn commit -m "{{ github.event.release.name }} : {{ github.event.release.body }}" --no-auth-cache --non-interactive  --username "{{ github.secrets.SVN_USERNAME }}" --password "{{ github.secrets.SVN_PASSWORD }}"
+          echo "commiting with :: ${{ github.event.release.name }} : ${{ github.event.release.body }}"
+          svn commit -m "${{ github.event.release.name }} : ${{ github.event.release.body }}" --no-auth-cache --non-interactive  --username "${{ github.secrets.SVN_USERNAME }}" --password "${{ github.secrets.SVN_PASSWORD }}"
