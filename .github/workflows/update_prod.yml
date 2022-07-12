@@ -21,11 +21,14 @@ jobs:
             echo "------"
             echo "$(ls -al)"
             echo "------"
+            cd ExogenousData
+            echo "$(ls -al)"
+            echo "------"
             cd Trunk
             echo "$(ls -al)"
             echo "------"
             svn update
-            cd ../..
+            cd ../../..
             echo "::endgroup::"
       - uses: actions/checkout@v3
         with:
