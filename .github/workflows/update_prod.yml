@@ -55,7 +55,7 @@ jobs:
         run: |
           echo "::group::sending to prod via svn"
           echo "commiting with :: ${{ github.event.release.name }} : ${{ github.event.release.body }}"
-          echo "#${{ github.event.release.name }}\n${{ github.event.release.body }}" > ./svn_temp/commit.txt
+          echo "\# ${{ github.event.release.name }}\n${{ github.event.release.body }}" > ./svn_temp/commit.txt
           echo "------"
           echo "$(ls -al)"
           echo "------"
@@ -69,5 +69,5 @@ jobs:
           echo "------"
           echo "$(ls -al)"
           echo "------"
-          svn commit -F ../../commit.txt --no-auth-cache --non-interactive  --username "${{ secrets.SVN_USERNAME }}" --password "${{ secrets.SVN_PASSWORD }}"
+          svn commit -F ../../commit.txt --no-auth-cache --non-interactive  --username ${{ secrets.SVN_USERNAME }} --password ${{ secrets.SVN_PASSWORD }}
           echo "::endgroup::"
