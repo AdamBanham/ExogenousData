@@ -61,7 +61,6 @@ public class ExogenousTraceViewJChartFilterPanel {
 	public boolean filter(ChartFilter filter) {
 		try {
 			if (filter instanceof SlicerFilter) {
-				System.out.println("added slicer filter");
 				this.sfilters.add(filter);
 			} else {
 				this.filters.add(filter);
