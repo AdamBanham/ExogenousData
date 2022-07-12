@@ -35,7 +35,7 @@ jobs:
           cd ../svn_temp/ExogenousData/Trunk
           echo "$(ls)"
           echo "------"
-          cd ../..
+          cd ../../..
           rm -fr tmp/.svn
           rsync -vau tmp/ svn_temp/ExogenousData/Trunk
           rm -fr tmp
