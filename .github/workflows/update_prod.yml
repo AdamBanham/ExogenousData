@@ -39,9 +39,8 @@ jobs:
           echo "$(ls)"
           echo "------"
           cd ExogenousData/Trunk
-          echo "------"
           echo "$(ls)"
           echo "------"
           svn add --force .
-          svn commit -F ../commit.txt "${{ github.event.release.name }} : ${{ github.event.release.body }}" --no-auth-cache --non-interactive  --username "${{ github.secrets.SVN_USERNAME }}" --password "${{ github.secrets.SVN_PASSWORD }}"
+          svn commit -F ../../commit.txt "${{ github.event.release.name }} : ${{ github.event.release.body }}" --no-auth-cache --non-interactive  --username "${{ github.secrets.SVN_USERNAME }}" --password "${{ github.secrets.SVN_PASSWORD }}"
           echo "::endgroup::"
