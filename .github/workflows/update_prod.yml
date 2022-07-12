@@ -12,20 +12,23 @@ jobs:
   send_to_prod:
     runs-on: ubuntu-latest
     steps:
-      - run: |
-          echo "::group::svn checkout from prod"
-          svn co --username "${{ github.secrets.SVN_USERNAME }}" --password "${{ github.secrets.SVN_PASSWORD }}" https://svn.win.tue.nl/repos/prom/Packages/ExogenousData/
-          echo "::endgroup::"
+      - name: "svn checking out prod"
+        run: |
+            echo "::group::svn checkout from prod"
+            svn co --username "${{ github.secrets.SVN_USERNAME }}" --password "${{ github.secrets.SVN_PASSWORD }}" https://svn.win.tue.nl/repos/prom/Packages/ExogenousData/
+            echo "::endgroup::"
       - uses: actions/checkout@v3
         with:
           path: "tmp/Trunk"
-      - run: |
+      - name: "moving changes into prod dir"
+        run: |
           echo "::group::getting git and copying over"
           rm -fr tmp/Trunk/.svn
           rsync -vau tmp/ ExogenousData/
           rm -fr tmp
           echo "::endgroup::"
-      - run: |
+      - name: "svn committing to prod"
+        run: |
           echo "::group::sending to prod via svn"
           cd ExogenousData
           echo "commiting with :: ${{ github.event.release.name }} : ${{ github.event.release.body }}"
