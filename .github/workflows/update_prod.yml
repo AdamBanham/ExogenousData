@@ -1,4 +1,4 @@
-name: Update Production (tue svn) with Package Changes
+name: ProM Updated
 
 on:
   release:
