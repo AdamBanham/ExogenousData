@@ -18,8 +18,14 @@ jobs:
             mkdir svn_temp
             cd svn_temp
             svn co --username "${{ github.secrets.SVN_USERNAME }}" --password "${{ github.secrets.SVN_PASSWORD }}" https://svn.win.tue.nl/repos/prom/Packages/ExogenousData
+            echo "------"
+            echo "$(ls -al)"
+            echo "------"
+            cd Trunk
+            echo "$(ls -al)"
+            echo "------"
             svn update
-            cd ..
+            cd ../..
             echo "::endgroup::"
       - uses: actions/checkout@v3
         with:
@@ -28,13 +34,13 @@ jobs:
         run: |
           echo "::group::getting git and copying over"
           echo "------"
-          echo "$(ls)"
+          echo "$(ls -al)"
           echo "------"
           cd tmp
-          echo "$(ls)"
+          echo "$(ls -al)"
           echo "------"
           cd ../svn_temp/ExogenousData/Trunk
-          echo "$(ls)"
+          echo "$(ls -al)"
           echo "------"
           cd ../../..
           rm -fr tmp/.svn
@@ -45,17 +51,16 @@ jobs:
         run: |
           echo "::group::sending to prod via svn"
           echo "commiting with :: ${{ github.event.release.name }} : ${{ github.event.release.body }}"
-          echo "#${{ github.event.release.name }}\n${{ github.event.release.body }}" > commit.txt
+          echo "#${{ github.event.release.name }}\n${{ github.event.release.body }}" > ./svn_temp/commit.txt
           echo "------"
-          echo "$(ls)"
+          echo "$(ls -al)"
           echo "------"
-          cd svn_temp/ExogenousData
-          echo "$(ls)"
+          cd svn_temp/ExogenousData/Trunk
+          echo "$(ls -al)"
           echo "------"
           svn add --force .
           svn update
-          cd ..
           echo "------"
           svn status --show-updates
-          svn commit -F ../commit.txt "${{ github.event.release.name }} : ${{ github.event.release.body }}" --no-auth-cache --non-interactive  --username "${{ github.secrets.SVN_USERNAME }}" --password "${{ github.secrets.SVN_PASSWORD }}"
+          svn commit -F ../../commit.txt "${{ github.event.release.name }} : ${{ github.event.release.body }}" --no-auth-cache --non-interactive  --username "${{ github.secrets.SVN_USERNAME }}" --password "${{ github.secrets.SVN_PASSWORD }}"
           echo "::endgroup::"
