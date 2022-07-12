@@ -30,7 +30,8 @@ jobs:
       - name: "svn committing to prod"
         run: |
           echo "::group::sending to prod via svn"
-          cd ExogenousData
           echo "commiting with :: ${{ github.event.release.name }} : ${{ github.event.release.body }}"
-          svn commit -m "${{ github.event.release.name }} : ${{ github.event.release.body }}" --no-auth-cache --non-interactive  --username "${{ github.secrets.SVN_USERNAME }}" --password "${{ github.secrets.SVN_PASSWORD }}"
+          echo "#${{ github.event.release.name }}\n${{ github.event.release.body }}" > commit.txt
+          cd ExogenousData
+          svn commit -F ../commit.txt "${{ github.event.release.name }} : ${{ github.event.release.body }}" --no-auth-cache --non-interactive  --username "${{ github.secrets.SVN_USERNAME }}" --password "${{ github.secrets.SVN_PASSWORD }}"
           echo "::endgroup::"
