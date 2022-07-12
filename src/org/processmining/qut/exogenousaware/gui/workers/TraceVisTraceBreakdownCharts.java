@@ -31,13 +31,13 @@ import org.deckfour.xes.model.XTrace;
 import org.jfree.chart.ChartPanel;
 import org.processmining.framework.util.ui.widgets.traceview.ProMTraceList;
 import org.processmining.qut.exogenousaware.gui.ExogenousTraceView;
-import org.processmining.qut.exogenousaware.gui.ExogenousTraceView.exoTraceBuilder;
 import org.processmining.qut.exogenousaware.gui.listeners.TraceBreakdownEventListener;
 import org.processmining.qut.exogenousaware.gui.panels.ExogenousTraceViewJChartFilterPanel;
 import org.processmining.qut.exogenousaware.gui.panels.ExogenousTraceViewJChartFilterPanel.ChartFilter;
 import org.processmining.qut.exogenousaware.gui.panels.ExogenousTraceViewJChartFilterPanel.ChartHolder;
 import org.processmining.qut.exogenousaware.gui.panels.ExogenousTraceViewJChartFilterPanel.PanelFilter;
 import org.processmining.qut.exogenousaware.gui.panels.ExogenousTraceViewJChartFilterPanel.SlicerFilter;
+import org.processmining.qut.exogenousaware.gui.promlist.ProMListComponents.exoTraceBuilder;
 import org.processmining.qut.exogenousaware.gui.workers.TraceVisEventChart.ChartSeriesController;
 
 import com.fluxicon.slickerbox.factory.SlickerFactory;
