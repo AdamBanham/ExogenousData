@@ -8,13 +8,23 @@ on:
   workflow_dispatch:
 
 jobs:
+
+  checkout_svn:
+    runs-on: ubuntu-latest
+    steps:
+      - run: |
+          svn co --username "{{ github.secrets.SVN_USERNAME }}" --password "{{ github.secrets.SVN_PASSWORD }}" https://svn.win.tue.nl/repos/prom/Packages/ExogenousData/
+
   checkout_repo:
     runs-on: ubuntu-latest
     steps:
       - uses: actions/checkout@v3
+        with:
+          path: "tmp"
 
   send_to_prod:
     runs-on: ubuntu-latest
     steps:
       - run: |
+          rsync -vau --remove-source-files tmp/ ExogenousData/
           svn commit -m "{{github.event.release.name}} : {{ github.event.release.body}}" --no-auth-cache --non-interactive  --username "{{ github.secrets.SVN_USERNAME }}" --password "{{ github.secrets.SVN_PASSWORD }}"
