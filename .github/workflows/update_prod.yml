@@ -13,15 +13,21 @@ jobs:
     runs-on: ubuntu-latest
     steps:
       - run: |
+          echo "::group::svn checkout from prod"
           svn co --username "${{ github.secrets.SVN_USERNAME }}" --password "${{ github.secrets.SVN_PASSWORD }}" https://svn.win.tue.nl/repos/prom/Packages/ExogenousData/
+          echo "::endgroup::"
       - uses: actions/checkout@v3
         with:
           path: "tmp/Trunk"
       - run: |
+          echo "::group::getting git and copying over"
           rm -fr tmp/Trunk/.svn
           rsync -vau tmp/ ExogenousData/
           rm -fr tmp
+          echo "::endgroup::"
       - run: |
+          echo "::group::sending to prod via svn"
           cd ExogenousData
           echo "commiting with :: ${{ github.event.release.name }} : ${{ github.event.release.body }}"
           svn commit -m "${{ github.event.release.name }} : ${{ github.event.release.body }}" --no-auth-cache --non-interactive  --username "${{ github.secrets.SVN_USERNAME }}" --password "${{ github.secrets.SVN_PASSWORD }}"
+          echo "::endgroup::"
