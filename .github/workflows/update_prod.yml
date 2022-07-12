@@ -19,4 +19,5 @@ jobs:
           path: "tmp/Trunk"
       - run: |
           rsync -vau tmp/ ExogenousData/
+      - run: |
           svn commit -m "{{github.event.release.name}} : {{ github.event.release.body}}" --no-auth-cache --non-interactive  --username "{{ github.secrets.SVN_USERNAME }}" --password "{{ github.secrets.SVN_PASSWORD }}"
