@@ -8,16 +8,13 @@ on:
   workflow_dispatch:
 
 jobs:
-
-  runs-on: ubuntu-latest
-
-
   checkout_repo:
+    runs-on: ubuntu-latest
     steps:
       - uses: actions/checkout@v3
 
   send_to_prod:
-    
+    runs-on: ubuntu-latest
     steps:
       - run: |
           svn commit -m "{{github.event.release.name}} : {{ github.event.release.body}}" --no-auth-cache --non-interactive  --username "{{ github.secrets.SVN_USERNAME }}" --password "{{ github.secrets.SVN_PASSWORD }}"
