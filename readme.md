@@ -1,4 +1,4 @@
-[![ProM Updated](https://github.com/AdamBanham/ExogenousData/actions/workflows/update_prod.yml/badge.svg?branch=master)](https://github.com/AdamBanham/ExogenousData/actions/workflows/update_prod.yml)
+[![ProM Updated](https://github.com/AdamBanham/ExogenousData/actions/workflows/update_prod.yml/badge.svg)](https://github.com/AdamBanham/ExogenousData/actions/workflows/update_prod.yml)
 
 # Exogenous Data ProM Plugin
 
