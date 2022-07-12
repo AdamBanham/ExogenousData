@@ -17,7 +17,7 @@ jobs:
             echo "::group::svn checkout from prod"
             mkdir svn_temp
             cd svn_temp
-            svn co --username "${{ github.secrets.SVN_USERNAME }}" --password "${{ github.secrets.SVN_PASSWORD }}" https://svn.win.tue.nl/repos/prom/Packages/ExogenousData/Trunk
+            svn co --username "${{ github.secrets.SVN_USERNAME }}" --password "${{ github.secrets.SVN_PASSWORD }}" https://svn.win.tue.nl/repos/prom/Packages/ExogenousData
             cd ..
             echo "::endgroup::"
       - uses: actions/checkout@v3
@@ -48,10 +48,11 @@ jobs:
           echo "------"
           echo "$(ls)"
           echo "------"
-          cd svn_temp
+          cd svn_temp/Trunk
           echo "$(ls)"
           echo "------"
           svn add --force .
           svn update
+          cd ..
           svn commit --dry-run -F ../commit.txt "${{ github.event.release.name }} : ${{ github.event.release.body }}" --no-auth-cache --non-interactive  --username "${{ github.secrets.SVN_USERNAME }}" --password "${{ github.secrets.SVN_PASSWORD }}"
           echo "::endgroup::"
