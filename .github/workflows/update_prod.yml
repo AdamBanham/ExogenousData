@@ -48,7 +48,7 @@ jobs:
           echo "------"
           echo "$(ls)"
           echo "------"
-          cd svn_temp/Trunk
+          cd svn_temp
           echo "$(ls)"
           echo "------"
           svn add --force .
