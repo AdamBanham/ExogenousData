@@ -1,0 +1,24 @@
+name: Update Production (tue svn) with Package Changes
+
+on:
+  release:
+    - published
+    branches:
+    - master
+  workflow_dispatch:
+
+jobs:
+
+  runs-on: ubuntu-latest
+
+
+  checkout_repo:
+    
+    steps:
+    - uses: actions/checkout@v3
+
+  send_to_prod:
+    
+    steps:
+    - run: |
+      svn commit -m "{{github.event.release.name}} : {{ github.event.release.body}}" --no-auth-cache --non-interactive  --username "{{ github.secrets.SVN_USERNAME }}" --password "{{ github.secrets.SVN_PASSWORD }}"
