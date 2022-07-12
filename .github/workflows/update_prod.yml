@@ -17,7 +17,7 @@ jobs:
             echo "::group::svn checkout from prod"
             mkdir svn_temp
             cd svn_temp
-            svn co --username "${{ github.secrets.SVN_USERNAME }}" --password "${{ github.secrets.SVN_PASSWORD }}" https://svn.win.tue.nl/repos/prom/Packages/ExogenousData
+            svn co --username "${{ secrets.SVN_USERNAME }}" --password "${{ secrets.SVN_PASSWORD }}" https://svn.win.tue.nl/repos/prom/Packages/ExogenousData
             echo "------"
             echo "$(ls -al)"
             echo "------"
@@ -69,5 +69,5 @@ jobs:
           echo "------"
           echo "$(ls -al)"
           echo "------"
-          svn commit . -F ../../commit.txt --no-auth-cache --non-interactive  --username "${{ github.secrets.SVN_USERNAME }}" --password "${{ github.secrets.SVN_PASSWORD }}"
+          svn commit . -F ../../commit.txt --no-auth-cache --non-interactive  --username "${{ secrets.SVN_USERNAME }}" --password "${{ secrets.SVN_PASSWORD }}"
           echo "::endgroup::"
