@@ -61,7 +61,8 @@ jobs:
         run: |
           echo "::group::sending to prod via svn"
           echo "commiting with :: ${{ github.event.release.name }} : ${{ github.event.release.body }}"
-          echo "\# ${{ github.event.release.name }} \r\n ${{ github.event.release.body }}" > ./svn_temp/commit.txt
+          echo "${{ github.event.release.name }}" >> ./svn_temp/commit.txt 
+          echo "${{ github.event.release.body }}" >> ./svn_temp/commit.txt
           echo "------"
           echo "$(ls -al)"
           echo "------"
