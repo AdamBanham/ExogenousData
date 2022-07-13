@@ -25,6 +25,11 @@ After linking, slicing and transforming is completed, the following plugin can b
 
 By clicking on an endogenous trace on the left panel, an overview of the trace will be generated on the right. A user can then explore exo-panels and slicers to finding associated slices and view them. Using the event sequence on the right, a user can highlight when the trace occurred in the large graph (top-right) and individual breakdowns of each exo-panel and slicers will be filters to clicked event (bottom-right). 
 
+#### Filtering Log Data 
+Endogenous traces will be highlighted in left pane, with selected under concept:name.
+Clicking on an endogenous event in the right pane will highlighted the event in the overview graph and will filter description graphs below. Click event again to stop filtering and highlighting.
+Clicking on the buttons on the left of description graphs will further filter graphs, e.g. only show graphs from a single exo-panel or only show a slices from a set of slicing functions.
+![Exogenous Annotated Log Filtering](docs/screens/20220713_TraceViewUpdate.png)
 
 ### Performing Exogenous Aware Discovery
 
