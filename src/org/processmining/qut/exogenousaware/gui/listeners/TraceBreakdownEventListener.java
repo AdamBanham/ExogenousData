@@ -7,7 +7,7 @@ import org.deckfour.xes.model.XTrace;
 import org.processmining.framework.util.ui.widgets.traceview.ProMTraceList;
 import org.processmining.framework.util.ui.widgets.traceview.ProMTraceList.ClickListener;
 import org.processmining.qut.exogenousaware.gui.ExogenousTraceView;
-import org.processmining.qut.exogenousaware.gui.promlist.ProMListComponents.exoTraceBuilder;
+import org.processmining.qut.exogenousaware.gui.promlist.ProMListComponents.ExoTraceBuilder;
 import org.processmining.qut.exogenousaware.gui.promlist.WedgeBuilderFactory;
 
 import lombok.Builder;
@@ -17,7 +17,7 @@ import lombok.NonNull;
 public class TraceBreakdownEventListener implements ClickListener<XTrace>{
 	
 	@NonNull private ExogenousTraceView source;
-	@NonNull private exoTraceBuilder builder;
+	@NonNull private ExoTraceBuilder builder;
 	@NonNull private ProMTraceList<XTrace> controller;
 	
 	

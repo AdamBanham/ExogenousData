@@ -34,7 +34,8 @@ import org.processmining.qut.exogenousaware.data.ExogenousAnnotatedLog;
 import org.processmining.qut.exogenousaware.gui.listeners.EndoTraceListener;
 import org.processmining.qut.exogenousaware.gui.panels.ExogenousTraceViewJChartFilterPanel;
 import org.processmining.qut.exogenousaware.gui.panels.ExogenousTraceViewJChartFilterPanel.EventFilter;
-import org.processmining.qut.exogenousaware.gui.promlist.ProMListComponents.exoTraceBuilder;
+import org.processmining.qut.exogenousaware.gui.promlist.ProMListComponents.ExoTraceBuilder;
+import org.processmining.qut.exogenousaware.gui.promlist.WedgeBuilderFactory;
 import org.processmining.qut.exogenousaware.gui.workers.TraceVisEventChart;
 import org.processmining.qut.exogenousaware.gui.workers.TraceVisOverviewChart;
 import org.processmining.qut.exogenousaware.gui.workers.TraceVisTraceBreakdownCharts;
@@ -234,13 +235,13 @@ public class ExogenousTraceView extends JPanel {
 				
 				)
 				.collect(Collectors.toSet());
-		exoTraceBuilder builder = new exoTraceBuilder(evKeySet);
+		ExoTraceBuilder builder = new ExoTraceBuilder(evKeySet);
 		ProMTraceList<XTrace> traceView = new ProMTraceList<XTrace>(
 				builder
 		);
 		traceView.addAll(this.source.getEndogenousLog());
 		traceView.addTraceClickListener(
-				new endoClickListener(this)
+				new endoClickListener(this, traceView)
 		);
 //		style trace list
 		JScrollBar bar = traceView.getScrollPane().getVerticalScrollBar();
@@ -391,19 +392,39 @@ public class ExogenousTraceView extends JPanel {
  	public static class endoClickListener implements ClickListener<XTrace> {
 		
 		private ExogenousTraceView source;
+		private ProMTraceList<XTrace> controller;
+		private ExoTraceBuilder builder;
 		
-		public endoClickListener(ExogenousTraceView source) {
+		public endoClickListener(ExogenousTraceView source, ProMTraceList<XTrace> controller) {
 			this.source = source;
+			this.controller = controller;
+			this.builder = (ExoTraceBuilder) controller.getTraceBuilder();
 		}
 
 		@Override
 		public void traceMouseDoubleClicked(XTrace trace, int traceIndex, int eventIndex, MouseEvent e) {
-			this.source.setSelectEndogenous(trace);
+			boolean changed = this.source.setSelectEndogenous(trace);
+			int target = changed ? traceIndex: -1;
+			this.controller.setWedgeBuilder(WedgeBuilderFactory.createTraceHighlight(target));
+			this.builder.selection.clear();
+			if (changed) {
+				this.builder.selection.add(target);
+			}
+			this.controller.updateUI();
+			this.controller.validate();
 		}
 
 		@Override
 		public void traceMouseClicked(XTrace trace, int traceIndex, int eventIndex, MouseEvent e) {
-			this.source.setSelectEndogenous(trace);
+			boolean changed = this.source.setSelectEndogenous(trace);
+			int target = changed ? traceIndex: -1;
+			this.controller.setWedgeBuilder(WedgeBuilderFactory.createTraceHighlight(target));
+			this.builder.selection.clear();
+			if (changed) {
+				this.builder.selection.add(target);
+			} 
+			this.controller.updateUI();
+			this.controller.validate();
 		}
 		
 	}

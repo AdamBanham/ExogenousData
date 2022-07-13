@@ -37,7 +37,8 @@ import org.processmining.qut.exogenousaware.gui.panels.ExogenousTraceViewJChartF
 import org.processmining.qut.exogenousaware.gui.panels.ExogenousTraceViewJChartFilterPanel.ChartHolder;
 import org.processmining.qut.exogenousaware.gui.panels.ExogenousTraceViewJChartFilterPanel.PanelFilter;
 import org.processmining.qut.exogenousaware.gui.panels.ExogenousTraceViewJChartFilterPanel.SlicerFilter;
-import org.processmining.qut.exogenousaware.gui.promlist.ProMListComponents.exoTraceBuilder;
+import org.processmining.qut.exogenousaware.gui.promlist.ProMListComponents.ExoTraceBuilder;
+import org.processmining.qut.exogenousaware.gui.widgets.TraceViewButton;
 import org.processmining.qut.exogenousaware.gui.workers.TraceVisEventChart.ChartSeriesController;
 
 import com.fluxicon.slickerbox.factory.SlickerFactory;
@@ -103,7 +104,7 @@ public class TraceVisTraceBreakdownCharts extends SwingWorker<JPanel, String> {
 		evKeySet = evKeySet.stream()
 				.filter(s -> this.source.getSource().getLinkedSubseries().get(s).keySet().size() > 0)
 				.collect(Collectors.toSet());
-		exoTraceBuilder builder = new exoTraceBuilder(evKeySet);
+		ExoTraceBuilder builder = new ExoTraceBuilder(evKeySet);
 		ProMTraceList<XTrace> traceController = new ProMTraceList<XTrace>(
 				builder
 		);
@@ -182,11 +183,6 @@ public class TraceVisTraceBreakdownCharts extends SwingWorker<JPanel, String> {
 					.build();
 //			add all generated charts to panels
 			chartbuilder.setup();
-//			add title to section (might need to include this in the panelbuilder)
-//			gcc.weightx =0.5;
-//			gcc.fill = GridBagConstraints.HORIZONTAL;
-//			gcc.insets = new Insets(50,5,50,5);
-//			clickable.add(chartbuilder.makeTitle(), gcc);
 //			add chart 
 			for(ChartHolder chart: chartbuilder.getCharts()) {
 				this.source.stylePanel(chart.getPanel(), false);
@@ -215,7 +211,7 @@ public class TraceVisTraceBreakdownCharts extends SwingWorker<JPanel, String> {
 		panelHandler.add(label);
 		panelHandler.add(Box.createRigidArea(new Dimension(0,5)));
 		for(String panel : panels) {
-			JButton button = SlickerFactory.instance().createButton(panel);
+			TraceViewButton button = new TraceViewButton(panel);
 			button.setAlignmentX(JButton.CENTER_ALIGNMENT);
 			button.setMargin(new Insets(5, 30, 5, 30));
 			button.setMaximumSize(new Dimension(100,25));
@@ -230,7 +226,7 @@ public class TraceVisTraceBreakdownCharts extends SwingWorker<JPanel, String> {
 		sliceHandler.add(label);
 		sliceHandler.add(Box.createRigidArea(new Dimension(0,5)));
 		for(String slice : slices) {
-			JButton button = SlickerFactory.instance().createButton(slice);
+			TraceViewButton button = new TraceViewButton(slice);
 			button.setAlignmentX(JButton.CENTER_ALIGNMENT);
 			button.setMargin(new Insets(5, 30, 5, 30));
 			button.setMaximumSize(new Dimension(100,25));
@@ -277,12 +273,12 @@ public class TraceVisTraceBreakdownCharts extends SwingWorker<JPanel, String> {
 	
 	public static class ExoPanelFilterListener implements ActionListener {
 
-		JButton button;
+		TraceViewButton button;
 		ExogenousTraceViewJChartFilterPanel controller;
 		ChartFilter filter;
 		boolean added = false;
 		
-		public ExoPanelFilterListener(JButton button, ExogenousTraceViewJChartFilterPanel controller, String panel) {
+		public ExoPanelFilterListener(TraceViewButton button, ExogenousTraceViewJChartFilterPanel controller, String panel) {
 			this.button = button;
 			this.controller = controller;
 			this.filter = PanelFilter.builder()
@@ -298,19 +294,19 @@ public class TraceVisTraceBreakdownCharts extends SwingWorker<JPanel, String> {
 				controller.removeFilter(filter);
 				added = false;
 			}
-			button.setForeground(Color.red);
+			button.setActive(added);
 		}
 		
 	}
 	
 	public static class SlicerFilterListener implements ActionListener {
 		
-		JButton button;
+		TraceViewButton button;
 		ExogenousTraceViewJChartFilterPanel controller;
 		ChartFilter filter;
 		boolean added = false;
 		
-		public SlicerFilterListener(JButton button, ExogenousTraceViewJChartFilterPanel controller, String slicer) {
+		public SlicerFilterListener(TraceViewButton button, ExogenousTraceViewJChartFilterPanel controller, String slicer) {
 			this.button = button;
 			this.controller = controller;
 			this.filter = SlicerFilter.builder()
@@ -326,7 +322,7 @@ public class TraceVisTraceBreakdownCharts extends SwingWorker<JPanel, String> {
 				controller.removeFilter(filter);
 				added = false;
 			}
-			button.setForeground(Color.red);
+			button.setActive(added);
 		}
 	}
 }

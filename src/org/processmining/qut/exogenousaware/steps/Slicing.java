@@ -85,7 +85,7 @@ public class Slicing {
 				periods.add(hour*12);
 				for(long period: periods) {
 		//			get slicing points for this piece of the exogenous dataset
-		//			Map<String,ArrayList<XEvent>> slicePoints = naiveSlicingPoints(endogenous, exoTrace);
+		//			Map<String,ArrayList<XEvent>> slicePoints = naiveSlicingPoints(endogenous, ExoTrace);
 					Map<XEvent, SubSeries> slicePoints = TimeAwareSlicer
 							.builder().timePeriod(period).build()
 							.slice(endogenous, exoTrace, edataset);

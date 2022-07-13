@@ -23,4 +23,8 @@ public class WedgeBuilderFactory {
 		return new EventHighlightWedger(eventNumber);
 	}
 	
+	public static DefaultWedgeBuilder createTraceHighlight(int traceNumber) {
+		return new TraceHighlightWedger(traceNumber);
+	}
+	
 }

@@ -1,30 +1,37 @@
 package org.processmining.qut.exogenousaware.gui.promlist;
 
 import java.awt.Color;
+import java.util.ArrayList;
+import java.util.HashMap;
 import java.util.HashSet;
 import java.util.Iterator;
 import java.util.List;
+import java.util.Map;
 import java.util.Set;
 import java.util.stream.Collectors;
 
+import org.deckfour.xes.model.XAttribute;
 import org.deckfour.xes.model.XEvent;
 import org.deckfour.xes.model.XTrace;
-import org.deckfour.xes.model.impl.XAttributeLiteralImpl;
 import org.processmining.framework.util.ui.widgets.traceview.ProMTraceList.TraceBuilder;
 import org.processmining.framework.util.ui.widgets.traceview.ProMTraceView.Event;
 import org.processmining.framework.util.ui.widgets.traceview.ProMTraceView.Trace;
+import org.processmining.qut.exogenousaware.steps.transform.data.TransformedAttribute;
 
 public class ProMListComponents {
 	
 	private ProMListComponents() {};
 	
-	public static class exoTraceBuilder implements TraceBuilder<XTrace> {
+	public static class ExoTraceBuilder implements TraceBuilder<XTrace> {
 
 		private Set<String> exoEvents;
 		private boolean highlight = false;
 		private int eventid = -1;
+		private int traceCount = 0;
+		private Map<XTrace, Integer> traceMap = new HashMap();
+		public List<Integer> selection = new ArrayList();
 		
-		public exoTraceBuilder(Set<String> exoEvents) {
+		public ExoTraceBuilder(Set<String> exoEvents) {
 			this.exoEvents = exoEvents;
 		}
 		
@@ -33,21 +40,45 @@ public class ProMListComponents {
 		public Trace<? extends Event> build(XTrace element) {
 			// TODO Auto-generated method stub
 			Boolean hasExo = false;
-			if (element.getAttributes().keySet().contains("exogenous:exist")) {
-				hasExo = ((XAttributeLiteralImpl) element.getAttributes().get("exogenous:exist") ).getValue().contentEquals("True");
+			
+			// check if event in the trace has some transformed attribute, then we have exogenous data.
+			for( XEvent ev : element) {
+				for( XAttribute attr: ev.getAttributes().values()) {
+					if (attr instanceof TransformedAttribute) {
+						hasExo = true;
+						break;
+					}
+				}
+				if (hasExo) {
+					break;
+				}
 			}
+			if (!traceMap.containsKey(element)) {
+				traceMap.put(element, traceCount);
+				this.traceCount++;
+			}
+			int traceNo = traceMap.get(element);
+			boolean selected = selection.contains(traceNo);
+			ExoTrace newTrace;
 			if (this.highlight) {
-				return new exoTrace(element, 
+				newTrace = new ExoTrace(element, 
 						hasExo,
 						exoEvents,
-						this.eventid
+						this.eventid,
+						traceNo,
+						selected
 				);
 			} else {
-				return new exoTrace(element, 
+				newTrace = new ExoTrace(element, 
 						hasExo,
-						exoEvents
+						exoEvents,
+						-1,
+						traceNo,
+						selected
 				);
 			}
+			return newTrace;
+			
 		}
 		
 		public void setHighlight(int eventid) {
@@ -62,29 +93,33 @@ public class ProMListComponents {
 		
 	}
 
-	public static class exoTrace implements Trace<Event> {
+	public static class ExoTrace implements Trace<Event> {
 		
-		private XTrace source;
-		private Boolean hasExo;
-		private Set<String> exoEvents;
-		private int highlightevent = -1;
+		public XTrace source;
+		public Boolean hasExo;
+		public Set<String> exoEvents;
+		public int highlightevent = -1;
+		public int traceNo = -1;
+		public boolean selected = false;
 		
-		public exoTrace(XTrace source, Boolean hasExo, Set<String> exoEvents) {
-			this(source,hasExo,exoEvents,-1);
+		public ExoTrace(XTrace source, Boolean hasExo, Set<String> exoEvents,int traceNo, boolean selected) {
+			this(source,hasExo,exoEvents,-1,traceNo, selected);
 		}
 		
-		public exoTrace(XTrace source, Boolean hasExo, Set<String> exoEvents, int highlightevent) {
+		public ExoTrace(XTrace source, Boolean hasExo, Set<String> exoEvents, int highlightevent, int traceNo, boolean selected) {
 			this.source = source;
 			this.hasExo = hasExo;
 			this.exoEvents = exoEvents;
 			this.highlightevent = highlightevent;
+			this.traceNo = traceNo;
+			this.selected = selected;
 		}
 		
 		@Override
 		public Iterator<Event> iterator() {
 			
 			List<String> evSet = this.source.stream().map(ev -> ev.getID().toString()).collect(Collectors.toList());
-			return new exoIterator(
+			return new ExoIterator(
 					this.source.iterator(), 
 					this.hasExo ? this.exoEvents.stream().filter(s -> evSet.contains(s)).collect(Collectors.toSet()) : new HashSet<String>(), 
 					this.highlightevent
@@ -103,14 +138,11 @@ public class ProMListComponents {
 
 		@Override
 		public String getInfo() {
-			// TODO Auto-generated method stub
-			String info = "";
-			for(String key: this.source.getAttributes().keySet()) {
-				info += String.format("%s : %s \n",
-						key, this.source.getAttributes().get(key)
-				);
+			if (this.selected) {
+				return "Selected";
+			} else {
+				return "";
 			}
-			return info;
 		}
 
 		@Override
@@ -121,14 +153,14 @@ public class ProMListComponents {
 		
 	}
 
-	public static class exoIterator implements Iterator<Event> {
+	public static class ExoIterator implements Iterator<Event> {
 
 		Iterator<XEvent> source;
 		private Set<String> exoEvents;
 		private int highlightevent = -1;
 		private int counter = -1;
 		
-		public exoIterator(Iterator<XEvent> source, Set<String> exoEvents, int highlightevent) {
+		public ExoIterator(Iterator<XEvent> source, Set<String> exoEvents, int highlightevent) {
 			this.source = source;
 			this.exoEvents = exoEvents;
 			this.highlightevent = highlightevent;
@@ -145,7 +177,7 @@ public class ProMListComponents {
 			// TODO Auto-generated method stub
 			this.counter++;
 			XEvent ev = this.source.next();
-			return new exoEvent(
+			return new ExoEvent(
 					ev,
 					counter,
 					ev.getAttributes().keySet().stream().anyMatch(s -> s.contains("exogenous:dataset")),
@@ -155,18 +187,18 @@ public class ProMListComponents {
 		
 	}
 
-	public static class exoEvent implements Event {
+	public static class ExoEvent implements Event {
 		
 		private XEvent source;
 		private boolean hasExo;
 		private boolean highlight;
 		public int eventID;
 		
-		public exoEvent(XEvent source, int eventID, boolean hasExo) {
+		public ExoEvent(XEvent source, int eventID, boolean hasExo) {
 			this(source, eventID, hasExo, false);
 		}
 		
-		public exoEvent(XEvent source, int eventID, boolean hasExo, boolean highlight) {
+		public ExoEvent(XEvent source, int eventID, boolean hasExo, boolean highlight) {
 			this.source = source;
 			this.hasExo = hasExo;
 			this.highlight = highlight;
