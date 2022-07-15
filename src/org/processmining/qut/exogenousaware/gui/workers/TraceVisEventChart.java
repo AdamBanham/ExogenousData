@@ -1,5 +1,6 @@
 package org.processmining.qut.exogenousaware.gui.workers;
 
+import java.awt.BasicStroke;
 import java.awt.Color;
 import java.awt.Dimension;
 import java.awt.GridBagConstraints;
@@ -7,6 +8,7 @@ import java.awt.GridBagLayout;
 import java.awt.Insets;
 import java.awt.geom.Ellipse2D;
 import java.util.ArrayList;
+import java.util.Comparator;
 import java.util.HashMap;
 import java.util.HashSet;
 import java.util.List;
@@ -34,6 +36,7 @@ import org.jfree.data.xy.XYSeriesCollection;
 import org.processmining.qut.exogenousaware.data.ExogenousAnnotatedLog;
 import org.processmining.qut.exogenousaware.data.ExogenousDatasetType;
 import org.processmining.qut.exogenousaware.gui.ExogenousTraceView;
+import org.processmining.qut.exogenousaware.gui.colours.ColourScheme;
 import org.processmining.qut.exogenousaware.gui.panels.ExogenousTraceViewJChartFilterPanel.ChartHolder;
 import org.processmining.qut.exogenousaware.steps.slicing.data.SubSeries;
 import org.processmining.qut.exogenousaware.steps.transform.data.TransformedAttribute;
@@ -51,6 +54,8 @@ public class TraceVisEventChart {
 	@NonNull ExogenousAnnotatedLog log;
 	@NonNull XEvent endogenous; 
 	@NonNull @Default int eventIndex = -1;
+	
+	@Default Color seriesColourBase = ColourScheme.green;
 	
 	@Default JScrollPane chartPanel = new JScrollPane();
 	@Default JPanel view = new JPanel();
@@ -92,6 +97,7 @@ public class TraceVisEventChart {
 	Map<String, Set<SubSeries>> linkedDatasets = new HashMap<String, Set<SubSeries>>();
 	for(TransformedAttribute xattr: xattrs) {
 		String dataset = xattr.getSource().getDataset();
+		
 		if ( !linkedDatasets.containsKey(dataset)) {
 			Set<SubSeries> collect = new HashSet<SubSeries>();
 			collect.add(xattr.getSource());
@@ -105,6 +111,7 @@ public class TraceVisEventChart {
 	for( Entry<String, Set<SubSeries>> entry : linkedDatasets.entrySet()) {
 		String datasetkey = entry.getKey();
 		XYSeriesCollection dataset = new XYSeriesCollection();
+		
 		double high = 0.0;
 		double low = 0.0;
 		int exoSeries= 0;
@@ -112,9 +119,16 @@ public class TraceVisEventChart {
 		String exoSet = entry.getKey();
 		String slicekey = "foo";
 		List<String> slicers = new ArrayList();
+		List<SubSeries> vals = new ArrayList<SubSeries>(entry.getValue());
+		Comparator<SubSeries> lengthSort = (a,b) -> Integer.compare(a.size(),b.size());
+		vals.sort(lengthSort);
+		Color seriesColourBase = this.seriesColourBase;
+		if (vals.size() > 0) {
+			seriesColourBase = vals.get(0).getComesFrom().getColourBase();
+		}
 //		cycle through subseries and plot each
 		Map<String, Integer> sliceCombos = new HashMap();
-		for(SubSeries subtimeseries: entry.getValue()) {
+		for(SubSeries subtimeseries: vals) {
 			if (subtimeseries.getDatatype().equals(ExogenousDatasetType.DISCRETE)) {
 				continue;
 			}
@@ -200,10 +214,13 @@ public class TraceVisEventChart {
 //		handle render settings for each series type
 		XYLineAndShapeRenderer exoRender = new XYLineAndShapeRenderer();
 		exoRender.setUseFillPaint(true);
+		List<Color> colours = ColourScheme.getDarkerSampleSpace(seriesColourBase, exoSeries);
 		for(int xseries=0;xseries < exoSeries; xseries++) {
-			exoRender.setSeriesShape(xseries, new Ellipse2D.Double(-2.5,-2.5,5,5));
+			exoRender.setSeriesShape(xseries, new Ellipse2D.Double(-5,-5,10,10));
+			exoRender.setSeriesStroke(xseries, new BasicStroke(2.0f));
 			exoRender.setSeriesShapesVisible(xseries, true);
 			exoRender.setSeriesFillPaint(xseries, Color.white);
+			exoRender.setSeriesPaint(xseries, colours.get(xseries));
 			this.seriesControllers.get(datasetkey)
 				.get(slicers.get(xseries))
 				.add(new ChartSeriesController(datasetkey, slicers.get(xseries), xseries, exoRender));
