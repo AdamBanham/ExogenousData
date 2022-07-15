@@ -30,6 +30,7 @@ import org.jfree.data.xy.XYSeries;
 import org.jfree.data.xy.XYSeriesCollection;
 import org.processmining.qut.exogenousaware.data.ExogenousDatasetType;
 import org.processmining.qut.exogenousaware.gui.ExogenousTraceView;
+import org.processmining.qut.exogenousaware.steps.slicing.data.SubSeries;
 import org.processmining.qut.exogenousaware.steps.transform.data.TransformedAttribute;
 
 import lombok.Builder;
@@ -111,13 +112,19 @@ public class TraceVisOverviewChart extends SwingWorker<JPanel, String> {
 //		for each attribute, find subseries
 //		then find set of exogenous time series to show
 		Set<XTrace> exogenousTimeSeries = new HashSet<XTrace>();
+		List<XTrace> exoSeries = new ArrayList();
+		List<SubSeries> slices = new ArrayList();
 		for(XEvent ev: this.endo) {
 			for(Entry<String, XAttribute> entry : ev.getAttributes().entrySet()) {
 				if (entry.getValue().getClass().equals(TransformedAttribute.class)) {
 					TransformedAttribute xattr = (TransformedAttribute) entry.getValue();
 //					can only visualise numerical traces
 					if (xattr.getSource().getDatatype().equals(ExogenousDatasetType.NUMERICAL)) {
-						exogenousTimeSeries.add(xattr.getSource().getSource());
+						boolean added = exogenousTimeSeries.add(xattr.getSource().getSource());
+						if (added) {
+							slices.add(xattr.getSource());
+							exoSeries.add(xattr.getSource().getSource());
+						}
 					}
 				}
 			}
@@ -126,8 +133,9 @@ public class TraceVisOverviewChart extends SwingWorker<JPanel, String> {
 //		x being the timestamp
 //		y being the measurement (exogenous:value)
 //		keep track of min and max to make event slices
+		
 		int exoCount = 0;
-		for(XTrace exo: exogenousTimeSeries) {
+		for(XTrace exo: exoSeries) {
 			List<Double> x = exo.stream().map((ev) -> getEventTimestampMillis(ev)).collect(Collectors.toList());
 			List<Double> y = exo.stream().map((ev) -> getExoEventValue(ev)).collect(Collectors.toList());
 //			check if we have set up bounds before
@@ -149,13 +157,14 @@ public class TraceVisOverviewChart extends SwingWorker<JPanel, String> {
 //			build series and render
 			String title = "%s (Exo-Panel#%d)";
 			String name = getExogenousName(exo);
-			XYSeries series = new XYSeries(String.format(title, name, exoCount));
+			XYSeries series = new XYSeries(String.format(title, name, exoCount+1));
 			for(int idx = 0; idx < x.size(); idx++) {
 				series.add(x.get(idx) - starting, y.get(idx));
 			}
 			exoSignals.addSeries(series);
 			exoRender.setSeriesShape(exoCount, new Ellipse2D.Double(-1.5,-1.5,3,3));
 			exoRender.setSeriesFillPaint(exoCount, Color.white);
+			exoRender.setSeriesPaint(exoCount, slices.get(exoCount).getComesFrom().getColourBase());
 			exoCount++;
 		}
 		
@@ -259,7 +268,7 @@ public class TraceVisOverviewChart extends SwingWorker<JPanel, String> {
         // thread finishes execution
         try 
         {
-            JPanel graph = (JPanel) get();
+            JPanel graph = get();
             this.source.setTraceOverviewChart(chart);
             this.progress.setVisible(false);
             this.target.add(graph);
