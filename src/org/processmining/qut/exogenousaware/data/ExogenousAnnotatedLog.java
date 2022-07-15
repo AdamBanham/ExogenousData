@@ -27,6 +27,7 @@ import org.deckfour.xes.model.impl.XAttributeMapImpl;
 import org.processmining.contexts.uitopia.UIPluginContext;
 import org.processmining.framework.plugin.Progress;
 import org.processmining.qut.exogenousaware.exceptions.LinkNotFoundException;
+import org.processmining.qut.exogenousaware.gui.colours.ExoPanelPicker;
 import org.processmining.qut.exogenousaware.steps.Slicing;
 import org.processmining.qut.exogenousaware.steps.Transforming;
 import org.processmining.qut.exogenousaware.steps.slicing.data.SlicingConfiguration;
@@ -114,6 +115,11 @@ public class ExogenousAnnotatedLog implements XLog {
 //		check that configuration is setup
 		handleConfigurationSetup(context);
 		if (!this.parsed) {
+//			set base colours for exo-panels
+			ExoPanelPicker picker = ExoPanelPicker.builder().build();
+			for( ExogenousDataset dset : this.exogenousDatasets) {
+				dset.setColourBase(picker.getColour());
+			}
 			this.exoSubseries = new XFactoryNaiveImpl().createLog();
 //			#1 for each endogenous trace, search each exogenous dataset for linked signals
 //			## but first setup a progress bar
