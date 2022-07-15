@@ -1,5 +1,6 @@
 package org.processmining.qut.exogenousaware.data;
 
+import java.awt.Color;
 import java.util.List;
 
 import org.deckfour.xes.model.XLog;
@@ -7,12 +8,14 @@ import org.deckfour.xes.model.XTrace;
 import org.processmining.qut.exogenousaware.exceptions.CannotConvertException;
 import org.processmining.qut.exogenousaware.exceptions.ExogenousAttributeNotFoundException;
 import org.processmining.qut.exogenousaware.exceptions.LinkNotFoundException;
+import org.processmining.qut.exogenousaware.gui.colours.ColourScheme;
 import org.processmining.qut.exogenousaware.steps.linking.Linker;
 
 import lombok.Builder;
 import lombok.Builder.Default;
 import lombok.Getter;
 import lombok.NonNull;
+import lombok.Setter;
 
 @Builder
 public class ExogenousDataset {
@@ -21,6 +24,7 @@ public class ExogenousDataset {
 	
 	@Default @Getter ExogenousDatasetLinkType linkType = null;
 	@Default @Getter ExogenousDatasetType dataType = null;
+	@Default @Getter @Setter Color colourBase = ColourScheme.green;
 	@Default @Getter Linker linker = null;
 	@Default private Boolean setupCompleted = false;
 	
@@ -52,6 +56,8 @@ public class ExogenousDataset {
 		this.setupCompleted = true;
 		return this;
 	}
+	
+	
 	
 	/**
 	 * Checks for a link between a trace and this exogenous dataset.
