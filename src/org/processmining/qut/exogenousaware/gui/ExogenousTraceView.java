@@ -407,6 +407,7 @@ public class ExogenousTraceView extends JPanel {
 			int target = changed ? traceIndex: -1;
 			this.controller.setWedgeBuilder(WedgeBuilderFactory.createTraceHighlight(target));
 			this.builder.selection.clear();
+			this.source.getTraceBreakdownView().clearFilters();
 			if (changed) {
 				this.builder.selection.add(target);
 			}
@@ -420,6 +421,7 @@ public class ExogenousTraceView extends JPanel {
 			int target = changed ? traceIndex: -1;
 			this.controller.setWedgeBuilder(WedgeBuilderFactory.createTraceHighlight(target));
 			this.builder.selection.clear();
+			this.source.getTraceBreakdownView().clearFilters();
 			if (changed) {
 				this.builder.selection.add(target);
 			} 
