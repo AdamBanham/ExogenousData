@@ -30,7 +30,7 @@ Endogenous traces will be highlighted in left pane, with selected under concept:
 Clicking on an endogenous event in the right pane will highlighted the event in the overview graph and will filter description graphs below. Click event again to stop filtering and highlighting.
 Clicking on the buttons on the left of description graphs will further filter graphs, e.g. only show graphs from a single exo-panel or only show a slices from a set of slicing functions.
 
-![Exogenous Annotated Log Filtering](docs/screens/20220713_TraceViewUpdate.PNG)
+![Exogenous Annotated Log Filtering](docs/screens/20220715_TraceViewUpdate.PNG)
 
 ### Performing Exogenous Aware Discovery
 
