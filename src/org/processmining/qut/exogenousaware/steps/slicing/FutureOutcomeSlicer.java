@@ -93,6 +93,7 @@ public class FutureOutcomeSlicer implements Slicer {
 					.slicingName(this.identifier)
 					.abvSlicingName(this.shortName)
 					.dataset(datasetName)
+					.comesFrom(dataset)
 					.source(exogenous)
 					.datatype(dataset.getDataType())
 					.endogenous(ev)

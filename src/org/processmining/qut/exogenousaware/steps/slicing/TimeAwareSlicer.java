@@ -112,6 +112,7 @@ public class TimeAwareSlicer implements Slicer{
 						.dataset(dataset)
 						.source(exogenous)
 						.datatype(edataset.getDataType())
+						.comesFrom(edataset)
 						.endogenous(ev)
 						.subEvents(subseries)
 						.endoSource(endogenous)
