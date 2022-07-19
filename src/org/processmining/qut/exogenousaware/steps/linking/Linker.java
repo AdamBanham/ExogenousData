@@ -33,5 +33,10 @@ public interface Linker {
 	 */
 	public Boolean linkedTo(XTrace endogenous, XTrace exogenous);
 	
+	/**
+	 * @return The name of the linker
+	 */
+	public String getName();
+	
 	
 }

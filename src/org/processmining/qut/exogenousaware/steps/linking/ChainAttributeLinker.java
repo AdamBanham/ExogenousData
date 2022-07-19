@@ -68,4 +68,8 @@ public class ChainAttributeLinker implements Linker {
 		return check;
 	}
 
+	public String getName() {
+		return "CAL";
+	}
+
 }

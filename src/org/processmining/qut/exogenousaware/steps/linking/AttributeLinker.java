@@ -53,4 +53,9 @@ public class AttributeLinker implements Linker {
 		return exoAttr.toString().equals(endoAttr.toString());
 	}
 
+
+	public String getName() {
+		return "AL";
+	}
+
 }
