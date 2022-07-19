@@ -16,7 +16,6 @@ import java.util.Map;
 import java.util.Map.Entry;
 import java.util.Set;
 
-import javax.swing.BorderFactory;
 import javax.swing.BoxLayout;
 import javax.swing.JLabel;
 import javax.swing.JPanel;
@@ -33,11 +32,13 @@ import org.jfree.chart.plot.XYPlot;
 import org.jfree.chart.renderer.xy.XYLineAndShapeRenderer;
 import org.jfree.data.xy.XYSeries;
 import org.jfree.data.xy.XYSeriesCollection;
+import org.processmining.framework.util.ui.widgets.ProMScrollPane;
 import org.processmining.qut.exogenousaware.data.ExogenousAnnotatedLog;
 import org.processmining.qut.exogenousaware.data.ExogenousDatasetType;
 import org.processmining.qut.exogenousaware.gui.ExogenousTraceView;
 import org.processmining.qut.exogenousaware.gui.colours.ColourScheme;
 import org.processmining.qut.exogenousaware.gui.panels.ExogenousTraceViewJChartFilterPanel.ChartHolder;
+import org.processmining.qut.exogenousaware.gui.styles.PanelStyler;
 import org.processmining.qut.exogenousaware.steps.slicing.data.SubSeries;
 import org.processmining.qut.exogenousaware.steps.transform.data.TransformedAttribute;
 
@@ -237,9 +238,17 @@ public class TraceVisEventChart {
 		domain.setRange(domain.getLowerBound()-0.5,domain.getUpperBound()+0.5);
 //		recreate chart panel with new plot
 		JPanel mainView = new JPanel();
-		mainView.setLayout(new BoxLayout(mainView, BoxLayout.Y_AXIS));
+		mainView.setLayout(new GridBagLayout());
+		c = new GridBagConstraints();
+		c.fill = c.HORIZONTAL;
+//		c.gridheight = 3;
+//		c.gridwidth = 2;
+		c.gridx= 0;
+		c.gridy= 0;
+		c.anchor = c.FIRST_LINE_START;
 //		add a title for the main view
-		mainView.add(makeTitle());
+		mainView.add(makeTitle(), c);
+		c.gridy++;
 //		add a graph panel to main view
 		chart = new JFreeChart(plot);
 		chart.setTitle("Subseries for "+ exoSet);
@@ -251,7 +260,28 @@ public class TraceVisEventChart {
 		graph.setPreferredSize(new Dimension(800,400));
 		graph.setMinimumSize(new Dimension(800,400));
 		graph.setMaximumSize(new Dimension(800,400));
-		mainView.add(graph);
+		mainView.add(graph, c);
+//		add a list of transformed attributes
+		c.gridy = 0;
+		c.gridx = 1;
+		c.fill = c.NONE;
+		c.insets = new Insets(0, 0, 10, 0);
+		JLabel titler = ExogenousTraceView.createLeftAlignedLabel("Transformed Attributes:", true, 18);
+		mainView.add(titler, c);
+		c.gridy++;
+//		add list of transformed values
+		JPanel transformedLabels = new JPanel();
+		transformedLabels.setLayout(new BoxLayout(transformedLabels, BoxLayout.Y_AXIS));
+		for( TransformedAttribute xattr: xattrs) {
+			if (vals.contains(xattr.getSource())) {
+				JLabel tlabel = new JLabel(xattr.getKey() +" := "+xattr.getValue());
+				transformedLabels.add(tlabel);
+			}
+		}
+		c.insets = new Insets(30, 15, 10, 15);
+		PanelStyler.StylePanel(transformedLabels, false);
+		ProMScrollPane spane = new ProMScrollPane(transformedLabels);
+		mainView.add(spane, c);
 //		do i still need this?
 		for(String sliceopt : new HashSet<String>(slicers)) {
 			this.chartDict.get(datasetkey).get(sliceopt).add(graph);
@@ -267,9 +297,6 @@ public class TraceVisEventChart {
 		charts.add(holder);
 		
 	}
-//	tidy up panel and validate sub-compontents
-	this.view.setBorder(BorderFactory.createLineBorder(Color.BLACK, 2, true));
-	this.view.validate();
 	}
 
 
