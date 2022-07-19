@@ -43,8 +43,6 @@ public class TransformConfigurationDialog extends JPanel {
 	
 	
 	public TransformConfigurationDialog setup() {
-		
-		System.out.println("No of deters: "+partialDeterminations.size());
 		setBackground(Color.DARK_GRAY);
 //		setup layout
 		GridBagConstraints c = new GridBagConstraints();

@@ -154,12 +154,10 @@ public class SlicingConfigurationDialog extends JPanel {
 		for (DialogSlicerSelector selector: this.generalSlicerSelectors) {
 			generated.addAll(selector.makePartials());
 		}
-		System.out.println("partial size (general): "+  generated.size() );
 //		go through targeted slicers
 		for (DialogSlicerSelector selector: this.targetedSlicerSelectors) {
 			generated.addAll(selector.makePartials());
 		}
-		System.out.println("partial size (targeted): "+  generated.size() );
 		return generated;
 	}
 	

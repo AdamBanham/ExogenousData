@@ -24,7 +24,6 @@ public class TraceViewButton extends SlickerButton{
 	}
 	
 	public void setActive(boolean active) {
-		System.out.println("called with :: "+active);
 		this.active = active;
 		if (this.active) {
 			this.COLOR_BG = ACTIVE;
