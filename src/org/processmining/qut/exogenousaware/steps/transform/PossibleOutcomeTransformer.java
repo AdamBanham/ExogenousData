@@ -103,4 +103,8 @@ public class PossibleOutcomeTransformer implements Transformer {
 		}
 	}
 
+	public String getName() {
+		return this.transformName;
+	}
+
 }

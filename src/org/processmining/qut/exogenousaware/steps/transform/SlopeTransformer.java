@@ -8,8 +8,8 @@ import org.processmining.qut.exogenousaware.steps.slicing.data.SubSeries;
 import org.processmining.qut.exogenousaware.steps.transform.data.TransformedAttribute;
 
 import lombok.Builder;
-import lombok.Getter;
 import lombok.Builder.Default;
+import lombok.Getter;
 
 /**
  * A transformation function which finds the line of best fit and annotates the slope.<br>
@@ -73,6 +73,10 @@ public class SlopeTransformer implements Transformer{
 	
 	public static double convertToMinutes(long val) {
 		return val / (1000.0 * 60.0);
+	}
+
+	public String getName() {
+		return this.name;
 	}
 
 	

@@ -18,4 +18,10 @@ public interface Transformer {
 	 */
 	public TransformedAttribute transform(SubSeries subtimeseries);
 	
+	
+	/**
+	 * @return the name of the transform function
+	 */
+	public String getName();
+	
 }
