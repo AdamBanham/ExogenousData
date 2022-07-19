@@ -55,6 +55,13 @@ public class SlicingConfiguration {
 		return eventSlices;
 	}
 	
+	@Override
+	public String toString() {
+		String configuration = "";
+		
+		return configuration;
+	}
+	
 	private void handleSlicing(Map<XEvent, SubSeries> slicePoints, Map<String,Map<String,List<SubSeries>>> eventSlices, String name) {
 		// update each event with matching sub-series 
 		for(XEvent endoEvent: slicePoints.keySet()) {

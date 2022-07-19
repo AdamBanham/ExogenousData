@@ -13,7 +13,6 @@ import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
-import java.util.stream.Collectors;
 
 import javax.swing.Box;
 import javax.swing.BoxLayout;
@@ -24,6 +23,7 @@ import javax.swing.JScrollPane;
 
 import org.processmining.qut.exogenousaware.data.ExogenousDataset;
 import org.processmining.qut.exogenousaware.gui.dialog.DialogSlicerSelector;
+import org.processmining.qut.exogenousaware.steps.determination.Determination;
 import org.processmining.qut.exogenousaware.steps.slicing.Slicer;
 import org.processmining.qut.exogenousaware.steps.slicing.data.SlicingConfiguration;
 
@@ -79,14 +79,14 @@ public class SlicingConfigurationDialog extends JPanel {
 		c.gridx = 0;
 		c.gridwidth = 2;
 		c.gridy++;
-		this.selectedGeneralSlicers.setBackground(Color.black);
+		this.selectedGeneralSlicers.setBackground(Color.DARK_GRAY);
 		this.selectedGeneralSlicers.setMaximumSize(new Dimension(650, 400));
 		this.selectedGeneralSlicers.setMinimumSize(new Dimension(650, 400));
 		this.selectedGeneralSlicers.setPreferredSize(new Dimension(650, 400));
 		add(selectedGeneralSlicers, c);
 		JPanel view = (JPanel) this.selectedGeneralSlicers.getViewport().getView();
 		view.add(Box.createRigidArea(new Dimension(600, 5)));
-		view.setBackground(Color.black);
+		view.setBackground(Color.DARK_GRAY);
 		view.setLayout(new BoxLayout(view, BoxLayout.Y_AXIS));
 		view.validate();
 		c.gridy++;
@@ -116,14 +116,14 @@ public class SlicingConfigurationDialog extends JPanel {
 		c.gridx = 0;
 		c.gridwidth = 2;
 		c.gridy++;
-		this.selectedTargetedSlicers.setBackground(Color.black);
+		this.selectedTargetedSlicers.setBackground(Color.DARK_GRAY);
 		this.selectedTargetedSlicers.setMaximumSize(new Dimension(650, 400));
 		this.selectedTargetedSlicers.setMinimumSize(new Dimension(650, 400));
 		this.selectedTargetedSlicers.setPreferredSize(new Dimension(650, 400));
 		add(selectedTargetedSlicers, c);
 		JPanel tview = (JPanel) this.selectedTargetedSlicers.getViewport().getView();
 		tview.add(Box.createRigidArea(new Dimension(600, 5)));
-		tview.setBackground(Color.black);
+		tview.setBackground(Color.DARK_GRAY);
 		tview.setLayout(new BoxLayout(tview, BoxLayout.Y_AXIS));
 		tview.validate();
 		return this;
@@ -136,18 +136,33 @@ public class SlicingConfigurationDialog extends JPanel {
 		}
 		Map<String, List<Slicer>> target = new HashMap<String, List<Slicer>>();
 		for (DialogSlicerSelector maker : this.targetedSlicerSelectors) {
-			for (String targeter : maker.getTargets().getSelectedValuesList()) {
-				if (target.containsKey(targeter)) {
-					target.get(targeter).add(maker.makeSlicer());
+				ExogenousDataset targeter = (ExogenousDataset) maker.getTargeter().getSelectedItem(); 
+				if (target.containsKey(targeter.getName())) {
+					target.get(targeter.getName()).add(maker.makeSlicer());
 				} else {
-					target.put(targeter, new ArrayList<Slicer>());
-					target.get(targeter).add(maker.makeSlicer());
+					target.put(targeter.getName(), new ArrayList<Slicer>());
+					target.get(targeter.getName()).add(maker.makeSlicer());
 				}
-			}
 		}
 		return SlicingConfiguration.builder().generalSlicers(general).targetedSlicers(target).build();
 	}
 
+	public List<Determination> generatePartials() {
+		List<Determination> generated = new ArrayList();
+		
+//		go through general slicers
+		for (DialogSlicerSelector selector: this.generalSlicerSelectors) {
+			generated.addAll(selector.makePartials());
+		}
+		System.out.println("partial size (general): "+  generated.size() );
+//		go through targeted slicers
+		for (DialogSlicerSelector selector: this.targetedSlicerSelectors) {
+			generated.addAll(selector.makePartials());
+		}
+		System.out.println("partial size (targeted): "+  generated.size() );
+		return generated;
+	}
+	
 	private class RemovedTargetSlicerListener implements PropertyChangeListener {
 		
 		private DialogSlicerSelector maker;
@@ -161,6 +176,11 @@ public class SlicingConfigurationDialog extends JPanel {
 		public void propertyChange(PropertyChangeEvent evt) {
 			this.source.targetedSlicerSelectors.remove(maker);
 			JPanel view = (JPanel) this.source.selectedTargetedSlicers.getViewport().getView();
+			for(int i=0; i<view.getComponentCount();i++) {
+				if (view.getComponent(i).equals(maker)) {
+					view.remove(i-1);
+				}
+			}
 			view.remove(maker);
 			//			for the edge case of no components in panel, triggers repaint
 			view.setVisible(false);
@@ -186,6 +206,11 @@ public class SlicingConfigurationDialog extends JPanel {
 		public void propertyChange(PropertyChangeEvent evt) {
 			this.source.generalSlicerSelectors.remove(maker);
 			JPanel view = (JPanel) this.source.selectedGeneralSlicers.getViewport().getView();
+			for(int i=0; i<view.getComponentCount();i++) {
+				if (view.getComponent(i).equals(maker)) {
+					view.remove(i-1);
+				}
+			}
 			view.remove(maker);
 			//			for the edge case of no components in panel, triggers repaint
 			view.setVisible(false);
@@ -211,11 +236,12 @@ public class SlicingConfigurationDialog extends JPanel {
 			JPanel view = (JPanel) this.source.selectedTargetedSlicers.getViewport().getView();
 			DialogSlicerSelector maker = DialogSlicerSelector.builder()
 					.targeted(true)
-					.datasetNames(this.source.datasets.stream().map(d -> d.toString()).collect(Collectors.toList()))
+					.datasetNames(this.source.datasets)
 					.build()
 					.setup();
 			this.source.targetedSlicerSelectors.add(maker);
 			maker.addPropertyChangeListener("remove-parent", new RemovedTargetSlicerListener(maker, source));
+			view.add(Box.createRigidArea(new Dimension(600, 5)));
 			view.add(maker);
 			view.validate();
 			this.source.selectedTargetedSlicers.validate();
@@ -247,17 +273,21 @@ public class SlicingConfigurationDialog extends JPanel {
 	private class GeneralSlicerListener implements MouseListener {
 
 		private SlicingConfigurationDialog source;
+		private GridBagConstraints c = new GridBagConstraints();
+		
 
 		public GeneralSlicerListener(SlicingConfigurationDialog source) {
 			this.source = source;
+			c.insets = new Insets(0,0,0,5);
 		}
 
 		public void mouseClicked(MouseEvent e) {
 			JPanel view = (JPanel) this.source.selectedGeneralSlicers.getViewport().getView();
-			DialogSlicerSelector maker = DialogSlicerSelector.builder().build().setup();
+			DialogSlicerSelector maker = DialogSlicerSelector.builder().datasetNames(datasets).build().setup();
 			this.source.generalSlicerSelectors.add(maker);
 			maker.addPropertyChangeListener("remove-parent", new RemoveGeneralSlicerListener(maker, source));
-			view.add(maker);
+			view.add(Box.createRigidArea(new Dimension(600, 5)));
+			view.add(maker, c);
 			view.validate();
 			this.source.selectedGeneralSlicers.validate();
 			this.source.validate();
