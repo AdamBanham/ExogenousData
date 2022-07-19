@@ -34,6 +34,7 @@ import org.processmining.qut.exogenousaware.steps.slicing.data.SlicingConfigurat
 import org.processmining.qut.exogenousaware.steps.slicing.data.SubSeries;
 import org.processmining.qut.exogenousaware.steps.slicing.gui.SlicingConfigurationDialog;
 import org.processmining.qut.exogenousaware.steps.transform.data.TransformedAttribute;
+import org.processmining.qut.exogenousaware.steps.transform.gui.TransformConfigurationDialog;
 
 import lombok.AllArgsConstructor;
 import lombok.Builder;
@@ -104,7 +105,11 @@ public class ExogenousAnnotatedLog implements XLog {
 					.build()
 					.setup();
 			context.showWizard("Create your slicing configuration", true, false, sdialog);
-			InteractionResult result = context.showWizard("Create your transforming configuration", false, true, sdialog);
+			TransformConfigurationDialog tdialog = TransformConfigurationDialog.builder()
+					.partialDeterminations(sdialog.generatePartials())
+					.build()
+					.setup();
+			InteractionResult result = context.showWizard("Create your transforming configuration", false, true, tdialog);
 			if (result == InteractionResult.FINISHED) {
 				this.slicingConfig = sdialog.generateConfig();
 			}
