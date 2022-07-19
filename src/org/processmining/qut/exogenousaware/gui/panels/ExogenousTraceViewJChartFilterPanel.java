@@ -5,6 +5,7 @@ import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 import java.util.Set;
+import java.util.stream.Collectors;
 
 import javax.swing.BoxLayout;
 import javax.swing.JPanel;
@@ -65,26 +66,9 @@ public class ExogenousTraceViewJChartFilterPanel {
 			} else {
 				this.filters.add(filter);
 			}
-			for(ChartHolder chart: this.charts) {
 				
-				boolean visible = chart.getPanel().isVisible();
-				
-				if (filter instanceof SlicerFilter) {
-					if (visible) {
-						Set<String> keys = chart.getSlicers().keySet();
-						for(String key : keys) {
-							int tkey = chart.getSlicers().get(key);
-							chart.getChart().getXYPlot().getRenderer().setSeriesVisible(tkey, false);
-						}
-						for(ChartFilter cfilter: this.sfilters) {
-							cfilter.filter(chart);
-						}
-					}
-				} else {
-					visible = filter.shouldFilter(chart) && visible;
-					chart.getPanel().setVisible(visible);
-				}
-			}
+			runFilterCheck();
+			
 			return true;
 		} catch (Exception e) {
 			
@@ -99,12 +83,41 @@ public class ExogenousTraceViewJChartFilterPanel {
 		} else {
 			this.filters.remove(filter);
 		}
-
 		
+		runFilterCheck();
+		
+		return true;
+	}
+	
+	public void runFilterCheck() {
+//		check event filters separately 
+		List<ChartFilter> evFilters = this.filters.stream().filter(e -> e instanceof EventFilter).collect(Collectors.toList());
+		List<ChartFilter> otFilters = this.filters.stream().filter(e -> !(e instanceof EventFilter)).collect(Collectors.toList());
+		
+//		check all filters that must be true
 		for(ChartHolder chart: this.charts) {
-			boolean visible = true;
-			for(ChartFilter cfilter: this.filters) {
-				visible = cfilter.shouldFilter(chart) && visible;
+			if (evFilters.size() < 1) {
+				chart.panel.setVisible(true);
+			} else {
+				boolean visible = true;
+				for (ChartFilter efilter : evFilters) {
+					visible = efilter.shouldFilter(chart) && visible;
+				}
+				chart.panel.setVisible(visible);
+			}
+			
+		}
+
+//		check for at least one filter allowing for chart
+		for(ChartHolder chart: this.charts.stream().filter(e -> e.panel.isVisible()).collect(Collectors.toList())) {
+			boolean visible;
+			if (otFilters.size() < 1) {
+				visible = true;
+			} else {
+				visible = false;
+			}
+			for(ChartFilter cfilter: otFilters) {
+				visible = cfilter.shouldFilter(chart) || visible;
 			}
 			chart.getPanel().setVisible(visible);
 			
@@ -127,7 +140,6 @@ public class ExogenousTraceViewJChartFilterPanel {
 				}
 			}
 		}
-		return true;
 	}
 	
 	public void clearFilters() {
