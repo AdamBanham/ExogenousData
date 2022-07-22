@@ -4,7 +4,7 @@ import org.processmining.qut.exogenousaware.data.ExogenousDataset;
 import org.processmining.qut.exogenousaware.steps.determination.Determination;
 import org.processmining.qut.exogenousaware.steps.linking.Linker;
 import org.processmining.qut.exogenousaware.steps.slicing.Slicer;
-import org.processmining.qut.exogenousaware.steps.transform.Transformer;
+import org.processmining.qut.exogenousaware.steps.transform.type.Transformer;
 
 public class DummyDetermination extends Determination {
 
