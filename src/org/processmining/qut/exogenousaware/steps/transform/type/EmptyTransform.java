@@ -1,4 +1,4 @@
-package org.processmining.qut.exogenousaware.steps.transform;
+package org.processmining.qut.exogenousaware.steps.transform.type;
 
 import org.processmining.qut.exogenousaware.steps.slicing.data.SubSeries;
 import org.processmining.qut.exogenousaware.steps.transform.data.TransformedAttribute;

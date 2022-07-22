@@ -1,4 +1,4 @@
-package org.processmining.qut.exogenousaware.steps.transform;
+package org.processmining.qut.exogenousaware.steps.transform.type.linear;
 
 import java.math.BigDecimal;
 import java.math.RoundingMode;
@@ -6,6 +6,7 @@ import java.util.List;
 
 import org.processmining.qut.exogenousaware.steps.slicing.data.SubSeries;
 import org.processmining.qut.exogenousaware.steps.transform.data.TransformedAttribute;
+import org.processmining.qut.exogenousaware.steps.transform.type.Transformer;
 
 import lombok.Builder;
 import lombok.Builder.Default;

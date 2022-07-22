@@ -1,4 +1,4 @@
-package org.processmining.qut.exogenousaware.steps.transform;
+package org.processmining.qut.exogenousaware.steps.transform.type;
 
 import java.util.List;
 import java.util.NoSuchElementException;

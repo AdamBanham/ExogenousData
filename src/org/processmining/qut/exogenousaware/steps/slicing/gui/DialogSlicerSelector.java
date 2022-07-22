@@ -1,4 +1,4 @@
-package org.processmining.qut.exogenousaware.gui.dialog;
+package org.processmining.qut.exogenousaware.steps.slicing.gui;
 
 import java.awt.Color;
 import java.awt.Dimension;
@@ -34,7 +34,7 @@ import org.processmining.qut.exogenousaware.steps.slicing.FutureOutcomeSlicer;
 import org.processmining.qut.exogenousaware.steps.slicing.PastOutcomeSlicer;
 import org.processmining.qut.exogenousaware.steps.slicing.Slicer;
 import org.processmining.qut.exogenousaware.steps.slicing.TimeAwareSlicer;
-import org.processmining.qut.exogenousaware.steps.transform.EmptyTransform;
+import org.processmining.qut.exogenousaware.steps.transform.type.EmptyTransform;
 
 import com.fluxicon.slickerbox.util.ColorUtils;
 
