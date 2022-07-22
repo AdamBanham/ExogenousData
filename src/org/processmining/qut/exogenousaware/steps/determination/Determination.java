@@ -3,7 +3,7 @@ package org.processmining.qut.exogenousaware.steps.determination;
 import org.processmining.qut.exogenousaware.data.ExogenousDataset;
 import org.processmining.qut.exogenousaware.steps.linking.Linker;
 import org.processmining.qut.exogenousaware.steps.slicing.Slicer;
-import org.processmining.qut.exogenousaware.steps.transform.Transformer;
+import org.processmining.qut.exogenousaware.steps.transform.type.Transformer;
 
 import lombok.AllArgsConstructor;
 import lombok.Builder;

@@ -22,7 +22,6 @@ import javax.swing.JPanel;
 import javax.swing.JScrollPane;
 
 import org.processmining.qut.exogenousaware.data.ExogenousDataset;
-import org.processmining.qut.exogenousaware.gui.dialog.DialogSlicerSelector;
 import org.processmining.qut.exogenousaware.steps.determination.Determination;
 import org.processmining.qut.exogenousaware.steps.slicing.Slicer;
 import org.processmining.qut.exogenousaware.steps.slicing.data.SlicingConfiguration;
