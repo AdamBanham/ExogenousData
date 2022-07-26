@@ -8,9 +8,11 @@ import org.processmining.qut.exogenousaware.steps.slicing.data.SubSeries;
 import org.processmining.qut.exogenousaware.steps.transform.data.TransformedAttribute;
 import org.processmining.qut.exogenousaware.steps.transform.type.Transformer;
 
+import lombok.AllArgsConstructor;
 import lombok.Builder;
 import lombok.Builder.Default;
 import lombok.Getter;
+import lombok.NoArgsConstructor;
 
 /**
  * A transformation function which finds the line of best fit and annotates the slope.<br>
@@ -20,6 +22,8 @@ import lombok.Getter;
  * @author Adam Banham
  */
 @Builder
+@AllArgsConstructor
+@NoArgsConstructor
 public class SlopeTransformer implements Transformer{
 	
 	@Getter private String dataset;
