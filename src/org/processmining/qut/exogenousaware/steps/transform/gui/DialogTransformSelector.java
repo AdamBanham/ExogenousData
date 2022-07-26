@@ -6,10 +6,14 @@ import java.awt.Font;
 import java.awt.GridBagConstraints;
 import java.awt.GridBagLayout;
 import java.awt.Insets;
+import java.awt.event.ItemEvent;
+import java.awt.event.ItemListener;
 import java.awt.event.MouseEvent;
 import java.awt.event.MouseListener;
+import java.lang.reflect.InvocationTargetException;
 import java.util.ArrayList;
 import java.util.List;
+import java.util.stream.Collectors;
 
 import javax.swing.Box;
 import javax.swing.DefaultComboBoxModel;
@@ -18,6 +22,7 @@ import javax.swing.JLabel;
 import javax.swing.JPanel;
 
 import org.processmining.framework.util.ui.widgets.ProMComboBox;
+import org.processmining.qut.exogenousaware.steps.determination.Determination;
 import org.processmining.qut.exogenousaware.steps.transform.type.Transformer;
 import org.processmining.qut.exogenousaware.steps.transform.type.agg.MaxTransformer;
 import org.processmining.qut.exogenousaware.steps.transform.type.agg.MeanTransformer;
@@ -31,20 +36,36 @@ import com.fluxicon.slickerbox.util.ColorUtils;
 import lombok.Builder;
 import lombok.Builder.Default;
 import lombok.Getter;
+import lombok.NonNull;
 
 @Builder
 public class DialogTransformSelector extends JPanel {
+	
+	@NonNull @Getter Determination partial;
 	
 	@Default List<TransformChoice> Transformers = new ArrayList() {{
 		for (TransformChoice choice: TransformChoice.values()) {
 			add(choice);
 		}
 	}};
+	
+	
+	private ProMComboBox<TransformChoice> typeSelector;
+	private ProMComboBox<TransformChoice> chainerChoices;
+	private JLabel chainerLabel;
+	private Color textColour;
 
 	
 	public DialogTransformSelector setup() {
 		//	style panel
-		setBackground(Color.GRAY);
+		if (this.partial instanceof DummyDetermination) {
+			setBackground(Color.DARK_GRAY);
+			this.textColour = Color.white;
+		} else {
+			setBackground(Color.GRAY);
+			this.textColour = Color.black;
+		}
+		
 		//	setup layout and manager
 		setLayout(new GridBagLayout());
 		GridBagConstraints c = new GridBagConstraints();
@@ -58,18 +79,37 @@ public class DialogTransformSelector extends JPanel {
 		// add components
 		// add transform choice
 		JLabel choice = new JLabel("Transformer :");
+		choice.setForeground(textColour);
 		c.insets = new Insets(6, 5, 5, 5);
 		add(choice, c);
 		c.gridx++;
-		ProMComboBox<TransformChoice> typeSelector = new ProMComboBox<TransformChoice>( new DefaultComboBoxModel() );
+		typeSelector = new ProMComboBox<TransformChoice>( new DefaultComboBoxModel() );
 		typeSelector.addAllItems(Transformers);
 		typeSelector.setFont(new Font("Times New Roman", Font.BOLD, 9));
-//		typeSelector.addItemListener(new SlicerTypeListener(this));
-		c.insets = new Insets(0,0, 0, 5);
+		typeSelector.addItemListener(new TransformChoiceListener(this));
+		typeSelector.setPreferredSize(new Dimension(125,25));
+		typeSelector.setMaximumSize(typeSelector.getPreferredSize());
+		typeSelector.setMinimumSize(typeSelector.getPreferredSize());
+		c.insets = new Insets(5,0, 0, 5);
 		add(typeSelector, c);
 		c.gridx++;
-		
-		
+		// add a choice combo for chainers if its needed.
+		chainerLabel = new JLabel("Next Transform :");
+		chainerLabel.setForeground(textColour);
+		c.insets = new Insets(6, 5, 5, 5);
+		chainerLabel.setVisible(false);
+		add(chainerLabel, c);
+		c.gridx++;
+		chainerChoices = new ProMComboBox<TransformChoice>( new DefaultComboBoxModel() );
+		chainerChoices.addAllItems(Transformers.stream().filter(t -> !t.isRequiresChain()).collect(Collectors.toList()));
+		chainerChoices.setFont(new Font("Times New Roman", Font.BOLD, 9));
+		chainerChoices.setVisible(false);
+		chainerChoices.setPreferredSize(new Dimension(125,25));
+		chainerChoices.setMaximumSize(chainerChoices.getPreferredSize());
+		chainerChoices.setMinimumSize(chainerChoices.getPreferredSize());
+		c.insets = new Insets(5,0, 0, 5);
+		add(chainerChoices, c);
+		c.gridx++;		
 		// remove button
 		JButton remove = new JButton("X");
 		remove.setForeground(Color.white);
@@ -85,29 +125,80 @@ public class DialogTransformSelector extends JPanel {
 		c.weightx = 1.0;
 		add(Box.createHorizontalGlue(), c);
 		// set preferred size
-		setMaximumSize(new Dimension(600,75));
+		setMaximumSize(new Dimension(800,75));
 		setMinimumSize(getMaximumSize());
 		setPreferredSize(getMaximumSize());
 //		this.validate();
 		return this;
 	}
 	
+	public void showChainer(boolean show) {
+		this.chainerLabel.setVisible(show);
+		this.chainerChoices.setVisible(show);
+	}
 	
+	
+	public Determination completeDetermination(Determination partial) {
+		return Determination.builder()
+			   .panel(partial.getPanel())
+			   .linker(partial.getLinker())
+			   .slicer(partial.getSlicer())
+			   .transformer(createTransformer())
+			   .build();
+	}
+	
+	
+	public Transformer createTransformer() {
+		Transformer transform = null;
+		TransformChoice choice = (TransformChoice) typeSelector.getSelectedItem();
+		Class<? extends Transformer> transformChoice = choice.getClazz();
+		
+		if (choice.isRequiresChain()) {
+			
+		} else {
+			try {
+				transform = transformChoice.getConstructor().newInstance(new Object[0]);
+			} catch (InstantiationException e) {
+				// TODO Auto-generated catch block
+				e.printStackTrace();
+			} catch (IllegalAccessException e) {
+				// TODO Auto-generated catch block
+				e.printStackTrace();
+			} catch (IllegalArgumentException e) {
+				// TODO Auto-generated catch block
+				e.printStackTrace();
+			} catch (InvocationTargetException e) {
+				// TODO Auto-generated catch block
+				e.printStackTrace();
+			} catch (NoSuchMethodException e) {
+				// TODO Auto-generated catch block
+				e.printStackTrace();
+			} catch (SecurityException e) {
+				// TODO Auto-generated catch block
+				e.printStackTrace();
+			}
+		}
+		return transform;
+	}
+
+
 	static public enum TransformChoice {
-		Slope("BestFit Slope", SlopeTransformer.class),
-		AggMin("Minimum", MinTransformer.class),
-		AggMax("Maximum", MaxTransformer.class),
-		AggMean("Mean", MeanTransformer.class),
-		AggMedian("Median", MedianTransformer.class),
-		Velocity("Velocity", VelocityTransformer.class)
+		Slope("BestFit Slope", SlopeTransformer.class, false),
+		AggMin("Minimum", MinTransformer.class, false),
+		AggMax("Maximum", MaxTransformer.class, false),
+		AggMean("Mean", MeanTransformer.class, false),
+		AggMedian("Median", MedianTransformer.class, false),
+		Velocity("Velocity", VelocityTransformer.class, true)
 		;
 		
-		private String name;
+		@Getter private String name;
 		@Getter private Class<? extends Transformer> clazz;
+		@Getter private boolean requiresChain;
 		
-		private TransformChoice(String name, Class<? extends Transformer> clazz) {
+		private TransformChoice(String name, Class<? extends Transformer> clazz, boolean chain) {
 			this.name = name;
 			this.clazz = clazz;
+			this.requiresChain = chain;
 		}
 		
 		@Override
@@ -115,6 +206,25 @@ public class DialogTransformSelector extends JPanel {
 			return this.name;
 		}
 		
+		
+	}
+	
+	static private class TransformChoiceListener implements ItemListener{
+		
+		private DialogTransformSelector controller;
+		
+		public TransformChoiceListener(DialogTransformSelector controller) {
+			this.controller = controller;
+			
+		}
+
+		public void itemStateChanged(ItemEvent e) {
+			if (e.getStateChange() == ItemEvent.SELECTED) {
+				TransformChoice choice = (TransformChoice) e.getItem();
+				boolean vis = choice.isRequiresChain();
+				this.controller.showChainer(vis);
+			}
+		}
 		
 	}
 

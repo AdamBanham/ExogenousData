@@ -1,6 +1,7 @@
 package org.processmining.qut.exogenousaware.steps.transform.gui;
 
 import java.awt.Color;
+import java.awt.Component;
 import java.awt.GridBagConstraints;
 import java.beans.PropertyChangeEvent;
 import java.beans.PropertyChangeListener;
@@ -12,11 +13,13 @@ import javax.swing.BoxLayout;
 import javax.swing.JPanel;
 
 import org.processmining.qut.exogenousaware.gui.styles.PanelStyler;
+import org.processmining.qut.exogenousaware.steps.determination.Determination;
 
 import com.fluxicon.slickerbox.components.RoundedPanel;
 
 import lombok.Builder;
 import lombok.Builder.Default;
+import lombok.Data;
 import lombok.Getter;
 import lombok.NonNull;
 
@@ -25,7 +28,7 @@ public class TransformSelectorFilterList {
 	
 	@NonNull @Getter TransformConfigurationDialog source;
 	
-	@Default List<DialogTransformSelector> visibles = new ArrayList();
+	@Default List<DialogHolder> visibles = new ArrayList();
 	@Default GridBagConstraints c = new GridBagConstraints();
 	
 	@Getter private RoundedPanel panel;
@@ -44,34 +47,67 @@ public class TransformSelectorFilterList {
 
 
 	public void addDialog(DialogTransformSelector dialog) {
-		visibles.add(dialog);	
+		DialogHolder holder = DialogHolder.builder()
+				.dialog(dialog)
+				.spacer(Box.createVerticalStrut(15))
+				.build();
+		visibles.add(holder);	
 		c.gridy++;
-		panel.add(Box.createVerticalStrut(15));
+		panel.add(holder.getSpacer());
 		c.gridy++;
-		dialog.addPropertyChangeListener("remove-parent", new RemovalListener(dialog, this));
-		panel.add(dialog);
+		dialog.addPropertyChangeListener("remove-parent", new RemovalListener(holder, this));
+		panel.add(holder.getDialog());
 		panel.validate();
+	}
+	
+	public void filterToPartial(Determination partial) {
+		for (DialogHolder visible: visibles) {
+			visible.hide(visible.checkPartial(partial));
+		}
+	}
+	
+	@Builder
+	@Data
+	private static class DialogHolder {
+		
+		private DialogTransformSelector dialog;
+		private Component spacer;
+		
+		public Boolean checkPartial(Determination partial) {
+			if (this.dialog.getPartial() instanceof DummyDetermination) {
+				return true;
+			} else {
+				return this.dialog.getPartial().equals(partial);
+			}
+			
+		}
+		
+		public void hide(Boolean hide) {
+			this.dialog.setVisible(hide);
+			this.spacer.setVisible(hide);
+		}
+		
+		public void remove(JPanel parent) {
+			parent.remove(this.dialog);
+			parent.remove(this.spacer);
+		}
 	}
 	
 	public static class RemovalListener implements PropertyChangeListener {
 		
 		private TransformSelectorFilterList controller;
-		private DialogTransformSelector dialog;
+		private DialogHolder holder;
 		private JPanel panel;
 		
-		public RemovalListener(DialogTransformSelector dialog, TransformSelectorFilterList controller) {
-			this.dialog = dialog;
+		public RemovalListener(DialogHolder holder, TransformSelectorFilterList controller) {
+			this.holder = holder;
 			this.panel = controller.getPanel();
 			this.controller = controller;
 		}
 
 		public void propertyChange(PropertyChangeEvent evt) {
-			for(int i=0; i<this.panel.getComponentCount();i++) {
-				if (this.panel.getComponent(i).equals(dialog)) {
-					this.panel.remove(i-1);
-				}
-			}
-			this.panel.remove(dialog);
+			this.holder.remove(this.panel);
+			this.controller.source.removeDialog(this.holder.getDialog().getPartial(), this.holder.getDialog());
 			this.panel.validate();
 			this.panel.repaint();
 			this.controller.getSource().scroller.validate();
