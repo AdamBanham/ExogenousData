@@ -30,6 +30,7 @@ import org.processmining.qut.exogenousaware.exceptions.LinkNotFoundException;
 import org.processmining.qut.exogenousaware.gui.colours.ExoPanelPicker;
 import org.processmining.qut.exogenousaware.steps.Slicing;
 import org.processmining.qut.exogenousaware.steps.Transforming;
+import org.processmining.qut.exogenousaware.steps.determination.Determination;
 import org.processmining.qut.exogenousaware.steps.slicing.data.SlicingConfiguration;
 import org.processmining.qut.exogenousaware.steps.slicing.data.SubSeries;
 import org.processmining.qut.exogenousaware.steps.slicing.gui.SlicingConfigurationDialog;
@@ -66,6 +67,7 @@ public class ExogenousAnnotatedLog implements XLog {
 	@Singular Set<XExtension> extensions;
 	@Default @Setter @Getter HashMap<String, Map<String,List<SubSeries>>> linkedSubseries = new HashMap<String, Map<String,List<SubSeries>>>();
 	@Default XLog exoSubseries = null;
+	@Default List<Determination> determinations = new ArrayList<>();
 	@NonNull Boolean parsed;
 	
 //	configuration setup for exogenous aware log
@@ -91,6 +93,7 @@ public class ExogenousAnnotatedLog implements XLog {
 				this.extensions,
 				this.linkedSubseries,
 				this.exoSubseries,
+				this.determinations,
 				false,
 				false,
 				this.slicingConfig
@@ -112,8 +115,10 @@ public class ExogenousAnnotatedLog implements XLog {
 			InteractionResult result = context.showWizard("Create your transforming configuration", false, true, tdialog);
 			if (result == InteractionResult.FINISHED) {
 				this.slicingConfig = sdialog.generateConfig();
+				this.determinations = tdialog.generateDeterminations();
 			}
 		}
+		return;
 	}
 	
 	public ExogenousAnnotatedLog setup(UIPluginContext context) {
@@ -170,6 +175,18 @@ public class ExogenousAnnotatedLog implements XLog {
 		}
 
 		return this;
+	}
+	
+	public List<XTrace> handleDeterminations(XTrace endo, Progress progress){
+		List<XTrace> subseriesTraces = new ArrayList<XTrace>();
+		
+//		the work; apply all determinations to this endogenous trace to produce 
+//		a possible association with exogenous data
+		for(Determination deter: this.determinations) {
+			
+		}
+		
+		return subseriesTraces;
 	}
 	
 	public List<XTrace> handleEndogenousTraceLinkage(XTrace endo, Progress progress) {
