@@ -18,6 +18,7 @@ import org.processmining.qut.exogenousaware.exceptions.CannotConvertException;
 import org.processmining.qut.exogenousaware.gui.ExogenousDiscoveryInvestigator;
 import org.processmining.qut.exogenousaware.gui.ExogenousTraceExplorer;
 import org.processmining.qut.exogenousaware.gui.ExogenousTraceView;
+import org.processmining.qut.exogenousaware.steps.determination.configs.AIME2022;
 
 
 
@@ -76,7 +77,53 @@ public class ExogenousAwareDiscoveryPlugin {
 				.exogenousDatasets(exoLogs)
 				.classifiers(endogenous.getClassifiers())
 				.extensions(endogenous.getExtensions())
+				.useDefaultConfiguration(false)
+				.globalEventAttributes(endogenous.getGlobalEventAttributes())
+				.globalTraceAttributes(endogenous.getGlobalTraceAttributes())
+				.attributes(endogenous.getAttributes())
+				.parsed(false)
+				.build()
+				.setup(context);
+		return annotated;
+		
+	}
+	
+	@Plugin(
+			name = "Exogenous Annotated Log Preparation (AIME 2022)",
+			parameterLabels = {"Event Log", "Exo-Panels"},
+			returnLabels = {"Exogenous Annotated Log"},
+			returnTypes = {ExogenousAnnotatedLog.class},
+			userAccessible = true
+	)
+	@UITopiaVariant(
+			affiliation = "QUT",
+			author = "A. Banham",
+			email = "adam.banham@hdr.qut.edu.au"
+	)
+	public ExogenousAnnotatedLog AIME2022preperation(UIPluginContext context, XLog endogenous, XLog[] exogenous) throws Throwable{
+		List<ExogenousDataset> exoLogs = new ArrayList<ExogenousDataset>();
+		for(XLog elog: exogenous) {
+			ExogenousDataset temp;
+			try {
+				temp = ExogenousDataset.builder()
+						.source(elog)
+						.build()
+						.setup();
+			} catch (CannotConvertException e) {
+				// if log cannot naively be convert to dataset then move on
+				System.out.println("[ExogenousAnnotatedLog] Cannot convert log='"+ elog.getAttributes().get("concept:name").toString()+"' to an exogenous dataset.");
+				continue;
+			}
+			exoLogs.add(temp);
+		}
+		ExogenousAnnotatedLog annotated = ExogenousAnnotatedLog
+				.builder()
+				.endogenousLog(endogenous)
+				.exogenousDatasets(exoLogs)
+				.classifiers(endogenous.getClassifiers())
+				.extensions(endogenous.getExtensions())
 				.useDefaultConfiguration(true)
+				.determinations(AIME2022.getConfiguration(exoLogs))
 				.globalEventAttributes(endogenous.getGlobalEventAttributes())
 				.globalTraceAttributes(endogenous.getGlobalTraceAttributes())
 				.attributes(endogenous.getAttributes())
