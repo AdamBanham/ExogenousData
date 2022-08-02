@@ -123,7 +123,9 @@ public class ExogenousAnnotatedLog implements XLog {
 	
 	public ExogenousAnnotatedLog setup(UIPluginContext context) {
 //		check that configuration is setup
-		handleConfigurationSetup(context);
+		if (!this.useDefaultConfiguration) {
+			handleConfigurationSetup(context);
+		}
 		if (!this.parsed) {
 //			set base colours for exo-panels
 			ExoPanelPicker picker = ExoPanelPicker.builder().build();
@@ -139,7 +141,7 @@ public class ExogenousAnnotatedLog implements XLog {
 			progress.setCaption("Linking endogenous traces...");
 //			run parallel work pool over handler
 			List<List<XTrace>> subseries = this.endogenousLog.parallelStream()
-				.map( trace -> handleEndogenousTraceLinkage(trace, progress))
+				.map( trace -> handleDeterminations(trace, progress))
 				.collect(Collectors.toList());
 //			add subseries collection into subseries Xlog
 			progress.setMaximum(this.endogenousLog.size()+subseries.size());
@@ -183,12 +185,15 @@ public class ExogenousAnnotatedLog implements XLog {
 //		the work; apply all determinations to this endogenous trace to produce 
 //		a possible association with exogenous data
 		for(Determination deter: this.determinations) {
-			
+			List<XTrace> foundExoTraces = deter.apply(endo);
+			subseriesTraces.addAll(foundExoTraces);
 		}
-		
+		progress.inc();
 		return subseriesTraces;
 	}
 	
+	
+	@Deprecated
 	public List<XTrace> handleEndogenousTraceLinkage(XTrace endo, Progress progress) {
 		List<XTrace> subseriesTraces = new ArrayList<XTrace>();
 		// don't do work if we are cancelled :(

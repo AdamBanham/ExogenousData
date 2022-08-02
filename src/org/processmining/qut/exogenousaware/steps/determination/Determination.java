@@ -1,12 +1,12 @@
 package org.processmining.qut.exogenousaware.steps.determination;
 
-import java.util.ArrayList;
 import java.util.List;
 import java.util.Map;
 import java.util.Map.Entry;
 
 import org.deckfour.xes.model.XEvent;
 import org.deckfour.xes.model.XTrace;
+import org.deckfour.xes.model.impl.XAttributeBooleanImpl;
 import org.processmining.qut.exogenousaware.data.ExogenousDataset;
 import org.processmining.qut.exogenousaware.steps.linking.Linker;
 import org.processmining.qut.exogenousaware.steps.slicing.Slicer;
@@ -44,8 +44,7 @@ public class Determination {
 	 * @param endo : the endogenous trace to be considered
 	 * @return A list of found subseries from this determination
 	 */
-	public List<SubSeries> apply(XTrace endo){
-		List<SubSeries> foundSubSeries = new ArrayList<>();
+	public List<XTrace> apply(XTrace endo){
 //		perform the linkage
 		List<XTrace> exogenousSeries = linker.link(endo, panel.getSource());
 //		if we have some linkage, then perform slicing
@@ -54,14 +53,20 @@ public class Determination {
 //			if we have some subseries, then perform transformation
 			for(Entry<XEvent, SubSeries> item: result.entrySet()) {
 				TransformedAttribute xattr = transformer.transform(item.getValue());
+//				add attribute to say that exogenous data was found
+				item.getKey().getAttributes()
+					.put("exogenous:dataset:"+xattr.getSource().getDataset()+":linked", 
+						new XAttributeBooleanImpl("exogenous:dataset:"+xattr.getSource().getDataset()+":linked", true)
+					);
+//				check if we need to add a transformed attribute
 				if (xattr != null) {
 					item.getKey().getAttributes()
 						.put(xattr.getKey(), xattr);
+
 				}
-				foundSubSeries.add(item.getValue());
 			}
 		}			
-		return foundSubSeries;
+		return exogenousSeries;
 	}
 
 }

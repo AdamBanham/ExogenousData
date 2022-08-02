@@ -10,13 +10,21 @@ import lombok.NoArgsConstructor;
 public class MinTransformer implements Transformer {
 
 	public TransformedAttribute transform(SubSeries subtimeseries) {
-		// TODO Auto-generated method stub
-		return null;
+		double min = subtimeseries.getYSeries()
+				.stream()
+				.reduce(Double::min)
+				.get();
+		min = Double.parseDouble(String.format("%.2f", min));
+		return TransformedAttribute.builder()
+				.value(min)
+				.transform(getName())
+				.key(subtimeseries.buildPrefix(true))
+				.source(subtimeseries)
+				.build();
 	}
 
 	public String getName() {
-		// TODO Auto-generated method stub
-		return null;
+		return "min";
 	}
 
 }

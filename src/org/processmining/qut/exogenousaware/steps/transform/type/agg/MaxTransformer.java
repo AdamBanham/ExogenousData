@@ -11,13 +11,21 @@ public class MaxTransformer implements Transformer {
 	
 
 	public TransformedAttribute transform(SubSeries subtimeseries) {
-		// TODO Auto-generated method stub
-		return null;
+		Double max = subtimeseries.getYSeries()
+				.stream()
+				.reduce(Double::max)
+				.get();	
+		max = Double.parseDouble(String.format("%.2f", max));
+		return TransformedAttribute.builder()
+				.value(max)
+				.key(subtimeseries.buildPrefix(true))
+				.transform(getName())
+				.source(subtimeseries)
+				.build();
 	}
 
 	public String getName() {
-		// TODO Auto-generated method stub
-		return null;
+		return "max";
 	}
 
 }
