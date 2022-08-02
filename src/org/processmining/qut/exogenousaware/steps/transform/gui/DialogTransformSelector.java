@@ -147,6 +147,28 @@ public class DialogTransformSelector extends JPanel {
 			   .build();
 	}
 	
+	private Transformer getSimpleTransformer(Class<? extends Transformer> clazz) {
+		try {
+			return clazz.getConstructor().newInstance(new Object[0]);
+		} catch (InstantiationException | IllegalAccessException | IllegalArgumentException
+				| InvocationTargetException | NoSuchMethodException | SecurityException e) {
+			// TODO Auto-generated catch block
+			e.printStackTrace();
+		}
+		return null;
+	}
+	
+	private Transformer getChainerTransformer(Class<? extends Transformer> clazz, Object[] args) {
+		try {
+			return clazz.getConstructor(Transformer.class).newInstance(args);
+		} catch (InstantiationException | IllegalAccessException | IllegalArgumentException | InvocationTargetException
+				| NoSuchMethodException | SecurityException e) {
+			// TODO Auto-generated catch block
+			e.printStackTrace();
+		}
+		return null;
+	}
+	
 	
 	public Transformer createTransformer() {
 		Transformer transform = null;
@@ -154,29 +176,13 @@ public class DialogTransformSelector extends JPanel {
 		Class<? extends Transformer> transformChoice = choice.getClazz();
 		
 		if (choice.isRequiresChain()) {
-			
+			TransformChoice chainerChoice = (TransformChoice) chainerChoices.getSelectedItem();
+			Transformer chainer = getSimpleTransformer(chainerChoice.getClazz());
+			Object[] args = new Object[1];
+			args[0] = chainer;
+			transform = getChainerTransformer(transformChoice, args);
 		} else {
-			try {
-				transform = transformChoice.getConstructor().newInstance(new Object[0]);
-			} catch (InstantiationException e) {
-				// TODO Auto-generated catch block
-				e.printStackTrace();
-			} catch (IllegalAccessException e) {
-				// TODO Auto-generated catch block
-				e.printStackTrace();
-			} catch (IllegalArgumentException e) {
-				// TODO Auto-generated catch block
-				e.printStackTrace();
-			} catch (InvocationTargetException e) {
-				// TODO Auto-generated catch block
-				e.printStackTrace();
-			} catch (NoSuchMethodException e) {
-				// TODO Auto-generated catch block
-				e.printStackTrace();
-			} catch (SecurityException e) {
-				// TODO Auto-generated catch block
-				e.printStackTrace();
-			}
+			transform = getSimpleTransformer(transformChoice);
 		}
 		return transform;
 	}
