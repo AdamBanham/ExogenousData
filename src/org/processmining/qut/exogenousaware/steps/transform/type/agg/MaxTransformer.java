@@ -11,6 +11,9 @@ public class MaxTransformer implements Transformer {
 	
 
 	public TransformedAttribute transform(SubSeries subtimeseries) {
+		if (subtimeseries.size() < 1) {
+			return null;
+		}
 		Double max = subtimeseries.getYSeries()
 				.stream()
 				.reduce(Double::max)

@@ -40,7 +40,7 @@ public class Transforming {
 		List<TransformedAttribute> attrs = new ArrayList<TransformedAttribute>();
 		if (subtimeseries.getDatatype().equals(ExogenousDatasetType.NUMERICAL)) {
 			if (subtimeseries.getSubEvents().size() > 1) {
-				attrs.add(SlopeTransformer.builder().dataset(dataset).build().transform(subtimeseries));
+				attrs.add(SlopeTransformer.builder().build().transform(subtimeseries));
 			}
 		} else if (subtimeseries.getDatatype().equals(ExogenousDatasetType.DISCRETE)) {
 			attrs.add(PossibleOutcomeTransformer.builder().Outcome("SEPSIS INFECTION").build().transform(subtimeseries));

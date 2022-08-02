@@ -53,13 +53,13 @@ public class Determination {
 //			if we have some subseries, then perform transformation
 			for(Entry<XEvent, SubSeries> item: result.entrySet()) {
 				TransformedAttribute xattr = transformer.transform(item.getValue());
-//				add attribute to say that exogenous data was found
-				item.getKey().getAttributes()
-					.put("exogenous:dataset:"+xattr.getSource().getDataset()+":linked", 
-						new XAttributeBooleanImpl("exogenous:dataset:"+xattr.getSource().getDataset()+":linked", true)
-					);
 //				check if we need to add a transformed attribute
 				if (xattr != null) {
+//					add attribute to say that exogenous data was found
+					item.getKey().getAttributes()
+						.put("exogenous:dataset:"+xattr.getSource().getDataset()+":linked", 
+							new XAttributeBooleanImpl("exogenous:dataset:"+xattr.getSource().getDataset()+":linked", true)
+						);
 					item.getKey().getAttributes()
 						.put(xattr.getKey(), xattr);
 

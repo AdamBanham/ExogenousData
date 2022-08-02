@@ -10,6 +10,9 @@ import lombok.NoArgsConstructor;
 public class MinTransformer implements Transformer {
 
 	public TransformedAttribute transform(SubSeries subtimeseries) {
+		if (subtimeseries.size() < 1) {
+			return null;
+		}
 		double min = subtimeseries.getYSeries()
 				.stream()
 				.reduce(Double::min)

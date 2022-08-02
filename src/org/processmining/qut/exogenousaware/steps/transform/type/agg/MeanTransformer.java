@@ -10,6 +10,9 @@ import lombok.NoArgsConstructor;
 public class MeanTransformer implements Transformer {
 
 	public TransformedAttribute transform(SubSeries subtimeseries) {
+		if (subtimeseries.size() < 1) {
+			return null;
+		}
 		Double mean = subtimeseries.getYSeries()
 				.stream()
 				.reduce(Double::sum)

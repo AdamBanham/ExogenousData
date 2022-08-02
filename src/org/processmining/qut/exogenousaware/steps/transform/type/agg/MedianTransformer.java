@@ -11,6 +11,9 @@ import lombok.NoArgsConstructor;
 public class MedianTransformer implements Transformer {
 
 	public TransformedAttribute transform(SubSeries subtimeseries) {
+		if (subtimeseries.size() < 1) {
+			return null;
+		}
 		double[] vals = new double[subtimeseries.size()];
 		int i= 0;
 		for(double v : subtimeseries.getYSeries()) {

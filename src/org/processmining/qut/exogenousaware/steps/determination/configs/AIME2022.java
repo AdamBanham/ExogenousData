@@ -35,7 +35,7 @@ public class AIME2022 {
 							.panel(dataset)
 							.linker(dataset.getLinker())
 							.slicer( TimeAwareSlicer.builder().timePeriod((long) (range * HOUR)).build())
-							.transformer( SlopeTransformer.builder().dataset(dataset.getName()).build())
+							.transformer( SlopeTransformer.builder().build())
 							.build()
 					);
 				}

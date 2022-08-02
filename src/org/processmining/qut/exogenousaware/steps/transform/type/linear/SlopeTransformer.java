@@ -1,7 +1,5 @@
 package org.processmining.qut.exogenousaware.steps.transform.type.linear;
 
-import java.math.BigDecimal;
-import java.math.RoundingMode;
 import java.util.List;
 
 import org.processmining.qut.exogenousaware.steps.slicing.data.SubSeries;
@@ -11,7 +9,6 @@ import org.processmining.qut.exogenousaware.steps.transform.type.Transformer;
 import lombok.AllArgsConstructor;
 import lombok.Builder;
 import lombok.Builder.Default;
-import lombok.Getter;
 import lombok.NoArgsConstructor;
 
 /**
@@ -26,15 +23,18 @@ import lombok.NoArgsConstructor;
 @NoArgsConstructor
 public class SlopeTransformer implements Transformer{
 	
-	@Getter private String dataset;
 	@Default private String name = "slope";
+	
+	private static double scale = 1000.0* 60 * 60;
 	
 	@Override
 	public TransformedAttribute transform(SubSeries subtimeseries) {
+		if (subtimeseries.size() < 2) {
+			return null;
+		}
 		return TransformedAttribute.builder()
-			   .key(this.dataset+":"+ subtimeseries.getSlicingName())
+			   .key(subtimeseries.buildPrefix(true))
 			   .value(findSlope(subtimeseries))
-			   .extension(null)
 			   .transform(this.name)
 			   .source(subtimeseries)
 			   .build();
@@ -54,30 +54,28 @@ public class SlopeTransformer implements Transformer{
 			List<Double> y = subtimeseries.getYSeries();
 	//		precompute compontents
 			int n = x.size();
-			double s_x = x.stream().map(ts -> convertToMinutes(ts)).reduce( 0.0, (cu,ne) -> cu+ne);
-			double s_xx = x.stream().map(ts -> convertToMinutes(ts)).reduce( 0.0, (curr,next) -> curr+(next*next)) ;
+			double s_x = x.stream().map(ts -> convertToScale(ts)).reduce( 0.0, (cu,ne) -> cu+ne);
+			double s_xx = x.stream().map(ts -> convertToScale(ts)).reduce( 0.0, (curr,next) -> curr+(next*next)) ;
 			double s_y = y.stream().reduce(0.00, (cu,ne) -> cu+ne);
 			double s_xy = 0;
 			for(int i=0;i < x.size();i++) {
-				s_xy += convertToMinutes(x.get(i)) + y.get(i);
+				s_xy += convertToScale(x.get(i)) + y.get(i);
 			}
 	//		find slope
 			double slope = ((n * s_xy) - (s_x * s_y)) / ((n * s_xx) - (Math.pow(s_x,2)));
 			slope = round(slope);
 			return slope;
 		} catch (NumberFormatException e) {
-			return 0;
+			return 0.0;
 		}
 	}
 	
 	public static double round(double val) {
-		BigDecimal bd = new BigDecimal(Double.toString(val));
-		bd = bd.setScale(2, RoundingMode.HALF_UP);
-		return bd.doubleValue();
+		return Double.parseDouble(String.format("%.2f", val));
 	}
 	
-	public static double convertToMinutes(long val) {
-		return val / (1000.0 * 60.0);
+	public static double convertToScale(long val) {
+		return val / (scale);
 	}
 
 	public String getName() {
