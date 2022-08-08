@@ -29,6 +29,7 @@ import org.processmining.qut.exogenousaware.steps.transform.type.agg.MeanTransfo
 import org.processmining.qut.exogenousaware.steps.transform.type.agg.MedianTransformer;
 import org.processmining.qut.exogenousaware.steps.transform.type.agg.MinTransformer;
 import org.processmining.qut.exogenousaware.steps.transform.type.linear.SlopeTransformer;
+import org.processmining.qut.exogenousaware.steps.transform.type.modeller.PolynomialCurveFitterModeller;
 import org.processmining.qut.exogenousaware.steps.transform.type.velocity.VelocityTransformer;
 
 import com.fluxicon.slickerbox.util.ColorUtils;
@@ -194,7 +195,8 @@ public class DialogTransformSelector extends JPanel {
 		AggMax("Maximum", MaxTransformer.class, false),
 		AggMean("Mean", MeanTransformer.class, false),
 		AggMedian("Median", MedianTransformer.class, false),
-		Velocity("Velocity", VelocityTransformer.class, true)
+		Velocity("Velocity", VelocityTransformer.class, true),
+		PolyFitter("PolynomialFitter", PolynomialCurveFitterModeller.class, false)
 		;
 		
 		@Getter private String name;
