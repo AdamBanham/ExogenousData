@@ -7,8 +7,6 @@ import java.awt.Dimension;
 import java.awt.Font;
 import java.awt.GridLayout;
 import java.awt.event.MouseEvent;
-import java.util.Set;
-import java.util.stream.Collectors;
 
 import javax.swing.BorderFactory;
 import javax.swing.BoxLayout;
@@ -228,14 +226,7 @@ public class ExogenousTraceView extends JPanel {
 	public JComponent buildTraceList () {
 		JPanel bottomRight = new JPanel();
 //		create stylish trace selector
-//		run through keyset and collect only ev's that have some linkedsubseries data
-		Set<String> evKeySet = this.source.getLinkedSubseries().keySet();
-		evKeySet = evKeySet.stream().filter(
-				key -> this.source.getLinkedSubseries().get(key).keySet().size() > 0
-				
-				)
-				.collect(Collectors.toSet());
-		ExoTraceBuilder builder = new ExoTraceBuilder(evKeySet);
+		ExoTraceBuilder builder = new ExoTraceBuilder();
 		ProMTraceList<XTrace> traceView = new ProMTraceList<XTrace>(
 				builder
 		);

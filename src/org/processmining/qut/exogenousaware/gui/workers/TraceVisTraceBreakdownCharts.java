@@ -13,7 +13,6 @@ import java.util.HashSet;
 import java.util.List;
 import java.util.Map;
 import java.util.Set;
-import java.util.stream.Collectors;
 
 import javax.swing.Box;
 import javax.swing.BoxLayout;
@@ -97,14 +96,7 @@ public class TraceVisTraceBreakdownCharts extends SwingWorker<JPanel, String> {
 		c.weightx = 0;
 		c.gridy++;
 //		setup trace wedge vis with a listener of event clicks
-		Set<String> evKeySet = this.source.getSource().getLinkedSubseries().keySet();
-		evKeySet = evKeySet.stream()
-				.filter(s -> endo.stream().map(ev -> this.source.getSource().getEventExogenousLinkId(ev)).collect(Collectors.toList()).contains(s))
-				.collect(Collectors.toSet());
-		evKeySet = evKeySet.stream()
-				.filter(s -> this.source.getSource().getLinkedSubseries().get(s).keySet().size() > 0)
-				.collect(Collectors.toSet());
-		ExoTraceBuilder builder = new ExoTraceBuilder(evKeySet);
+		ExoTraceBuilder builder = new ExoTraceBuilder();
 		ProMTraceList<XTrace> traceController = new ProMTraceList<XTrace>(
 				builder
 		);

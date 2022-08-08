@@ -3,12 +3,9 @@ package org.processmining.qut.exogenousaware.gui.promlist;
 import java.awt.Color;
 import java.util.ArrayList;
 import java.util.HashMap;
-import java.util.HashSet;
 import java.util.Iterator;
 import java.util.List;
 import java.util.Map;
-import java.util.Set;
-import java.util.stream.Collectors;
 
 import org.deckfour.xes.model.XAttribute;
 import org.deckfour.xes.model.XEvent;
@@ -24,15 +21,13 @@ public class ProMListComponents {
 	
 	public static class ExoTraceBuilder implements TraceBuilder<XTrace> {
 
-		private Set<String> exoEvents;
 		private boolean highlight = false;
 		private int eventid = -1;
 		private int traceCount = 0;
 		private Map<XTrace, Integer> traceMap = new HashMap();
 		public List<Integer> selection = new ArrayList();
 		
-		public ExoTraceBuilder(Set<String> exoEvents) {
-			this.exoEvents = exoEvents;
+		public ExoTraceBuilder() {
 		}
 		
 		
@@ -63,7 +58,6 @@ public class ProMListComponents {
 			if (this.highlight) {
 				newTrace = new ExoTrace(element, 
 						hasExo,
-						exoEvents,
 						this.eventid,
 						traceNo,
 						selected
@@ -71,7 +65,6 @@ public class ProMListComponents {
 			} else {
 				newTrace = new ExoTrace(element, 
 						hasExo,
-						exoEvents,
 						-1,
 						traceNo,
 						selected
@@ -97,19 +90,17 @@ public class ProMListComponents {
 		
 		public XTrace source;
 		public Boolean hasExo;
-		public Set<String> exoEvents;
 		public int highlightevent = -1;
 		public int traceNo = -1;
 		public boolean selected = false;
 		
-		public ExoTrace(XTrace source, Boolean hasExo, Set<String> exoEvents,int traceNo, boolean selected) {
-			this(source,hasExo,exoEvents,-1,traceNo, selected);
+		public ExoTrace(XTrace source, Boolean hasExo,int traceNo, boolean selected) {
+			this(source,hasExo,-1,traceNo, selected);
 		}
 		
-		public ExoTrace(XTrace source, Boolean hasExo, Set<String> exoEvents, int highlightevent, int traceNo, boolean selected) {
+		public ExoTrace(XTrace source, Boolean hasExo, int highlightevent, int traceNo, boolean selected) {
 			this.source = source;
 			this.hasExo = hasExo;
-			this.exoEvents = exoEvents;
 			this.highlightevent = highlightevent;
 			this.traceNo = traceNo;
 			this.selected = selected;
@@ -117,11 +108,8 @@ public class ProMListComponents {
 		
 		@Override
 		public Iterator<Event> iterator() {
-			
-			List<String> evSet = this.source.stream().map(ev -> ev.getID().toString()).collect(Collectors.toList());
 			return new ExoIterator(
-					this.source.iterator(), 
-					this.hasExo ? this.exoEvents.stream().filter(s -> evSet.contains(s)).collect(Collectors.toSet()) : new HashSet<String>(), 
+					this.source.iterator(),  
 					this.highlightevent
 					);
 		}
@@ -156,13 +144,11 @@ public class ProMListComponents {
 	public static class ExoIterator implements Iterator<Event> {
 
 		Iterator<XEvent> source;
-		private Set<String> exoEvents;
 		private int highlightevent = -1;
 		private int counter = -1;
 		
-		public ExoIterator(Iterator<XEvent> source, Set<String> exoEvents, int highlightevent) {
+		public ExoIterator(Iterator<XEvent> source, int highlightevent) {
 			this.source = source;
-			this.exoEvents = exoEvents;
 			this.highlightevent = highlightevent;
 		}
 		
