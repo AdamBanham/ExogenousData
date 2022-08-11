@@ -1,6 +1,13 @@
 package org.processmining.qut.exogenousaware.gui.panels;
 
-import java.awt.GridLayout;
+import java.awt.Color;
+import java.awt.Component;
+import java.awt.Dimension;
+import java.awt.GridBagConstraints;
+import java.awt.GridBagLayout;
+import java.awt.Insets;
+import java.awt.event.AdjustmentEvent;
+import java.awt.event.AdjustmentListener;
 import java.awt.event.MouseEvent;
 import java.awt.event.MouseListener;
 import java.util.ArrayList;
@@ -11,7 +18,10 @@ import java.util.Map;
 import java.util.Map.Entry;
 import java.util.stream.Collectors;
 
+import javax.swing.Box;
+import javax.swing.JLabel;
 import javax.swing.JPanel;
+import javax.swing.SwingUtilities;
 
 import org.apache.commons.lang.NotImplementedException;
 import org.apache.commons.lang.StringEscapeUtils;
@@ -19,6 +29,7 @@ import org.processmining.datapetrinets.expression.GuardExpression;
 import org.processmining.datapetrinets.expression.syntax.ExprRoot;
 import org.processmining.datapetrinets.expression.syntax.ExpressionParser;
 import org.processmining.datapetrinets.expression.syntax.SimpleNode;
+import org.processmining.framework.util.ui.widgets.ProMScrollPane;
 import org.processmining.models.graphbased.directed.petrinet.PetrinetEdge;
 import org.processmining.models.graphbased.directed.petrinet.PetrinetNode;
 import org.processmining.models.graphbased.directed.petrinet.elements.Arc;
@@ -31,6 +42,8 @@ import org.processmining.plugins.graphviz.dot.Dot.GraphDirection;
 import org.processmining.plugins.graphviz.dot.DotEdge;
 import org.processmining.plugins.graphviz.dot.DotNode;
 import org.processmining.plugins.graphviz.visualisation.DotPanel;
+import org.processmining.qut.exogenousaware.gui.dot.panels.DotPanelG2;
+import org.processmining.qut.exogenousaware.gui.styles.ScrollbarStyler;
 
 import lombok.AllArgsConstructor;
 import lombok.Builder;
@@ -48,7 +61,7 @@ import lombok.Setter;
 public class ExogenousInvestigatorDotPanel  {
 
 	@Getter private JPanel main;
-	@Getter private DotPanel vis;
+	@Getter private DotPanelG2 vis;
 	@Getter @NonNull private PetriNetWithData graph;
 	
 	@Default @Setter private Map<String, GuardExpression> rules = null;
@@ -56,16 +69,147 @@ public class ExogenousInvestigatorDotPanel  {
 	@Default @Setter private PetriNetWithData updatedGraph = null;
 	
 	public ExogenousInvestigatorDotPanel setup() {
-		this.main = new JPanel();
-		this.main.setLayout(new GridLayout());
-		this.vis = new DotPanel(new Dot());
-		this.vis.changeDot(this.convertGraphToDot(this.vis), false);
-		this.vis.setDirection(GraphDirection.leftRight);
-		this.main.add(this.vis);
+////		setup layout settings
+//		GridBagConstraints c = new GridBagConstraints();
+//		c.weightx = 1.0;
+//		c.weighty = 1.0;
+////		make main panel
+//		this.main = new JPanel();
+//		this.main.setLayout(new GridBagLayout());	
+////		add clickable for info panel
+//		JPanel b = new JPanel();
+//		b.setLayout(new GridBagLayout());
+////		add some visible icons for hide/unhide
+//		c.gridx = 0;
+//		c.gridy = 0;
+//		c.weightx = 1.0;
+//		c.weighty = 1.0;
+//		b.add(Box.createGlue(), c);
+//		c.gridy++;
+//		c.weighty = 0.;
+//		b.add(new JLabel("<"), c);
+//		c.gridy++;
+//		b.add(new JLabel(">"), c);
+//		c.weighty = 1.0;
+//		c.gridy++;
+//		b.add(Box.createGlue(), c);
+//		b.setBackground(Color.LIGHT_GRAY);
+//		b.setPreferredSize(new Dimension(15,75));
+////		add in clickable
+//		c.weightx = 0.1;
+//		c.weighty = 1.0;
+//		c.gridy = 0;
+//		c.gridwidth = 1;
+//		c.anchor = c.EAST;
+//		c.gridx = 4;
+//		c.fill = c.VERTICAL;
+//		this.main.add(b,c);
+////		add info panel
+//		JPanel bb = new JPanel();
+//		JPanel dummy = new JPanel();
+//		dummy.setBackground(new Color(0,0,0,0));
+//		dummy.setPreferredSize(new Dimension(50,2500));
+//		dummy.setMinimumSize(dummy.getPreferredSize());
+//		ProMScrollPane scroll = new ProMScrollPane(dummy);
+//		Color transGray = new Color(128, 128, 128, 175);
+//		scroll.setBackground(transGray);
+//		scroll.setPreferredSize(new Dimension(250,75));
+//		scroll.setVisible(false);
+//		
+////		add scroll info panel
+//		c.weightx = 0.1;
+//		c.weighty = 1.0;
+//		c.insets = new Insets(0,0,0,15);
+//		c.gridy = 0;
+//		c.gridx = 4;
+//		c.gridwidth = 1;
+//		c.anchor = c.EAST;
+//		c.fill = c.VERTICAL;
+//		this.main.add(scroll,c);
+//		
+////		add listener to hide info panel
+//		b.addMouseListener(new MouseListener() {
+//			
+//					private Component comp = scroll;
+//					private JPanel host = main;
+//										
+//					public void mouseClicked(MouseEvent e) {
+//						// TODO Auto-generated method stub
+//						System.out.println("b clicked! :: "+ !bb.isVisible());
+//						comp.setVisible(!comp.isVisible());
+//						host.validate();
+//						host.repaint();
+//					}
+//
+//					public void mousePressed(MouseEvent e) {
+//						// TODO Auto-generated method stub
+//						
+//					}
+//
+//					public void mouseReleased(MouseEvent e) {
+//						// TODO Auto-generated method stub
+//						
+//					}
+//
+//					public void mouseEntered(MouseEvent e) {
+//						// TODO Auto-generated method stub
+//						
+//					}
+//
+//					public void mouseExited(MouseEvent e) {
+//						// TODO Auto-generated method stub
+//						
+//					}
+//		});
+//		
+////		make dot visualiser
+//		this.vis = new DotPanelG2(new Dot());
+//		this.vis.changeDot(this.convertGraphToDot(this.vis), true);
+//		this.vis.setDirection(GraphDirection.leftRight);
+//		System.out.println("Adding dot graph visualiser...");
+//		c.weightx = 1.0;
+//		c.weighty = 1.0;
+//		c.gridx = 0;
+//		c.gridy = 0;
+//		c.anchor = c.WEST;
+//		c.fill = c.BOTH;
+//		c.gridwidth = 5;
+//		this.main.add(this.vis, c);
+//		
+////		handle repaints on info panel
+//		scroll.getVerticalScrollBar().
+//		addAdjustmentListener(new AdjustmentListener() {
+//			
+//			private ProMScrollPane host = scroll;
+//			private DotPanelG2 dotter = vis;
+//			private long lastBounce = -1;
+//			
+//			public void adjustmentValueChanged(AdjustmentEvent e) {
+//				// TODO Auto-generated method stub
+//				long time = System.nanoTime();
+//				if (lastBounce < 0) {
+////					host.revalidate();
+//					host.repaint();
+//					dotter.repaint();
+//					
+//					lastBounce = time;
+//				}
+//				else if ((time - lastBounce) > 1) {
+////					host.revalidate();
+//					host.repaint();
+//					dotter.repaint();
+//					lastBounce = time;
+//				}
+//			}
+//		});
+		
+		this.main = new DotController(this, this.graph);
+		this.main.validate();
+		
 		return this;
 	}
 	
-	public Dot convertGraphToDot(DotPanel panel) {
+	public Dot convertGraphToDot(DotPanelG2 panel) {
 //		build new dot graph with rules 
 		Dot update = new Dot();
 		update.setOption("bgcolor", "none");
@@ -88,6 +232,7 @@ public class ExogenousInvestigatorDotPanel  {
 		}
 //		walk through petri net and find backwards edges
 		while (curr.size() > 0) {
+			System.out.println("Curr dotwalk length: "+curr.size());
 			next = new ArrayList<PetrinetNode>();
 			nextEdges = new ArrayList<>();
 			for(Object node : curr) {
@@ -351,7 +496,7 @@ public class ExogenousInvestigatorDotPanel  {
 		this.vis.changeDot(update, true);
 	}
 	
-	private ExoDotNode buildTransitionNode(String label, DotPanel panel, GuardExpression guardExpression) {
+	private ExoDotNode buildTransitionNode(String label, DotPanelG2 panel, GuardExpression guardExpression) {
 		String labelFortmat = ""
 				+ "<<TABLE BGCOLOR=\"%s\" BORDER=\"1\" CELLBORDER=\"0\" SCALE=\"BOTH\" CELLPADDING=\"0\" CELLSPACING=\"0\" PORT=\"HEAD\">"
 				+ "<TR>"
@@ -458,7 +603,7 @@ public class ExogenousInvestigatorDotPanel  {
 		return expr;
 	}
 	
-	public ExoDotNode buildTransitionNode(String label, DotPanel panel ) {
+	public ExoDotNode buildTransitionNode(String label, DotPanelG2 panel ) {
 		String labelFortmat = ""
 				+ "<<TABLE BGCOLOR=\"%s\" BORDER=\"1\" CELLBORDER=\"0\" SCALE=\"BOTH\" CELLPADDING=\"0\" CELLSPACING=\"0\" PORT=\"HEAD\">"
 				+ "<TR>"
@@ -503,7 +648,7 @@ public class ExogenousInvestigatorDotPanel  {
 		
 		private String label;
 
-		public ExoDotNode(String label, DotPanel panel, String transLabel) {
+		public ExoDotNode(String label, DotPanelG2 panel, String transLabel) {
 			super(label, 
 					new HashMap<String,String>(){{
 						put("style", "filled");
@@ -604,5 +749,237 @@ public class ExogenousInvestigatorDotPanel  {
 		}
 		
 	}
+	
+	private class DotController extends JPanel {
+		
+		@Getter private DotPanelG2 vis;
+		@Getter private JPanel main;
+		@Getter private JPanel clickable;
+		@Getter private JPanel scrollable;
+		@Getter private ProMScrollPane infoPanel;
+		private PetriNetWithData graph;
+		private ExogenousInvestigatorDotPanel source;
+		
+		public DotController(ExogenousInvestigatorDotPanel source ,PetriNetWithData graph) {
+			this.source = source;
+			this.graph = graph;
+			this.main = this;
+			setup();
+		}
+		
+		private void setup() {
+			setBackground(Color.LIGHT_GRAY);
+			
+//			setup layout settings
+			GridBagConstraints c = new GridBagConstraints();
+			c.weightx = 1.0;
+			c.weighty = 1.0;
+//			make main panel
+			setLayout(new GridBagLayout());	
+			
+//			add clickable for info panel
+			clickable = new JPanel();
+			clickable.setLayout(new GridBagLayout());
+//			add some visible icons for hide/unhide
+			c.gridx = 0;
+			c.gridy = 0;
+			c.weightx = 1.0;
+			c.weighty = 1.0;
+			clickable.add(Box.createGlue(), c);
+			c.gridy++;
+			c.weighty = 0.;
+			clickable.add(new JLabel("<"), c);
+			c.gridy++;
+			clickable.add(new JLabel(">"), c);
+			c.weighty = 1.0;
+			c.gridy++;
+			clickable.add(Box.createGlue(), c);
+			clickable.setBackground(Color.LIGHT_GRAY);
+			clickable.setPreferredSize(new Dimension(15,75));
+//			add in clickable
+			c.weightx = 0.1;
+			c.weighty = 1.0;
+			c.gridy = 0;
+			c.gridwidth = 1;
+			c.anchor = c.EAST;
+			c.gridx = 4;
+			c.fill = c.VERTICAL;
+			add(clickable, c);
+//			add info panel
+			Color transGray = new Color(128, 128, 128, 175);
+			scrollable = new JPanel();
+			scrollable.setBackground(transGray);
+//			scrollable.setPreferredSize(new Dimension(50,2500));
+//			scrollable.setMinimumSize(scrollable.getPreferredSize());
+			scrollable.setLayout(new GridBagLayout());
+			c.weightx = 1.0;
+			c.weighty = 1.0;
+			c.fill = c.HORIZONTAL;
+			c.anchor = c.CENTER;
+			c.gridx = 0;
+			c.gridy = 0;
+			scrollable.add(new JLabel("Transition A"), c);
+			c.gridy++;
+			scrollable.add( Box.createVerticalStrut(800), c);
+			infoPanel = new ProMScrollPane(scrollable);
+//			infoPanel.setOpaque(false);
+			
+			infoPanel.setBackground(transGray);
+			infoPanel.setPreferredSize(new Dimension(250,75));
+			ScrollbarStyler.styleScrollBar(infoPanel.getHorizontalScrollBar());
+			ScrollbarStyler.styleScrollBar(infoPanel.getVerticalScrollBar());
+			infoPanel.setVisible(false);
+			
+//			add scroll info panel
+			c.weightx = 0.1;
+			c.weighty = 1.0;
+			c.insets = new Insets(0,0,0,15);
+			c.gridy = 0;
+			c.gridx = 4;
+			c.gridwidth = 1;
+			c.anchor = c.EAST;
+			c.fill = c.VERTICAL;
+			add(infoPanel,c);
+//			add listener to hide info panel
+			clickable.addMouseListener(new MouseListener() {
+				
+						private Component comp = getInfoPanel();
+						private JPanel host = getMain();
+											
+						public void mouseClicked(MouseEvent e) {
+							// TODO Auto-generated method stub
+							System.out.println("b clicked! :: "+ !comp.isVisible());
+							comp.setVisible(!comp.isVisible());
+							host.revalidate();
+//							host.repaint();
+						}
+
+						public void mousePressed(MouseEvent e) {
+							// TODO Auto-generated method stub
+							
+						}
+
+						public void mouseReleased(MouseEvent e) {
+							// TODO Auto-generated method stub
+							
+						}
+
+						public void mouseEntered(MouseEvent e) {
+							// TODO Auto-generated method stub
+							
+						}
+
+						public void mouseExited(MouseEvent e) {
+							// TODO Auto-generated method stub
+							
+						}
+			});
+			
+//			make dot visualiser
+			this.vis = new DotPanelG2(new Dot());
+			vis.setBackground(Color.LIGHT_GRAY);
+			this.vis.changeDot(source.convertGraphToDot(this.vis), true);
+			this.vis.setDirection(GraphDirection.leftRight);
+			System.out.println("Adding dot graph visualiser...");
+			c.weightx = 1.0;
+			c.weighty = 1.0;
+			c.gridx = 0;
+			c.gridy = 0;
+			c.anchor = c.WEST;
+			c.fill = c.BOTH;
+			c.gridwidth = 5;
+			add(this.vis, c);
+//			handle repaints on info panel
+			infoPanel.getVerticalScrollBar().
+			addAdjustmentListener(new AdjustmentListener() {
+				
+				private JPanel main = getMain();
+				private long lastBounce = -1;
+				
+				public void adjustmentValueChanged(AdjustmentEvent e) {
+					// TODO Auto-generated method stub
+					long time = System.nanoTime();
+					if (lastBounce < 0) {
+						lastBounce = time;
+						SwingUtilities.invokeLater(new Runnable() {
+							public void run() {
+								main.repaint();
+							}
+						});
+					}
+					else if ((time - lastBounce) > 1000) {
+						lastBounce = time;
+						SwingUtilities.invokeLater(new Runnable() {
+							public void run() {
+								main.repaint();
+							}
+						});
+						
+						
+					}
+				}
+			});
+			
+			validate();
+		}
+		
+//		@Override
+//		protected void paintComponent(Graphics g) {	
+//			revalidate();
+//			super.paintComponent(g);
+////			paintChildren(g);
+//		}
+//		
+//		@Override
+//		protected void paintChildren(Graphics g) {
+//			
+//			
+//			
+//			synchronized(getTreeLock()) {
+//			
+//			Rectangle r = getBounds();
+//			Point p = getLocationOnScreen();
+//			
+//			g = g.create();
+//			
+//			Rectangle clipBounds = g.getClipBounds();
+//            if (clipBounds == null) {
+//                clipBounds = new Rectangle(0, 0, getWidth(),
+//                                           getHeight());
+//            }
+//			
+//			r = this.vis.getBounds();
+//			p = this.vis.getLocation();
+//			SwingUtilities.computeIntersection
+//            (clipBounds.x, clipBounds.y,
+//             clipBounds.width, clipBounds.height, r);
+//			this.vis.paint(g.create(r.x, r.y, r.width, r.height));
+//			
+//			if (this.infoPanel.isVisible()) {
+//				r = this.infoPanel.getBounds();
+//				p = this.infoPanel.getLocation();
+//				SwingUtilities.computeIntersection
+//	            (clipBounds.x, clipBounds.y,
+//	             clipBounds.width, clipBounds.height, r);
+//
+//				this.infoPanel.paint(g.create(r.x, r.y, r.width, r.height));
+//			}
+//			
+//			r = this.clickable.getBounds();
+//			p = this.clickable.getLocation();
+//			SwingUtilities.computeIntersection
+//            (clipBounds.x, clipBounds.y,
+//             clipBounds.width, clipBounds.height, r);
+//			if (r.width == 0 & r.height !=0 & r.x != 0 & r.y != 0) {
+//				this.clickable.paint(g.create(r.x, r.y, r.width, r.height));
+//			}
+//			
+//			g.dispose();
+//			}
+//		}
+		
+	}
+	
+	
 	
 }
