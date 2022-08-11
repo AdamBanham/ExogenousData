@@ -4,16 +4,20 @@ import java.awt.Color;
 import java.awt.GridBagConstraints;
 import java.awt.GridBagLayout;
 import java.awt.Insets;
+import java.beans.PropertyChangeEvent;
+import java.beans.PropertyChangeListener;
 import java.util.ArrayList;
 import java.util.HashSet;
 import java.util.List;
 import java.util.Map;
 import java.util.Optional;
 import java.util.Set;
+import java.util.concurrent.ExecutionException;
 
 import javax.swing.JButton;
 import javax.swing.JComponent;
 import javax.swing.JPanel;
+import javax.swing.SwingWorker;
 
 import org.deckfour.xes.info.XLogInfo;
 import org.deckfour.xes.info.XLogInfoFactory;
@@ -25,9 +29,7 @@ import org.processmining.datapetrinets.expression.GuardExpression;
 import org.processmining.datapetrinets.ui.ConfigurationUIHelper;
 import org.processmining.models.graphbased.directed.petrinet.PetrinetGraph;
 import org.processmining.models.graphbased.directed.petrinetwithdata.newImpl.PetriNetWithData;
-import org.processmining.plugins.astar.petrinet.PetrinetReplayerWithILP;
 import org.processmining.plugins.connectionfactories.logpetrinet.TransEvClassMapping;
-import org.processmining.plugins.petrinet.replayer.PNLogReplayer;
 import org.processmining.plugins.petrinet.replayer.algorithms.costbasedcomplete.CostBasedCompleteParam;
 import org.processmining.plugins.petrinet.replayresult.PNRepResult;
 import org.processmining.qut.exogenousaware.data.ExogenousAnnotatedLog;
@@ -35,6 +37,7 @@ import org.processmining.qut.exogenousaware.data.storage.ExogenousDiscoveryInves
 import org.processmining.qut.exogenousaware.gui.panels.ExogenousEnhancementGraphInvestigator;
 import org.processmining.qut.exogenousaware.gui.panels.ExogenousInvestigatorDotPanel;
 import org.processmining.qut.exogenousaware.gui.panels.ExogenousInvestigatorSelectionPanel;
+import org.processmining.qut.exogenousaware.gui.workers.ExogenousDiscoveryAlignmentWorker;
 
 import lombok.Builder;
 import lombok.Builder.Default;
@@ -96,16 +99,15 @@ public class ExogenousDiscoveryInvestigator extends JPanel{
 	
 	public ExogenousDiscoveryInvestigator precompute() {
 		try {
-			this.alignment = this.computeSimpleAlignment();
-			System.out.println("[ExoDiscoveryInvestigator] completed precompute of alignment...");
-			System.out.println("[ExoDiscoveryInvestigator] precomputed fitness : "+this.alignment.getInfo().get(PNRepResult.TRACEFITNESS) );
+			this.computeSimpleAlignment();
+			
 		} catch (Exception e) {
 			System.out.println("[ExoDiscoveryInvestigator] Failed to precompute alignment :" + e.getCause());
 		}
 		return this;
 	}
 	
-	public PNRepResult computeSimpleAlignment() throws Exception {
+	public void computeSimpleAlignment() throws Exception {
 		PetrinetGraph net = this.controlflow;
 		TransEvClassMapping mapping = ConfigurationUIHelper.queryActivityEventClassMapping(context, net, this.source.getEndogenousLog());
 		System.out.println("[ExoDiscoveryInvestigator] Net to Log Activity Map : " +mapping.toString());
@@ -113,7 +115,7 @@ public class ExogenousDiscoveryInvestigator extends JPanel{
 		CostBasedCompleteParam parameters = new CostBasedCompleteParam(
 				logInfo.getEventClasses().getClasses(), mapping.getDummyEventClass(),  net.getTransitions(), 1, 1
 		);
-		parameters.setGUIMode(true);
+		parameters.setGUIMode(false);
 		parameters.setUsePartialOrderedEvents(true);
 		parameters.setCreateConn(false);
 		parameters.setInitialMarking(this.controlflow.getInitialMarking());
@@ -121,14 +123,43 @@ public class ExogenousDiscoveryInvestigator extends JPanel{
 //		parameters.setNumThreads(this.maxConcurrentThreads); ILP problem with an array index when threaded : LPProblemProvider:24
 		parameters.setMaxNumOfStates(Integer.MAX_VALUE);
 		System.out.println("[ExoDiscoveryInvestigator] starting precompute of alignment...");
-		return new PNLogReplayer().replayLog(
-				this.context,
-				net,
-				(XLog) this.source.getEndogenousLog().clone(),
-				mapping,
-				new PetrinetReplayerWithILP() ,
-				parameters
-				);
+		
+		
+//		off load alignment work to worker
+		ExogenousDiscoveryAlignmentWorker worker = ExogenousDiscoveryAlignmentWorker.builder()
+			.context(this.context)
+			.endogenousLog((XLog) this.source.getEndogenousLog().clone())
+			.mapping(mapping)
+			.net(net)
+			.parameters(parameters)
+			.build();
+		worker.addPropertyChangeListener(new PropertyChangeListener() {
+			
+			public void propertyChange(PropertyChangeEvent evt) {
+				// TODO Auto-generated method stub
+				if (evt.getNewValue() == SwingWorker.StateValue.DONE) {
+					if (worker.isDone()) {
+						try {
+							setAlignment(worker.get());
+						} catch (InterruptedException | ExecutionException e) {
+							// TODO Auto-generated catch block
+							e.printStackTrace();
+						}
+					}
+				}
+			}
+		});
+		
+//		worker	
+//			.execute();
+	}
+	
+	private void setAlignment(PNRepResult alignment) {
+		this.alignment = alignment;
+		this.exoSelectionPanel.getEnhance().setEnabled(true);
+		this.exoSelectionPanel.getInvestigate().setEnabled(true);
+		System.out.println("[ExoDiscoveryInvestigator] completed precompute of alignment...");
+		System.out.println("[ExoDiscoveryInvestigator] precomputed fitness : "+this.alignment.getInfo().get(PNRepResult.TRACEFITNESS) );
 	}
 	
 	public List<String> getEndogenousVariables(){
@@ -244,7 +275,6 @@ public class ExogenousDiscoveryInvestigator extends JPanel{
 		this.exoDotController.setSwapMap(swapMap);
 		this.exoDotController.setUpdatedGraph(outcome);
 		this.exoDotController.update();
-		this.exoSelectionPanel.getEnhance().setEnabled(true);
 	}
 	
 	public void createSelectionPanel() {
@@ -260,6 +290,8 @@ public class ExogenousDiscoveryInvestigator extends JPanel{
 				.build()
 				.setup();
 		this.add(this.exoSelectionPanel.getMain(), this.c);
+		this.exoSelectionPanel.getEnhance().setEnabled(false);
+		this.exoSelectionPanel.getInvestigate().setEnabled(false);
 	}
 	
 	public JComponent getComponent() {
