@@ -202,7 +202,7 @@ public class NavigableSVGPanelG2 extends JPanel implements Printable {
 		addComponentListener(new ComponentAdapter() {
 			public void componentResized(ComponentEvent e) {
 				
-				System.out.println("[NavPanel] component resize triggered");
+//				System.out.println("[NavPanel] component resize triggered");
 				
 				
 				AffineTransform u2i = (AffineTransform) user2image.clone();
@@ -257,17 +257,17 @@ public class NavigableSVGPanelG2 extends JPanel implements Printable {
 		//set up mouse listener
 		addMouseListener(new MouseListener() {
 			public void mouseReleased(MouseEvent e) {
-				System.out.println("[NavPanel] mouseReleased triggered");
+//				System.out.println("[NavPanel] mouseReleased triggered");
 				processMouseRelease(e);
 			}
 
 			public void mousePressed(MouseEvent e) {
-				System.out.println("[NavPanel] mousePressed triggered");
+//				System.out.println("[NavPanel] mousePressed triggered");
 				processMousePress(e);
 			}
 
 			public void mouseExited(MouseEvent e) {
-				System.out.println("[NavPanel] mouseExited triggered");
+//				System.out.println("[NavPanel] mouseExited triggered");
 				processMouseExit(e);
 			}
 
@@ -276,7 +276,7 @@ public class NavigableSVGPanelG2 extends JPanel implements Printable {
 			}
 
 			public void mouseClicked(MouseEvent e) {
-				System.out.println("[NavPanel] mouseClicked triggered");
+//				System.out.println("[NavPanel] mouseClicked triggered");
 				
 				if (isFocusable()) {
 					requestFocusInWindow();
@@ -288,12 +288,12 @@ public class NavigableSVGPanelG2 extends JPanel implements Printable {
 		//set up drag listener
 		addMouseMotionListener(new MouseMotionListener() {
 			public void mouseDragged(MouseEvent e) {
-				System.out.println("[NavPanel] mouseDragged triggered");
+//				System.out.println("[NavPanel] mouseDragged triggered");
 				processMouseDrag(e);
 			}
 
 			public void mouseMoved(MouseEvent e) {
-				System.out.println("[NavPanel] mouseMoved triggered");
+//				System.out.println("[NavPanel] mouseMoved triggered");
 				processMouseMove(e);
 			}
 		});
@@ -301,7 +301,7 @@ public class NavigableSVGPanelG2 extends JPanel implements Printable {
 		//set up scroll listener
 		addMouseWheelListener(new MouseWheelListener() {
 			public void mouseWheelMoved(MouseWheelEvent e) {
-				System.out.println("[NavPanel] mouseWheelMoved triggered");
+//				System.out.println("[NavPanel] mouseWheelMoved triggered");
 				
 				Point p = e.getPoint();
 				boolean zoomIn = (e.getWheelRotation() < 0);
@@ -374,6 +374,30 @@ public class NavigableSVGPanelG2 extends JPanel implements Printable {
 		getInputMap(WHEN_IN_FOCUSED_WINDOW).put(KeyStroke.getKeyStroke(KeyEvent.VK_P, InputEvent.CTRL_MASK), "print"); // - key
 		getActionMap().put("print", printAction);
 	}
+	
+	@Override
+	public void repaint(int x, int y, int width, int height) {
+		// TODO Auto-generated method stub
+		super.repaint(x, y, width, height);
+	}
+	
+	@Override
+	public void repaint() {
+		// TODO Auto-generated method stub
+		super.repaint();
+	}
+	
+	@Override
+	public void repaint(long tm, int x, int y, int width, int height) {
+		// TODO Auto-generated method stub
+		super.repaint(tm, x, y, width, height);
+	}
+	
+	@Override
+	protected void paintChildren(Graphics g) {
+		// TODO Auto-generated method stub
+		super.paintChildren(g);
+	}
 
 	/**
 	 * Paints the panel and its image at the current zoom level, location, and
@@ -390,19 +414,16 @@ public class NavigableSVGPanelG2 extends JPanel implements Printable {
 					(int) Math.round(image.getViewRect().getWidth()),
 					(int) Math.round(image.getViewRect().getHeight()));
 		
-		System.out.println(r.toString());
-		System.out.println(g.getClipBounds().toString());
-		if (!g.hitClip(r.x, r.y, r.width, r.height)) {
-			return;
-		}
 		
-		System.out.println("[NavPanel] paintComponent triggered");
+//		System.out.println("[NavPanel] paintComponent triggered");
 		
 		if (!isPaintingForPrint()) {
 			super.paintComponent(g.create()); // Paints the background
 		}
 
 		Graphics2D g2 = (Graphics2D) g.create();
+		
+		g2.translate(this.getLocation().x, this.getLocation().y);
 
 		if (image == null) {
 			return;
@@ -485,9 +506,9 @@ public class NavigableSVGPanelG2 extends JPanel implements Printable {
 	 */
 	public static void drawSVG(Graphics2D g, SVGDiagram image, int x, int y, int width, int height) {
 		
-		System.out.println("[NavPanel] drawSVG triggered");
+//		System.out.println("[NavPanel] drawSVG triggered");
 		
-		System.out.println(String.format("x=%d, y=%d, width=%d, height=%d", x, y, width, height));
+//		System.out.println(String.format("x=%d, y=%d, width=%d, height=%d", x, y, width, height));
 
 		double scaleX = width / image.getWidth();
 		double scaleY = height / image.getHeight();
@@ -875,14 +896,14 @@ public class NavigableSVGPanelG2 extends JPanel implements Printable {
 	 */
 	public boolean isImageCompletelyInPanel() {
 		//check the northwest corner
-		Point2D.Double nw = new Point.Double(0, 0);
+		Point2D.Double nw = new Point.Double(this.getLocation().x, this.getLocation().y);
 		image2user.transform(nw, nw);
 		if (nw.getX() < 0 || nw.getY() < 0) {
 			return false;
 		}
 
 		//check the southeast corner
-		Point2D.Double se = new Point2D.Double(image.getWidth(), image.getHeight());
+		Point2D.Double se = new Point2D.Double(this.getLocation().x+image.getWidth(),this.getLocation().y + image.getHeight());
 		image2user.transform(se, se);
 		if (se.getX() > getWidth() || se.getY() > getHeight()) {
 			return false;
@@ -1008,7 +1029,7 @@ public class NavigableSVGPanelG2 extends JPanel implements Printable {
 	 */
 	protected boolean processMousePress(MouseEvent e) {
 		
-		System.out.println("[NavPanel] processMousePress triggered");
+//		System.out.println("[NavPanel] processMousePress triggered");
 		
 		Point point = e.getPoint();
 		lastMousePosition = point;
@@ -1065,7 +1086,7 @@ public class NavigableSVGPanelG2 extends JPanel implements Printable {
 	 */
 	protected boolean processMouseRelease(MouseEvent e) {
 		
-		System.out.println("[NavPanel] processMouseRelease triggered");
+//		System.out.println("[NavPanel] processMouseRelease triggered");
 		
 		if (isDraggingAnimation) {
 			double progress = Math.max(0,
@@ -1098,7 +1119,7 @@ public class NavigableSVGPanelG2 extends JPanel implements Printable {
 	 */
 	protected boolean processMouseDrag(MouseEvent e) {
 		
-		System.out.println("[NavPanel] processMouseDrag triggered");
+//		System.out.println("[NavPanel] processMouseDrag triggered");
 		
 		if (!isDraggingImage && !isDraggingAnimation && !isDraggingTimeScale) {
 			if (SwingUtilities.isLeftMouseButton(e) && isAnimationEnabled() && animationControls != null
@@ -1162,7 +1183,7 @@ public class NavigableSVGPanelG2 extends JPanel implements Printable {
 	 */
 	protected boolean processMouseMove(MouseEvent e) {
 		
-		System.out.println("[NavPanel] processMouseMove triggered");
+//		System.out.println("[NavPanel] processMouseMove triggered");
 		
 		lastMousePosition = e.getPoint();
 		if (!isDraggingImage && helperControlsArc != null && !helperControlsShowing
@@ -1201,7 +1222,7 @@ public class NavigableSVGPanelG2 extends JPanel implements Printable {
 	 */
 	protected boolean processMouseClick(MouseEvent e) {
 		
-		System.out.println("[NavPanel] processMouseClick triggered");
+//		System.out.println("[NavPanel] processMouseClick triggered");
 		
 		if (SwingUtilities.isLeftMouseButton(e) && isAnimationEnabled() && animationControls != null
 				&& animationControls.contains(lastMousePosition)
@@ -1441,7 +1462,7 @@ public class NavigableSVGPanelG2 extends JPanel implements Printable {
 			return NO_SUCH_PAGE;
 		}
 		
-		System.out.println("[NavPanel] print triggered");
+//		System.out.println("[NavPanel] print triggered");
 
 		Graphics2D g2d = (Graphics2D) g;
 

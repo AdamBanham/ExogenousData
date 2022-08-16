@@ -148,7 +148,7 @@ public class DotPanelG2 extends NavigableSVGPanelG2 {
 		addMouseListener(new MouseAdapter() {
 			public void mousePressed(MouseEvent e) {
 				
-				System.out.println("process mouse adapter triggered");
+//				System.out.println("process mouse adapter triggered");
 				
 				e.setSource(this2);
 				for (DotElement element : getElementsAtPoint(e.getPoint())) {
@@ -162,7 +162,7 @@ public class DotPanelG2 extends NavigableSVGPanelG2 {
 	protected boolean processMouseClick(MouseEvent e) {
 		boolean superChanged = super.processMouseClick(e);
 		
-		System.out.println("[DotPanel] process mouse click triggered");
+//		System.out.println("[DotPanel] process mouse click triggered");
 
 		//pass clicks to elements and process selection changes, but not if the click was already catched.
 		boolean selectionChange = false;
@@ -194,7 +194,7 @@ public class DotPanelG2 extends NavigableSVGPanelG2 {
 	protected boolean processMouseRelease(MouseEvent e) {
 		boolean superChanged = super.processMouseRelease(e);
 		
-		System.out.println("[DotPanel] process mouse release triggered");
+//		System.out.println("[DotPanel] process mouse release triggered");
 
 		//call mouseReleased on all elements under the mouse
 		for (DotElement element : getElementsAtPoint(e.getPoint())) {
@@ -207,9 +207,9 @@ public class DotPanelG2 extends NavigableSVGPanelG2 {
 	@Override
 	protected boolean processMouseDrag(MouseEvent e) {
 		boolean changed = super.processMouseDrag(e);
-		System.out.println("[DotPanel] process mouse drag triggered");
+//		System.out.println("[DotPanel] process mouse drag triggered");
 		if (!e.getSource().equals(this)) {
-			System.out.println("[DotPanel] processMouseDrag :: source check failed");
+//			System.out.println("[DotPanel] processMouseDrag :: source check failed");
 			return false;
 		}
 		//if we start dragging, we exit all elements
@@ -221,7 +221,7 @@ public class DotPanelG2 extends NavigableSVGPanelG2 {
 	@Override
 	protected boolean processMouseMove(MouseEvent e) {
 		boolean captured = super.processMouseMove(e);
-		System.out.println("[DotPanel] process mouse move triggered");
+//		System.out.println("[DotPanel] process mouse move triggered");
 		boolean changed = false;
 
 		if (captured) {
@@ -257,7 +257,7 @@ public class DotPanelG2 extends NavigableSVGPanelG2 {
 	@Override
 	protected boolean processMouseExit(MouseEvent e) {
 		boolean changed = super.processMouseExit(e);
-		System.out.println("[DotPanel] process mouse exit triggered");
+//		System.out.println("[DotPanel] process mouse exit triggered");
 		//exit the dot elements, as we are leaving the screen
 		changed |= exitAllElements(e);
 
