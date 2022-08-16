@@ -34,6 +34,7 @@ import org.processmining.plugins.petrinet.replayer.algorithms.costbasedcomplete.
 import org.processmining.plugins.petrinet.replayresult.PNRepResult;
 import org.processmining.qut.exogenousaware.data.ExogenousAnnotatedLog;
 import org.processmining.qut.exogenousaware.data.storage.ExogenousDiscoveryInvestigation;
+import org.processmining.qut.exogenousaware.gui.panels.ExogenousDiscoveryProgresser;
 import org.processmining.qut.exogenousaware.gui.panels.ExogenousEnhancementGraphInvestigator;
 import org.processmining.qut.exogenousaware.gui.panels.ExogenousInvestigatorDotPanel;
 import org.processmining.qut.exogenousaware.gui.panels.ExogenousInvestigatorSelectionPanel;
@@ -43,19 +44,13 @@ import lombok.Builder;
 import lombok.Builder.Default;
 import lombok.Data;
 import lombok.EqualsAndHashCode;
+import lombok.Getter;
 import lombok.NonNull;
 
 @Builder
 @Data
 @EqualsAndHashCode(callSuper=false)
 public class ExogenousDiscoveryInvestigator extends JPanel{
-	
-	/**
-	 * 
-	 */
-	
-	
-	
 	
 	private static final long serialVersionUID = 7004747115076080275L;
 	@NonNull private ExogenousAnnotatedLog source;
@@ -76,6 +71,7 @@ public class ExogenousDiscoveryInvestigator extends JPanel{
 	@Default private ExogenousDiscoveryInvestigation result = null;
 	@Default private int maxConcurrentThreads = Runtime.getRuntime().availableProcessors() > 3 ? Runtime.getRuntime().availableProcessors() - 2 : 1;
 	
+	@Default @Getter private ExogenousDiscoveryProgresser progresser = null;
 	
 	public ExogenousDiscoveryInvestigator setup() {
 //		precompute available attributes for decision mining
@@ -89,11 +85,13 @@ public class ExogenousDiscoveryInvestigator extends JPanel{
 		this.c.weightx = 1;
 		this.c.weighty = 1;
 		this.c.gridy= 0;
-		this.c.insets = new Insets(10,25,10,25);
+		this.c.insets = new Insets(10,15,0,15);
 		this.createModelView();
+		this.createProgresser();
 		this.createSelectionPanel();
 		this.setBackground(Color.DARK_GRAY);
 		this.validate();
+		this.progresser.validate();
 		return this;
 	}
 	
@@ -115,7 +113,7 @@ public class ExogenousDiscoveryInvestigator extends JPanel{
 		CostBasedCompleteParam parameters = new CostBasedCompleteParam(
 				logInfo.getEventClasses().getClasses(), mapping.getDummyEventClass(),  net.getTransitions(), 1, 1
 		);
-		parameters.setGUIMode(false);
+		parameters.setGUIMode(true);
 		parameters.setUsePartialOrderedEvents(true);
 		parameters.setCreateConn(false);
 		parameters.setInitialMarking(this.controlflow.getInitialMarking());
@@ -128,6 +126,7 @@ public class ExogenousDiscoveryInvestigator extends JPanel{
 //		off load alignment work to worker
 		ExogenousDiscoveryAlignmentWorker worker = ExogenousDiscoveryAlignmentWorker.builder()
 			.context(this.context)
+			.progress(progresser)
 			.endogenousLog((XLog) this.source.getEndogenousLog().clone())
 			.mapping(mapping)
 			.net(net)
@@ -150,8 +149,8 @@ public class ExogenousDiscoveryInvestigator extends JPanel{
 			}
 		});
 		
-//		worker	
-//			.execute();
+		worker	
+			.execute();
 	}
 	
 	private void setAlignment(PNRepResult alignment) {
@@ -161,6 +160,7 @@ public class ExogenousDiscoveryInvestigator extends JPanel{
 		System.out.println("[ExoDiscoveryInvestigator] completed precompute of alignment...");
 		System.out.println("[ExoDiscoveryInvestigator] precomputed fitness : "+this.alignment.getInfo().get(PNRepResult.TRACEFITNESS) );
 	}
+	
 	
 	public List<String> getEndogenousVariables(){
 		if (this.endoVariables == null) {
@@ -277,11 +277,29 @@ public class ExogenousDiscoveryInvestigator extends JPanel{
 		this.exoDotController.update();
 	}
 	
+	
+	public void createProgresser() {
+//		setup layout 
+		this.c.gridx = 0;
+		this.c.gridy = 1;
+		this.c.weighty = 0.0;
+		this.c.fill = c.BOTH;
+		this.c.ipady = 0;
+		this.c.insets = new Insets(3,15,0,15);
+//		create progresser
+		this.progresser = ExogenousDiscoveryProgresser.builder()
+				.build()
+				.setup();
+		add(progresser, this.c);
+	}
+	
 	public void createSelectionPanel() {
 //		setup layout manager
 		this.c.gridx= 0;
-		this.c.gridy= 1;
-		this.c.ipady=0;
+		this.c.gridy= 2;
+		this.c.ipady= 25;
+		this.c.weighty = .5;
+		this.c.insets = new Insets(10,15,10,15);
 //		create panel
 		this.exoSelectionPanel = ExogenousInvestigatorSelectionPanel.builder()
 				.exoVariables(this.exoVariables)
@@ -337,6 +355,7 @@ public class ExogenousDiscoveryInvestigator extends JPanel{
 			this.c.gridy = 2;
 			this.add(this.enhancementView.getMain(), this.c);
 			this.exoSelectionPanel.getMain().setVisible(false);
+			this.progresser.setVisible(false);
 			this.exoDotController.getMain().setVisible(false);
 			this.validate();
 		} else {
@@ -353,10 +372,12 @@ public class ExogenousDiscoveryInvestigator extends JPanel{
 			if (this.enhancementView.getMain().isVisible()) {
 				this.enhancementView.getMain().setVisible(false);
 				this.exoSelectionPanel.getMain().setVisible(true);
+				this.progresser.setVisible(true);
 				this.exoDotController.getMain().setVisible(true);
 			} else {
 				this.enhancementView.getMain().setVisible(true);
 				this.exoSelectionPanel.getMain().setVisible(false);
+				this.progresser.setVisible(false);
 				this.exoDotController.getMain().setVisible(false);
 			}
 		}
