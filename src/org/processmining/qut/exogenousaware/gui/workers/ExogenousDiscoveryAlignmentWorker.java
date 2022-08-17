@@ -89,7 +89,7 @@ public class ExogenousDiscoveryAlignmentWorker extends SwingWorker<PNRepResult, 
 
 		public void setCaption(String message) {
 			// TODO Auto-generated method stub
-			
+			progresser.getState(ProgressType.Alignment).setCaption(message);
 		}
 
 		public String getCaption() {
@@ -137,7 +137,7 @@ public class ExogenousDiscoveryAlignmentWorker extends SwingWorker<PNRepResult, 
 
 		public void cancel() {
 			// TODO Auto-generated method stub
-			
+			progresser.getState(ProgressType.Alignment).setCaption("Alignment cancelled");
 		}
 		
 	}

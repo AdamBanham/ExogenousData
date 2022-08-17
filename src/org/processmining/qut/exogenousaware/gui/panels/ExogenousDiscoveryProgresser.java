@@ -6,11 +6,14 @@ import java.awt.Dimension;
 import java.awt.GridBagConstraints;
 import java.awt.GridBagLayout;
 import java.awt.Insets;
+import java.lang.reflect.InvocationTargetException;
 import java.util.ArrayList;
 import java.util.List;
 
 import javax.swing.JComponent;
+import javax.swing.JLabel;
 import javax.swing.JPanel;
+import javax.swing.SwingUtilities;
 
 import lombok.Builder;
 import lombok.Builder.Default;
@@ -117,10 +120,11 @@ public class ExogenousDiscoveryProgresser extends JPanel {
 	
 	public void triggerUpdateThread() {
 		if (this.updater != null) {
-			if (this.updater.isDone()) {
-				this.updater = new ProgressBarUpdater(this);
-				this.updater.start();
-			}
+			if (!this.updater.isDone()) {
+				this.updater.setCancelled(true);
+			} 
+			this.updater = new ProgressBarUpdater(this);
+			this.updater.start();
 		} else {
 			this.updater = new ProgressBarUpdater(this);
 			this.updater.start();
@@ -130,22 +134,32 @@ public class ExogenousDiscoveryProgresser extends JPanel {
 	
 	public static class ProgressState {
 		
+//		internal states
 		@Setter @Getter private int progress;
 		private float step;
 		@Setter private float current;
-		@Setter private int total;
+		@Setter private float total;
 		@Getter private ProgressType type;
+		
+//		gui widgets
 		private JComponent controller;
 		private Component progressbar;
 		private Component filler;
+		private JLabel caption;
+		
+//		listeners
 		@Setter private StateListener listener;
+		
 		
 		public ProgressState(int progress, ProgressType type) {
 			this.progress = progress;
 			this.type = type;
-			this.total = 100;
+			this.total = 100f;
 			this.step = progress/100.0f;
 			this.current = 0.00f;
+			
+			this.caption = new JLabel(type.name);
+			this.caption.setForeground(Color.white);
 		}
 		
 		private float[] computeWeights() {
@@ -164,16 +178,37 @@ public class ExogenousDiscoveryProgresser extends JPanel {
 			} else {
 				progressbar.setBackground(null);
 			}
+			
+			this.caption.setText(this.type.name + String.format("(%.1f %%)", (current/total) * 100.0f) );
+			
 			if (changed) {
-				validate();
+				try {
+					SwingUtilities.invokeAndWait(new Runnable() {
+						
+						public void run() {
+							// TODO Auto-generated method stub
+							validate();
+						}
+					});
+				} catch (InvocationTargetException | InterruptedException e) {
+					// TODO Auto-generated catch block
+					e.printStackTrace();
+				}
+				
 				return true;
 			}
+			
+			
 			return false;
 		}
 		
 		public boolean step() {
 			if (Math.abs(current - progress) > 0.001f) {
-				this.current += this.step;
+				if (current < progress) {
+					current = Math.min(this.current + this.step, progress);
+				} else {
+					current = Math.max(this.current + this.step, progress);
+				}
 				return true;
 			}
 			return false;
@@ -181,7 +216,7 @@ public class ExogenousDiscoveryProgresser extends JPanel {
 		
 		public void setController(JComponent box) {
 			this.controller = box;
-			controller.setBackground(Color.lightGray);
+			controller.setBackground(Color.DARK_GRAY);
 			controller.setLayout(new GridBagLayout());
 			controller.removeAll();
 			
@@ -213,6 +248,16 @@ public class ExogenousDiscoveryProgresser extends JPanel {
 			
 			controller.add(filler, c);
 			
+			c.gridy = 1;
+			c.gridx = 0;
+			c.gridwidth = 2;
+			c.anchor = c.CENTER;
+			c.fill = c.NONE;
+			c.weightx = 1.0;
+			
+			controller.add(caption, c);
+			
+			
 			controller.validate();
 		}
 		
@@ -243,6 +288,15 @@ public class ExogenousDiscoveryProgresser extends JPanel {
 				controller.add(filler, c);
 			}
 			
+			c.gridy = 1;
+			c.gridx = 0;
+			c.gridwidth = 2;
+			c.anchor = c.CENTER;
+			c.fill = c.NONE;
+			c.weightx = 1.0;
+			
+			controller.add(caption, c);
+			
 			controller.validate();
 		}
 		
@@ -272,7 +326,12 @@ public class ExogenousDiscoveryProgresser extends JPanel {
 			this.step = 0f;
 			this.total = 100;
 			this.progress = 0;
+			this.caption.setText("");
 			this.update();
+		}
+		
+		public void setCaption(String caption) {
+			this.caption.setText(caption);
 		}
 	}
 	
@@ -316,6 +375,7 @@ public class ExogenousDiscoveryProgresser extends JPanel {
 		
 		private ExogenousDiscoveryProgresser host;
 		@Getter private boolean done = false;
+		@Setter @Getter private boolean cancelled = false;
 		
 		public ProgressBarUpdater(ExogenousDiscoveryProgresser host) {
 			this.host = host;
@@ -324,6 +384,9 @@ public class ExogenousDiscoveryProgresser extends JPanel {
 		public void run() {
 			
 			while(!host.isShowing()) {
+				if (isCancelled()) {
+					return;
+				}
 				try {
 					Thread.sleep(10000);
 				} catch (InterruptedException e) {
@@ -331,12 +394,23 @@ public class ExogenousDiscoveryProgresser extends JPanel {
 				}
 			}
 			
+			if (isCancelled()) {
+				return;
+			}
+			
 			while(host.update()) {
+				if (isCancelled()) {
+					return;
+				}
 				try {
 					Thread.sleep(5);
 				} catch (InterruptedException e) {
 					
 				}
+			}
+			
+			if (isCancelled()) {
+				return;
 			}
 			
 			done = true;
