@@ -17,8 +17,11 @@ import org.processmining.models.graphbased.directed.petrinet.elements.Transition
 import org.processmining.models.graphbased.directed.petrinetwithdata.newImpl.PNWDTransition;
 import org.processmining.models.graphbased.directed.petrinetwithdata.newImpl.PetriNetWithData;
 import org.processmining.plugins.graphviz.dot.Dot;
+import org.processmining.plugins.graphviz.dot.Dot.GraphDirection;
 import org.processmining.plugins.graphviz.dot.DotEdge;
 import org.processmining.plugins.graphviz.dot.DotNode;
+import org.processmining.qut.exogenousaware.gui.workers.ExogenousDiscoveryStatisticWorker.DecisionPoint;
+import org.processmining.qut.exogenousaware.stats.models.ModelStatistics;
 
 import lombok.Builder;
 import lombok.Builder.Default;
@@ -47,14 +50,19 @@ import lombok.Setter;
  */
 @Builder
 public class DotGraphVisualisation {
-
+	
+//	builder parameters
 	@NonNull private PetriNetWithData graph;
 	@NonNull private Map<String,String> swapMap;
+	
+//	optional parameters
 	@Default private Map<Transition,Transition> transMapping = null;
 	@Default @Setter private Map<String, GuardExpression> rules = null;
 	@Default @Setter private PetriNetWithData updatedGraph = null;
 	@Default private DotNode selectedNode = null;
+	private ModelStatistics<Place,Transition,DecisionPoint> modelLogInfo;
 	
+//	internal states
 	@Default @Getter private Dot visualisation = new Dot();
 	@Default private List<Place> initial = new ArrayList<>();
 	@Default private List<Place> end = new ArrayList<>();
@@ -78,6 +86,7 @@ public class DotGraphVisualisation {
 	private void styleDot() {
 		this.visualisation.setOption("bgcolor", "none");
 		this.visualisation.setOption("rank", "min");
+		this.visualisation.setDirection(GraphDirection.leftRight);
 	}
 	
 	/**
@@ -236,12 +245,25 @@ public class DotGraphVisualisation {
 		DotNode newNode;
 		if (this.rules != null) {
 			if (this.rules.containsKey(t.getId().toString())) {
-				newNode = DotNodeStyles.buildRuleTransition(oldTrans, this.rules.get(t.getId().toString()), swapMap);
+				if (this.modelLogInfo != null) {
+					newNode = DotNodeStyles.buildRuleTransition(oldTrans, this.modelLogInfo, this.rules.get(t.getId().toString()), swapMap);
+				} else {
+					newNode = DotNodeStyles.buildRuleTransition(oldTrans, this.rules.get(t.getId().toString()), swapMap);
+				}
+				
+			} else {
+				if (this.modelLogInfo != null) {
+					newNode = DotNodeStyles.buildNoRuleTransition(oldTrans, this.modelLogInfo, swapMap);
+				} else {
+					newNode = DotNodeStyles.buildNoRuleTransition(oldTrans, swapMap);
+				}
+			}
+		} else {
+			if (this.modelLogInfo != null) {
+				newNode = DotNodeStyles.buildNoRuleTransition(oldTrans, this.modelLogInfo, swapMap);
 			} else {
 				newNode = DotNodeStyles.buildNoRuleTransition(oldTrans, swapMap);
 			}
-		} else {
-			newNode = DotNodeStyles.buildNoRuleTransition(oldTrans, swapMap);
 		}
 		transitions.add((ExoDotTransition)newNode);
 		return newNode;
