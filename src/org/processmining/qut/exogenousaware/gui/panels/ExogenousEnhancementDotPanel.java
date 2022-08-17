@@ -10,6 +10,7 @@ import javax.swing.JPanel;
 
 import org.apache.commons.lang.NotImplementedException;
 import org.processmining.datapetrinets.expression.GuardExpression;
+import org.processmining.models.graphbased.directed.petrinet.elements.Place;
 import org.processmining.models.graphbased.directed.petrinet.elements.Transition;
 import org.processmining.models.graphbased.directed.petrinetwithdata.newImpl.PetriNetWithData;
 import org.processmining.plugins.graphviz.dot.Dot;
@@ -18,6 +19,8 @@ import org.processmining.plugins.graphviz.visualisation.DotPanel;
 import org.processmining.qut.exogenousaware.gui.ExogenousEnhancementTracablity;
 import org.processmining.qut.exogenousaware.gui.dot.DotGraphVisualisation;
 import org.processmining.qut.exogenousaware.gui.dot.ExoDotTransition;
+import org.processmining.qut.exogenousaware.gui.workers.ExogenousDiscoveryStatisticWorker.DecisionPoint;
+import org.processmining.qut.exogenousaware.stats.models.ModelStatistics;
 
 import lombok.AllArgsConstructor;
 import lombok.Builder;
@@ -33,17 +36,20 @@ import lombok.Setter;
 @AllArgsConstructor
 @NoArgsConstructor
 public class ExogenousEnhancementDotPanel {
-
-	
+//	builder parameters
+	@Getter @NonNull private PetriNetWithData graph;
+//	optional builder parameters
 	@Setter @Default private ExogenousEnhancementTracablity source = null;
+//	gui widgets
 	@Getter private JPanel main;
 	@Getter private DotPanel vis;
-	@Getter @NonNull private PetriNetWithData graph;
 	
+//	internal states
 	@Default @Setter @Getter private Map<String, GuardExpression> rules = null;
 	@Default @Setter @Getter private Map<String,String> swapMap = null;
 	@Default @Setter @Getter private PetriNetWithData updatedGraph = null;
 	@Default private ExoDotTransition selectedNode = null;
+	@Getter @Setter private ModelStatistics<Place,Transition,DecisionPoint> modelLogInfo;
 	
 	public ExogenousEnhancementDotPanel setup() {
 		this.main = new JPanel();
