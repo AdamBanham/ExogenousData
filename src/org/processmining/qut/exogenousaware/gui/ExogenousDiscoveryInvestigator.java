@@ -312,10 +312,11 @@ public class ExogenousDiscoveryInvestigator extends JPanel{
 		this.add(exoDotController.getMain(), this.c);
 	}
 	
-	public void createModelView(Map<String, GuardExpression> newRules, Map<String,String> swapMap, DiscoveredPetriNetWithData outcome) {
+	public void createModelView(Map<String, GuardExpression> newRules, Map<String,String> swapMap, DiscoveredPetriNetWithData outcome, Map<Transition,Transition> transMapping) {
 		this.exoDotController.setRules(newRules);
 		this.exoDotController.setSwapMap(swapMap);
 		this.exoDotController.setUpdatedGraph(outcome);
+		this.exoDotController.setTransMapping(transMapping);
 		this.exoDotController.update();
 	}
 	
