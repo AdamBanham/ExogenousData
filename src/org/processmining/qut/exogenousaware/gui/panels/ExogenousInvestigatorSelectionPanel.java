@@ -9,7 +9,6 @@ import java.awt.event.MouseListener;
 import java.util.List;
 
 import javax.swing.JButton;
-import javax.swing.JComponent;
 import javax.swing.JLabel;
 import javax.swing.JPanel;
 
@@ -26,16 +25,24 @@ import prefuse.data.query.ListModel;
 @Builder
 @Data
 public class ExogenousInvestigatorSelectionPanel {
-
+//	builder parameters
 	@NonNull private List<String> exoVariables;
 	@NonNull private List<String> endoVariables;
 	@NonNull private ExogenousDiscoveryInvestigator source;
 	
+//	gui widgets
 	@Getter @Default private JPanel main = new JPanel();
 	@Getter @Default private ProMList<String> selectedEndoVariables = null;
 	@Getter @Default private ProMList<String> selectedExoVariables = null;
 	@Getter @Default private JButton investigate = new JButton("Start Investigation");
 	@Getter @Default private JButton enhance = new JButton("Open Enhancement");
+	@Getter @Default private JButton measure = new JButton("Measure Model");
+	
+//	grid view of panel
+	
+//	| 			text -> span 10 			|
+//	| list -> span 5    | list -> span 5    |
+//	| b | b |   |   |   |   |   |   |   | b |
 	
 	public ExogenousInvestigatorSelectionPanel setup() {
 		this.main.setLayout(new GridBagLayout());
@@ -51,18 +58,20 @@ public class ExogenousInvestigatorSelectionPanel {
 //		add a description at top of panel
 		JLabel info = new JLabel("To investigate the influence between exogenous or endogenous variables and decision points, select a variable combination below then click investigate.");
 		info.setForeground(Color.white);
-		sub_c.gridwidth = 2;
+		sub_c.gridwidth = 10;
 		this.main.add(info, sub_c);
 //		add selection lists
 		sub_c.gridy = 1;
 		sub_c.weightx = 0.5;
-		sub_c.gridwidth = 1;
+		sub_c.gridx = 0;
+		sub_c.gridwidth = 5;
 		sub_c.weighty = 1;
 		sub_c.fill = GridBagConstraints.BOTH;
 		ProMList<String> exoPanel = new ProMList<String>("Exogenous Variables", new ListModel(this.exoVariables.toArray()));
 		this.selectedExoVariables = exoPanel;
 		this.main.add(exoPanel,sub_c);
-		sub_c.gridx = 1;
+		sub_c.gridx = 5;
+		sub_c.gridwidth = 5;
 		sub_c.weightx = 0.5;
 		ProMList<String> endoPanel = new ProMList<String>("Endogenous Variables", new ListModel(this.endoVariables.toArray()));
 		this.selectedEndoVariables = endoPanel;
@@ -75,13 +84,16 @@ public class ExogenousInvestigatorSelectionPanel {
 		sub_c.weightx = 0;
 		this.investigate.addMouseListener(new InvestigationListener(this.source));
 		this.main.add(this.investigate, sub_c);
+//		add a measurement button
+		sub_c.gridx = 1;
+		this.main.add(this.measure, sub_c);
+		this.measure.setEnabled(false);
 //		add a discovery button
 		this.enhance.setEnabled(false);
 		sub_c.anchor = GridBagConstraints.LINE_END;
-		sub_c.gridx = 1;
+		sub_c.gridx = 9;
 		this.enhance.addMouseListener(new EnhancementListener(this.enhance,this.source));
 		this.main.add(this.enhance, sub_c);
-		System.out.println("added enhancement button");
 //		add panel
 		this.main.setBackground(Color.DARK_GRAY);
 		return this;
