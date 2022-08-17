@@ -38,6 +38,9 @@ import org.processmining.models.graphbased.directed.petrinetwithdata.newImpl.Pet
 import org.processmining.plugins.petrinet.replayresult.PNRepResult;
 import org.processmining.plugins.replayer.replayresult.SyncReplayResult;
 import org.processmining.qut.exogenousaware.data.storage.ExogenousDiscoveryInvestigation;
+import org.processmining.qut.exogenousaware.gui.panels.ExogenousDiscoveryProgresser;
+import org.processmining.qut.exogenousaware.gui.panels.ExogenousDiscoveryProgresser.ProgressState;
+import org.processmining.qut.exogenousaware.gui.panels.ExogenousDiscoveryProgresser.ProgressType;
 
 import com.google.common.util.concurrent.AtomicLongMap;
 
@@ -49,8 +52,11 @@ import lombok.NonNull;
 @Builder
 public class InvestigationTask extends SwingWorker<DiscoveredPetriNetWithData, Integer> {
 
+//	Builder parameters
 	@NonNull private ExogenousDiscoveryInvestigation source;
+	@NonNull private ExogenousDiscoveryProgresser progresser;
 	
+//	Internal states
 	@Default @Getter private int maxConcurrentThreads = Runtime.getRuntime().availableProcessors() > 3 ? Runtime.getRuntime().availableProcessors() - 2 : 1;
 	@Default @Getter private ThreadPoolExecutor pool = null;
 	@Default private Map<Place, FunctionEstimator> estimators = new HashMap<>();
@@ -134,10 +140,7 @@ public class InvestigationTask extends SwingWorker<DiscoveredPetriNetWithData, I
 	@Override
 	protected DiscoveredPetriNetWithData doInBackground() throws Exception {
 		try {
-//		setup progress size
-		this.source.getProgress().setMaximum(100);
-		this.source.getProgress().setValue(0);
-		dummyProgress progress = new dummyProgress(this, this.source.getLog().size() + this.estimators.entrySet().size());
+		dummyProgress progress = new dummyProgress(this);
 //		create some futures
 		List<Future<Integer>> traceFutures = new ArrayList<>();
 		// Prepare trace counters
@@ -172,6 +175,8 @@ public class InvestigationTask extends SwingWorker<DiscoveredPetriNetWithData, I
 			}
 		}
 		
+		progress.setMaximum(traceFutures.size()+ estimators.entrySet().size());
+		
 		for (Future<Integer> traceFuture : traceFutures) {
 			// This blocks until the trace processor is done
 			traceFuture.get();
@@ -204,6 +209,9 @@ public class InvestigationTask extends SwingWorker<DiscoveredPetriNetWithData, I
 		}
 		
 		System.out.println("[ExogenousInvestigationTask] Configured estimators...");
+		
+		
+		
 		
 		/*
 		 * Collect result for each decision point
@@ -377,13 +385,19 @@ public class InvestigationTask extends SwingWorker<DiscoveredPetriNetWithData, I
 	public class dummyProgress implements Progress {
 		
 		private InvestigationTask source;
+		private ExogenousDiscoveryProgresser progresser;
+		private ProgressState state;
 		private double value;
 		private int max;
 		
-		public dummyProgress(InvestigationTask source, int max) {
+		public dummyProgress(InvestigationTask source) {
 			this.source = source;
-			this.value = 0.0;
-			this.max = max;
+			this.progresser = source.progresser;
+			this.state = this.progresser.getState(ProgressType.Investigation);
+			this.state.setCaption("Starting...");
+			this.state.setProgress(0);
+			this.state.setTotal(0);
+			this.state.update();
 		}
 
 		@Override
@@ -395,19 +409,19 @@ public class InvestigationTask extends SwingWorker<DiscoveredPetriNetWithData, I
 		@Override
 		public void setMaximum(int value) {
 			// TODO Auto-generated method stub
-			
+			state.setTotal(value);
 		}
 
 		@Override
 		public void setValue(int value) {
 			// TODO Auto-generated method stub
-			
+			state.setProgress(value);
 		}
 
 		@Override
 		public void setCaption(String message) {
 			// TODO Auto-generated method stub
-			
+			state.setCaption(message);
 		}
 
 		@Override
@@ -419,13 +433,13 @@ public class InvestigationTask extends SwingWorker<DiscoveredPetriNetWithData, I
 		@Override
 		public int getValue() {
 			// TODO Auto-generated method stub
-			return 0;
+			return state.getProgress();
 		}
 
 		@Override
 		public void inc() {
 			// TODO Auto-generated method stub
-			this.source.setProgress((int) ((this.value++)/this.max));
+			state.increment();
 		}
 
 		@Override
