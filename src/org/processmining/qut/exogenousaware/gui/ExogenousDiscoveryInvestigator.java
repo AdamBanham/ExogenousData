@@ -28,6 +28,7 @@ import org.processmining.datadiscovery.model.DiscoveredPetriNetWithData;
 import org.processmining.datapetrinets.expression.GuardExpression;
 import org.processmining.datapetrinets.ui.ConfigurationUIHelper;
 import org.processmining.models.graphbased.directed.petrinet.PetrinetGraph;
+import org.processmining.models.graphbased.directed.petrinet.elements.Transition;
 import org.processmining.models.graphbased.directed.petrinetwithdata.newImpl.PetriNetWithData;
 import org.processmining.plugins.connectionfactories.logpetrinet.TransEvClassMapping;
 import org.processmining.plugins.petrinet.replayer.algorithms.costbasedcomplete.CostBasedCompleteParam;
@@ -39,6 +40,8 @@ import org.processmining.qut.exogenousaware.gui.panels.ExogenousEnhancementGraph
 import org.processmining.qut.exogenousaware.gui.panels.ExogenousInvestigatorDotPanel;
 import org.processmining.qut.exogenousaware.gui.panels.ExogenousInvestigatorSelectionPanel;
 import org.processmining.qut.exogenousaware.gui.workers.ExogenousDiscoveryAlignmentWorker;
+import org.processmining.qut.exogenousaware.gui.workers.ExogenousDiscoveryStatisticWorker;
+import org.processmining.qut.exogenousaware.stats.models.ProcessModelStatistics;
 
 import lombok.Builder;
 import lombok.Builder.Default;
@@ -53,25 +56,35 @@ import lombok.NonNull;
 public class ExogenousDiscoveryInvestigator extends JPanel{
 	
 	private static final long serialVersionUID = 7004747115076080275L;
+//	builder parameters
 	@NonNull private ExogenousAnnotatedLog source;
 	@NonNull private PetriNetWithData controlflow;
 	@NonNull private UIPluginContext context;
 	
+//	internal states
 	@Default private List<String> endoVariables = null;
 	@Default private List<String> exoVariables = null;
 	@Default private PNRepResult alignment = null;
-	@Default private JButton enhancementButton = new JButton("Open Enhancement");
 	@Default private GridBagConstraints c = new GridBagConstraints();
+	@Default public String enhancementTracablityViewKey = "E-Trace";
+	@Default public String enhancementSearchViewKey = "E-Search";
+	@Default private int maxConcurrentThreads = Runtime.getRuntime().availableProcessors() > 3 ? Runtime.getRuntime().availableProcessors() - 2 : 1;
+	@Default @Getter private ProcessModelStatistics statistics = null;
+	
+//  gui widgets
+	@Default private JButton enhancementButton = new JButton("Open Enhancement");
 	@Default private ExogenousInvestigatorDotPanel exoDotController = null;
 	@Default private ExogenousInvestigatorSelectionPanel exoSelectionPanel = null;
-	@Default public String enhancementTracablityViewKey = "E-Trace";
 	@Default private ExogenousEnhancementTracablity enhancementView = null;
-	@Default public String enhancementSearchViewKey = "E-Search";
 	@Default private ExogenousEnhancementGraphInvestigator enhancementSearchView = null;
 	@Default private ExogenousDiscoveryInvestigation result = null;
-	@Default private int maxConcurrentThreads = Runtime.getRuntime().availableProcessors() > 3 ? Runtime.getRuntime().availableProcessors() - 2 : 1;
 	
+//	state + gui compontents
 	@Default @Getter private ExogenousDiscoveryProgresser progresser = null;
+
+	
+//	workers
+	private ExogenousDiscoveryStatisticWorker statWorker;
 	
 	public ExogenousDiscoveryInvestigator setup() {
 //		precompute available attributes for decision mining
@@ -154,13 +167,48 @@ public class ExogenousDiscoveryInvestigator extends JPanel{
 	}
 	
 	private void setAlignment(PNRepResult alignment) {
+//		set alignment
 		this.alignment = alignment;
 		this.exoSelectionPanel.getEnhance().setEnabled(true);
 		this.exoSelectionPanel.getInvestigate().setEnabled(true);
 		System.out.println("[ExoDiscoveryInvestigator] completed precompute of alignment...");
 		System.out.println("[ExoDiscoveryInvestigator] precomputed fitness : "+this.alignment.getInfo().get(PNRepResult.TRACEFITNESS) );
+		
+//		start statistic worker
+		statWorker = ExogenousDiscoveryStatisticWorker.builder()
+				.alignment(alignment)
+				.progresser(progresser)
+				.controlflow(controlflow)
+				.log(source)
+				.build()
+				.setup();
+		
+		statWorker.addPropertyChangeListener(new PropertyChangeListener() {
+			
+			public void propertyChange(PropertyChangeEvent evt) {
+				// TODO Auto-generated method stub
+				if (evt.getNewValue() == SwingWorker.StateValue.DONE) {
+					if (statWorker.isDone()) {
+						try {
+							setStatistics(statWorker.get());
+						} catch (InterruptedException | ExecutionException e) {
+							// TODO Auto-generated catch block
+							e.printStackTrace();
+						}
+					}
+				}
+			}
+		});
+		
+		statWorker.execute();
 	}
 	
+	public void setStatistics(ProcessModelStatistics statistics) {
+		this.statistics = statistics;
+		this.exoDotController.setModelLogInfo(statistics);
+		this.exoDotController.update();
+		this.exoSelectionPanel.getMeasure().setEnabled(true);
+	}
 	
 	public List<String> getEndogenousVariables(){
 		if (this.endoVariables == null) {
@@ -260,12 +308,6 @@ public class ExogenousDiscoveryInvestigator extends JPanel{
 				.graph(this.controlflow)
 				.build()
 				.setup();
-//		JPanel modelView = new JPanel();
-//		modelView.setLayout(new GridLayout());
-//		ProMJGraphPanel model = ProMJGraphVisualizer.instance().visualizeGraphWithoutRememberingLayout(this.controlflow.getGraph());
-////		model.setPreferredSize(new Dimension(3000,600));
-//		modelView.add(model);
-//		modelView.setBackground(Color.DARK_GRAY);
 //		add panel
 		this.add(exoDotController.getMain(), this.c);
 	}
@@ -329,12 +371,6 @@ public class ExogenousDiscoveryInvestigator extends JPanel{
 			.source(this)
 			.build()
 			.setup();
-		GridBagConstraints c = new GridBagConstraints();
-		c.fill = GridBagConstraints.HORIZONTAL;
-		c.gridwidth = 2;
-		c.gridx = 0;
-		c.gridy = 3;
-		this.add(this.result.getMain(), c);
 		System.out.println("[Exogenous Investigator] Made investigation...");
 		this.validate();
 		result.run();
