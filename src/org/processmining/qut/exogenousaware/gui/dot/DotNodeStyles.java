@@ -54,6 +54,10 @@ public class DotNodeStyles {
 		return p;
 	}
 	
+	public static DotNode buildDecisionCluster(String label, List<DotNode> members, int group) {
+		return DecisionCluster.builder().label(label).members(members).group(group).build().setup();
+	}
+	
 	private static String buildStatLabel(Transition t, ModelStatistics<Place,Transition,DecisionPoint> stats) {
 		int totalObs = 0;
 		float relativeFreq = 0.0f;
@@ -152,16 +156,16 @@ public class DotNodeStyles {
 	
 	private static String createTransitionLabel(String label, boolean istau) {
 		String labelFortmat = ""
-				+ "<<TABLE BGCOLOR=\"%s\" BORDER=\"1\" CELLBORDER=\"0\" SCALE=\"BOTH\" CELLPADDING=\"0\" CELLSPACING=\"0\" PORT=\"HEAD\">"
+				+ "<<TABLE BGCOLOR=\"%s\" BORDER=\"1\"     CELLPADDING=\"0\" CELLSPACING=\"0\" PORT=\"HEAD\">"
 				+ "<TR>"
-				+ "<TD BORDER=\"0\" SCALE=\"WIDTH\" CELLPADDING=\"2\" CELLBORDER=\"0\" >"
+				+ "<TD BORDER=\"0\"   CELLPADDING=\"2\"   >"
 				+ "<FONT COLOR=\"%s\">%s </FONT>"
 				+ "</TD>"
 				+ "</TR>"
 				+ "<TR>"
-				+ "<TD BGCOLOR=\"black\" HEIGHT=\"5\" SCALE=\"WIDTH\" ALIGN=\"LEFT\" BORDER=\"0\" CELLPADDING=\"2\" CELLBORDER=\"0\" CELLSPACING=\"0\"></TD>"
+				+ "<TD BGCOLOR=\"black\" HEIGHT=\"5\"   ALIGN=\"LEFT\" BORDER=\"0\" CELLPADDING=\"2\"   CELLSPACING=\"0\"></TD>"
 				+ "</TR><TR>"
-				+ "<TD BGCOLOR=\"black\" HEIGHT=\"5\" SCALE=\"WIDTH\" ALIGN=\"LEFT\" BORDER=\"0\" CELLPADDING=\"2\" CELLBORDER=\"0\" CELLSPACING=\"0\"></TD>"
+				+ "<TD BGCOLOR=\"black\" HEIGHT=\"5\"   ALIGN=\"LEFT\" BORDER=\"0\" CELLPADDING=\"2\"   CELLSPACING=\"0\"></TD>"
 				+ "</TR>";
 		
 		String end = ""
@@ -177,16 +181,16 @@ public class DotNodeStyles {
 	
 	private static String createTransitionLabel(String label, boolean istau, GuardExpression g, Map<String,String> swapper) {
 		String labelFortmat = ""
-				+ "<<TABLE BGCOLOR=\"%s\" BORDER=\"1\" CELLBORDER=\"0\" SCALE=\"BOTH\" CELLPADDING=\"0\" CELLSPACING=\"0\" PORT=\"HEAD\">"
+				+ "<<TABLE BGCOLOR=\"%s\" BORDER=\"1\"     CELLPADDING=\"0\" CELLSPACING=\"0\" PORT=\"HEAD\">"
 				+ "<TR>"
-				+ "<TD BORDER=\"0\" SCALE=\"WIDTH\" CELLPADDING=\"2\" CELLBORDER=\"0\" >"
+				+ "<TD BORDER=\"0\"   CELLPADDING=\"2\"   >"
 				+ "<FONT COLOR=\"%s\">%s </FONT>"
 				+ "</TD>"
 				+ "</TR>"
 				+ "<TR>"
-				+ "<TD BGCOLOR=\"black\" HEIGHT=\"5\" SCALE=\"WIDTH\" ALIGN=\"LEFT\" BORDER=\"0\" CELLPADDING=\"2\" CELLBORDER=\"0\" CELLSPACING=\"0\"></TD>"
+				+ "<TD BGCOLOR=\"black\" HEIGHT=\"5\"   ALIGN=\"LEFT\" BORDER=\"0\" CELLPADDING=\"2\"   CELLSPACING=\"0\"></TD>"
 				+ "</TR><TR>"
-				+ "<TD BGCOLOR=\"black\" HEIGHT=\"5\" SCALE=\"WIDTH\" ALIGN=\"LEFT\" BORDER=\"0\" CELLPADDING=\"2\" CELLBORDER=\"0\" CELLSPACING=\"0\"></TD>"
+				+ "<TD BGCOLOR=\"black\" HEIGHT=\"5\"   ALIGN=\"LEFT\" BORDER=\"0\" CELLPADDING=\"2\"   CELLSPACING=\"0\"></TD>"
 				+ "</TR>";
 		
 		String end = ""

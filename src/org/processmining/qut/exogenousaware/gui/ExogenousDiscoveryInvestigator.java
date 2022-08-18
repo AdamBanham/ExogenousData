@@ -7,9 +7,11 @@ import java.awt.Insets;
 import java.beans.PropertyChangeEvent;
 import java.beans.PropertyChangeListener;
 import java.util.ArrayList;
+import java.util.HashMap;
 import java.util.HashSet;
 import java.util.List;
 import java.util.Map;
+import java.util.Map.Entry;
 import java.util.Optional;
 import java.util.Set;
 import java.util.concurrent.ExecutionException;
@@ -25,10 +27,13 @@ import org.deckfour.xes.model.XLog;
 import org.deckfour.xes.model.XTrace;
 import org.processmining.contexts.uitopia.UIPluginContext;
 import org.processmining.datadiscovery.model.DiscoveredPetriNetWithData;
+import org.processmining.datapetrinets.exception.NonExistingVariableException;
 import org.processmining.datapetrinets.expression.GuardExpression;
 import org.processmining.datapetrinets.ui.ConfigurationUIHelper;
 import org.processmining.models.graphbased.directed.petrinet.PetrinetGraph;
 import org.processmining.models.graphbased.directed.petrinet.elements.Transition;
+import org.processmining.models.graphbased.directed.petrinetwithdata.newImpl.DataElement;
+import org.processmining.models.graphbased.directed.petrinetwithdata.newImpl.PNWDTransition;
 import org.processmining.models.graphbased.directed.petrinetwithdata.newImpl.PetriNetWithData;
 import org.processmining.plugins.connectionfactories.logpetrinet.TransEvClassMapping;
 import org.processmining.plugins.petrinet.replayer.algorithms.costbasedcomplete.CostBasedCompleteParam;
@@ -312,11 +317,46 @@ public class ExogenousDiscoveryInvestigator extends JPanel{
 		this.add(exoDotController.getMain(), this.c);
 	}
 	
-	public void createModelView(Map<String, GuardExpression> newRules, Map<String,String> swapMap, DiscoveredPetriNetWithData outcome, Map<Transition,Transition> transMapping) {
-		this.exoDotController.setRules(newRules);
+	public void createModelView(Map<String,String> swapMap, DiscoveredPetriNetWithData outcome, Map<Transition,Transition> transMapping) {
+		
+		Map<String, GuardExpression> rules = new HashMap();
+		
+		this.controlflow.removeAllVariables();
+		
+		
+		for (DataElement de :outcome.getVariables()) {
+			this.controlflow.addVariable(de.getVarName(), de.getType(), de.getMinValue(), de.getMaxValue());
+		}
+		
+		
+		for(Entry<Transition, Transition> entry : transMapping.entrySet()) {
+			
+			Transition nt = entry.getValue();
+			Transition ot = entry.getKey();
+			
+			PNWDTransition rnt = null;
+			if (nt.getClass().equals(PNWDTransition.class)) {
+				rnt = (PNWDTransition) nt;
+			}
+			
+			if (rnt != null) {
+			 if (rnt.hasGuardExpression()) {
+				 try {
+					this.controlflow.setGuard(ot, rnt.getGuardExpression());
+					rules.put(ot.getId().toString(), rnt.getGuardExpression());
+				} catch (NonExistingVariableException e) {
+					// TODO Auto-generated catch block
+					e.printStackTrace();
+				}
+			 }
+			}
+		}
+		
+		
+		
+		this.exoDotController.setRules(rules);
 		this.exoDotController.setSwapMap(swapMap);
-		this.exoDotController.setUpdatedGraph(outcome);
-		this.exoDotController.setTransMapping(transMapping);
+		this.exoDotController.setUpdatedGraph(this.controlflow);
 		this.exoDotController.update();
 	}
 	

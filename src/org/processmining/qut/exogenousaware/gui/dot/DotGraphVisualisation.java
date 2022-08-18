@@ -1,5 +1,7 @@
 package org.processmining.qut.exogenousaware.gui.dot;
 
+import java.io.File;
+import java.io.IOException;
 import java.util.ArrayList;
 import java.util.Comparator;
 import java.util.HashMap;
@@ -70,22 +72,105 @@ public class DotGraphVisualisation {
 	@Default private List<PetrinetNode> next = new ArrayList<PetrinetNode>();
 	@Default private List<Object> nextEdges = new ArrayList<>();
 	@Default private List<String> seen = new ArrayList<>();
-	@Default private int group =1;
+	@Default private int group =2;
 	@Default private Map<String, DotNode> nodes = new HashMap<String, DotNode>();
 	@Default @Getter private List<ExoDotTransition> transitions = new ArrayList<ExoDotTransition>();
-
+	@Default private List<Place> decisionPlaces = new ArrayList();
+	@Default private DotNode leftAnchor = new DotAnchor("L");
+	@Default private DotNode rightAnchor = new DotAnchor("R");
 	
 	
 	public DotGraphVisualisation make() {
 		styleDot();
 		findStartsAndEnds();
 		walkGraph();
+		if (modelLogInfo != null) {
+			makeDecisionClusters();
+		}
 		return this;
+	}
+	
+	private void makeDecisionClusters() {
+		int dp = 1;
+		Dot clusterDot = new Dot();		
+		clusterDot.setDirection(GraphDirection.leftRight);
+		
+		Place last = null;
+		
+		
+		
+		
+		for(Place dplace: this.decisionPlaces) {
+			
+			List<DotEdge> seenEdges = new ArrayList();
+			List<DotEdge> seenTranEdges = new ArrayList();
+						
+			List<DotNode> members = new ArrayList();
+			String label = String.format("Decision Point #%d", dp);
+			
+			DotNode decisionNode = nodes.get(dplace.getId().toString());
+			members.add(decisionNode);
+			
+			for (DotEdge edge : this.visualisation.getEdges()) {
+				if (edge.getSource().equals(decisionNode)) {
+					seenEdges.add(edge);
+				}
+			}
+			
+			for(Transition outcome: modelLogInfo.getDecisionOutcomes(dplace)) {
+					DotNode tran = nodes.get(outcome.getId().toString());
+					members.add(tran);	
+					for (DotEdge edge : this.visualisation.getEdges()) {
+						if (edge.getSource().equals(tran)) {
+							seenTranEdges.add(edge);
+						}
+					}
+					this.visualisation.removeNode(tran);
+			}
+			
+			this.group++;
+			DotNode dc = DotNodeStyles.buildDecisionCluster(label, members, group);
+			
+			for (DotEdge edge : seenEdges) {
+				((DecisionCluster)dc).addEdge(edge);
+				this.visualisation.removeEdge(edge);
+			}
+			
+			clusterDot.addNode(dc);	
+			
+			for (DotEdge edge : seenTranEdges) {
+				clusterDot.addEdge(edge);
+			}
+			
+			if (last == null) {
+				last = dplace;
+			} else {
+				DotEdge invEdge = new DotAnchorEdge(nodes.get(last.getId().toString()), nodes.get(dplace.getId().toString()));
+//				((DecisionCluster)dc).addEdge(invEdge);
+				this.visualisation.addEdge(invEdge);
+			}
+			
+			this.visualisation.addNode(dc);	
+			
+			dp++;
+		}
+		clusterDot.addNode(nodes.get(end.get(0).getId().toString()));
+		File f = new File("C:\\\\Users\\\\n7176546\\\\OneDrive - Queensland University of Technology\\\\Desktop\\\\test\\\\dummy.dot");
+		try {
+			clusterDot.exportToFile(f);
+		} catch (IOException e) {
+			// TODO Auto-generated catch block
+			e.printStackTrace();
+		}
+	
 	}
 	
 	private void styleDot() {
 		this.visualisation.setOption("bgcolor", "none");
 		this.visualisation.setOption("rank", "min");
+		this.visualisation.setOption("clusterrank", "local");
+		this.visualisation.setOption("compound", "true");
+//		this.visualisation.setOption("newrank", "true");
 		this.visualisation.setDirection(GraphDirection.leftRight);
 	}
 	
@@ -93,31 +178,17 @@ public class DotGraphVisualisation {
 	 * Finds the starts and ending places, stores them for later so that these places uses a special style
 	 */
 	private void findStartsAndEnds() {
+		decisionPlaces.clear();
 //		add initial places first
+		leftAnchor.setOption("group", "1");
+		this.visualisation.addNode(leftAnchor);
 		for (Place place : graph.getInitialMarking().stream().collect(Collectors.toList())) {
-			if (this.updatedGraph != null) {
-				for(Place newPlace : this.updatedGraph.getPlaces()) {
-					if (newPlace.getLabel().equals(place.getLabel())) {
-						initial.add(newPlace);
-						curr.add(newPlace);
-						break;
-					}
-				}
-			} else {
 				initial.add(place);
 				curr.add(place);
-			}
 		}
 		for (Place place : graph.getFinalMarkings()[0].stream().collect(Collectors.toList())) {
-			if (this.updatedGraph != null) {
-				for(Place newPlace : this.updatedGraph.getPlaces()) {
-					if (newPlace.getLabel().equals(place.getLabel())) {
-						end.add(newPlace);
-					}
-				}
-			} else {
 				end.add(place);
-			}
+			
 		}
 	}
 	
@@ -147,12 +218,31 @@ public class DotGraphVisualisation {
 				if (node.getClass().equals(Place.class)) {
 					p = (Place) node;
 					DotNode pp = handlePlace(p);
-					pp.setOption("group", ""+group);
+					pp.setOption("group", "2");
+					
+//					check for decision place
+					if(graph.getOutEdges(p).size() > 1) {
+						decisionPlaces.add(p);
+					}
+//					check if place in initial
+					if (initial.contains(p)) {
+						DotEdge anchorEdge = new DotAnchorEdge(leftAnchor, pp);
+						visualisation.addEdge(anchorEdge);
+					}
+					
 					visualisation.addNode(pp);
+					
+//					check if place is final marking
+					if (end.contains(p)) {
+						DotEdge anchorEdge = new DotAnchorEdge(pp, rightAnchor);
+						visualisation.addEdge(anchorEdge);
+					}
+					
+					
 				} else if (node.getClass().equals(PNWDTransition.class)) {
 					t = (Transition) node;
 					DotNode newNode = handleTransition(t);
-					newNode.setOption("group", ""+group);
+					newNode.setOption("group", "2");
 					nodes.put(t.getId().toString(), newNode);
 //					newNode.addMouseListener(new EnhancementListener(this, this.vis, newNode));
 					visualisation.addNode( newNode );
@@ -182,6 +272,9 @@ public class DotGraphVisualisation {
 			curr.addAll(next.stream().sorted(Comparator.comparing(PetrinetNode::getLabel)).collect(Collectors.toList()));
 			curr.addAll(nextEdges);
 		}
+		group++;
+		rightAnchor.setOption("group", Integer.toString(group));
+		this.visualisation.addNode(rightAnchor);
 	}
 	
 	/**
@@ -192,7 +285,7 @@ public class DotGraphVisualisation {
 	private void getNextNodes(Place p, Transition t) {
 //		get edges with this element as source
 		List<PetrinetEdge< ? extends PetrinetNode, ? extends PetrinetNode>> edges;
-		PetriNetWithData graph = this.updatedGraph != null ? this.updatedGraph : this.graph;
+		PetriNetWithData graph = this.graph;
 		if (p != null) {
 			final Place pp = p;
 			edges = graph.getEdges().stream()
@@ -241,7 +334,7 @@ public class DotGraphVisualisation {
 	}
 	
 	private DotNode handleTransition(Transition t) {
-		Transition oldTrans = transMapping != null ? findOldTrans(t,transMapping) : t;
+		Transition oldTrans = t;
 		DotNode newNode;
 		if (this.rules != null) {
 			if (this.rules.containsKey(t.getId().toString())) {

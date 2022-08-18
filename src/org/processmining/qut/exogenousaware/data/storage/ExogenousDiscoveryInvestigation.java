@@ -122,7 +122,7 @@ public class ExogenousDiscoveryInvestigation {
 		}
 		this.transMap = this.task.getTransMap();
 		
-		this.source.createModelView(this.foundExpressions, this.task.getConveretedNames(), this.outcome, this.transMap);
+		this.source.createModelView(this.task.getConveretedNames(), this.outcome, this.transMap);
 	}
 	
 	public Map<String, Type> makeClassTypes() {
