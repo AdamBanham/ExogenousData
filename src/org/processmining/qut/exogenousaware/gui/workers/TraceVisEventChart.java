@@ -177,7 +177,12 @@ public class TraceVisEventChart {
 				}
 			}
 			// add series and move on
+			try {
 			dataset.addSeries(series);
+			} catch (Exception e) {
+//				ooppss we have a repeated slice
+				continue;
+			}
 			sliceCombos.put(slicekey, exoSeries);
 			exoSeries++;
 			// prepare exo series controller dict

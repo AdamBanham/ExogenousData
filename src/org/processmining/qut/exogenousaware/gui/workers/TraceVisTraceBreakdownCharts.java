@@ -166,6 +166,7 @@ public class TraceVisTraceBreakdownCharts extends SwingWorker<JPanel, String> {
 		this.source.getTraceBreakdownView().clear();
 		int eventIndex = -1;
 		for(XEvent ev: endo) {
+			try {
 			eventIndex++;
 //			create graphs for this endogenous event
 			TraceVisEventChart chartbuilder = TraceVisEventChart.builder()
@@ -189,6 +190,10 @@ public class TraceVisTraceBreakdownCharts extends SwingWorker<JPanel, String> {
 				for(String okey: chartbuilder.getChartDict().get(key).keySet()) {
 					slices.add(okey);
 				}
+			}
+			} catch (Exception e) {
+				System.out.println("unable to build TraceVisEventChart");
+				e.printStackTrace();
 			}
 		}
 		gcc.insets = new Insets(5,5,5,5);

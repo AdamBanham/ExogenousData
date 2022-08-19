@@ -1,5 +1,7 @@
 package org.processmining.qut.exogenousaware.steps.transform.type.modeller;
 
+import java.util.List;
+
 import org.apache.commons.math3.fitting.PolynomialCurveFitter;
 import org.apache.commons.math3.fitting.WeightedObservedPoints;
 import org.processmining.qut.exogenousaware.steps.slicing.data.SubSeries;
@@ -16,8 +18,16 @@ public class PolynomialCurveFitterModeller implements Transformer {
 	public TransformedAttribute transform(SubSeries subtimeseries) {
 		PolynomialCurveFitter fitter = PolynomialCurveFitter.create(2);
 		WeightedObservedPoints obs = new WeightedObservedPoints();
-		for(double y: subtimeseries.getYSeries()) {
-			obs.add(1.00, y);
+		
+		List<Long> x = subtimeseries.getXSeries(true);
+		List<Double> y = subtimeseries.getYSeries();
+		
+		for(int i=0 ; i < y.size(); i++) {
+			obs.add(i, y.get(i));
+		}
+		
+		if (obs.toList().size() < 1) {
+			return null;
 		}
 		
 		double[] coeff = fitter.fit(obs.toList());

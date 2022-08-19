@@ -75,7 +75,7 @@ public class VelocityTransformer implements Transformer {
 			
 			SubSeriesBuilder velocityBuilder = SubSeries.builder()	
 					.slicingName("velocity:"+subtimeseries.getSlicingName())
-					.abvSlicingName("v:"+subtimeseries.getAbvSlicingName())
+					.abvSlicingName(subtimeseries.getAbvSlicingName())
 					.source(subtimeseries.getSource())
 					.dataset("v:"+subtimeseries.getDataset())
 					.datatype(ExogenousDatasetType.NUMERICAL)
@@ -89,6 +89,7 @@ public class VelocityTransformer implements Transformer {
 			SubSeries velocity = velocityBuilder.build();
 
 			return chainer.transform(velocity);
+			
 		} else {
 			return null;
 		}
