@@ -106,7 +106,12 @@ public class DotGraphVisualisation {
 			List<DotEdge> seenTranEdges = new ArrayList();
 						
 			List<DotNode> members = new ArrayList();
-			String label = String.format("Decision Point #%d", dp);
+			
+			String label = String.format("Decision Point #%d (%d / %.1f%%)",
+					dp,
+					this.modelLogInfo.getInformation(dplace).getTotalInstances(),
+					this.modelLogInfo.getInformation(dplace).getRelativeFrequency()*100
+			);
 			
 			DotNode decisionNode = nodes.get(dplace.getId().toString());
 			members.add(decisionNode);
@@ -125,15 +130,15 @@ public class DotGraphVisualisation {
 							seenTranEdges.add(edge);
 						}
 					}
-					this.visualisation.removeNode(tran);
+//					this.visualisation.removeNode(tran);
 			}
 			
 			this.group++;
 			DotNode dc = DotNodeStyles.buildDecisionCluster(label, members, group);
 			
 			for (DotEdge edge : seenEdges) {
-				((DecisionCluster)dc).addEdge(edge);
-				this.visualisation.removeEdge(edge);
+//				((DecisionCluster)dc).addEdge(edge);
+//				this.visualisation.removeEdge(edge);
 			}
 			
 			clusterDot.addNode(dc);	
@@ -147,7 +152,7 @@ public class DotGraphVisualisation {
 			} else {
 				DotEdge invEdge = new DotAnchorEdge(nodes.get(last.getId().toString()), nodes.get(dplace.getId().toString()));
 //				((DecisionCluster)dc).addEdge(invEdge);
-				this.visualisation.addEdge(invEdge);
+//				this.visualisation.addEdge(invEdge);
 			}
 			
 			this.visualisation.addNode(dc);	
@@ -160,14 +165,14 @@ public class DotGraphVisualisation {
 			clusterDot.exportToFile(f);
 		} catch (IOException e) {
 			// TODO Auto-generated catch block
-			e.printStackTrace();
+//			e.printStackTrace();
 		}
 	
 	}
 	
 	private void styleDot() {
 		this.visualisation.setOption("bgcolor", "none");
-		this.visualisation.setOption("rank", "min");
+		this.visualisation.setOption("rank", "same");
 		this.visualisation.setOption("clusterrank", "local");
 		this.visualisation.setOption("compound", "true");
 //		this.visualisation.setOption("newrank", "true");
@@ -248,10 +253,19 @@ public class DotGraphVisualisation {
 					visualisation.addNode( newNode );
 				} else if (node.getClass().equals(Arc.class)) {
 					arc = (Arc) node;
-					DotEdge arcDot = DotNodeStyles.buildEdge(
-							nodes.get(arc.getSource().getId().toString()),
-							nodes.get(arc.getTarget().getId().toString())
-					);
+					DotEdge arcDot;
+					if (seen.contains(arc.getTarget().getId().toString())) {
+						arcDot = DotNodeStyles.buildBackwardsEdge(
+								nodes.get(arc.getSource().getId().toString()),
+								nodes.get(arc.getTarget().getId().toString())
+						);
+					} else {
+						arcDot = DotNodeStyles.buildEdge(
+								nodes.get(arc.getSource().getId().toString()),
+								nodes.get(arc.getTarget().getId().toString())
+						);
+					}
+					
 					visualisation.addEdge(
 							arcDot
 					);

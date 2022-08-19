@@ -46,6 +46,10 @@ public class DotNodeStyles {
 		return new ExoDotEdge(source, target);
 	}
 	
+	public static DotEdge buildBackwardsEdge(DotNode source, DotNode target) {
+		return new BackwardDotEdge(source, target);
+	}
+	
 	public static DotNode buildEndingPlaceNode(String label) {
 		DotNode p = buildPlaceNode(label);
 		p.setOption("fillcolor", "red");
