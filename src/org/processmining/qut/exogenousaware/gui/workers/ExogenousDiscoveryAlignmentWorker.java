@@ -90,6 +90,7 @@ public class ExogenousDiscoveryAlignmentWorker extends SwingWorker<PNRepResult, 
 		public void setCaption(String message) {
 			// TODO Auto-generated method stub
 			progresser.getState(ProgressType.Alignment).setCaption(message);
+			System.out.println("[ExogenousDiscoveryAlignment] "+message);
 		}
 
 		public String getCaption() {
