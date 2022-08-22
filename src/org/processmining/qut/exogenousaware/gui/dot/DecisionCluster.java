@@ -30,15 +30,10 @@ public class DecisionCluster extends DotCluster{
 		setOption("label", label);
 		setOption("color", "black");
 		setOption("margin", "10.0");
-//		setOption("compound", "true");
-//		setOption("group", "2");
+		setOption("layer", "dp");
 		
 		setGraphOption("style", "filled,dashed");
 		setGraphOption("fillcolor", fillcolor);
-		setGraphOption("clusterrank","global");
-//		setGraphOption("rank" , "min");
-//		setGraphOption("rankdir", "LR");
-//		setGraphOption("compound", "true");
 	}
 	
 	public void addMembers() {

@@ -39,6 +39,7 @@ public class DotNodeStyles {
 		p.setOption("fillcolor", "green");
 		p.setOption("style", "filled");
 		p.setOption("xlabel","START");
+		p.setOption("width", "1.0");
 		return p;
 	}
 	
@@ -55,6 +56,7 @@ public class DotNodeStyles {
 		p.setOption("fillcolor", "red");
 		p.setOption("style", "filled");
 		p.setOption("xlabel","END");
+		p.setOption("width", "1.0");
 		return p;
 	}
 	

@@ -16,6 +16,7 @@ public class ExoDotEdge extends DotEdge {
 		}
 		
 		setOption("xlabel", "");
+		setOption("layer", "net");
 //		setOption("label", null);
 	}
 	

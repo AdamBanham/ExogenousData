@@ -10,6 +10,7 @@ public class DotAnchor extends DotNode {
 		super(side+"-anchor", new HashMap());
 		// TODO Auto-generated constructor stub
 		setOption("style", "invis");
+		setOption("layer", "net");
 	}
 
 }

@@ -29,6 +29,7 @@ public class ExoDotTransition extends DotNode {
 				}}
 		
 		);
+		setOption("layer", "net");
 		this.oldLabel = oldLabel;
 		this.transLabel = transLabel;
 		this.controlFlowId = controlFlowId;

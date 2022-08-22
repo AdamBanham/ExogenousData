@@ -8,6 +8,7 @@ public class DotAnchorEdge extends DotEdge {
 	public DotAnchorEdge(DotNode source, DotNode target) {
 		super(source, target);
 		setOption("style", "invis");
+		setOption("layer", "net");
 	}
 
 }

@@ -172,10 +172,11 @@ public class DotGraphVisualisation {
 	
 	private void styleDot() {
 		this.visualisation.setOption("bgcolor", "none");
-		this.visualisation.setOption("rank", "same");
-		this.visualisation.setOption("clusterrank", "local");
+		this.visualisation.setOption("rank", "max");
 		this.visualisation.setOption("compound", "true");
-//		this.visualisation.setOption("newrank", "true");
+		this.visualisation.setOption("splines", "true");
+		this.visualisation.setOption("searchsize", "1000");
+		this.visualisation.setOption("layers", "dp:net:top");
 		this.visualisation.setDirection(GraphDirection.leftRight);
 	}
 	
@@ -223,7 +224,7 @@ public class DotGraphVisualisation {
 				if (node.getClass().equals(Place.class)) {
 					p = (Place) node;
 					DotNode pp = handlePlace(p);
-					pp.setOption("group", "2");
+//					pp.setOption("row", Integer.toString(group));
 					
 //					check for decision place
 					if(graph.getOutEdges(p).size() > 1) {
@@ -247,7 +248,7 @@ public class DotGraphVisualisation {
 				} else if (node.getClass().equals(PNWDTransition.class)) {
 					t = (Transition) node;
 					DotNode newNode = handleTransition(t);
-					newNode.setOption("group", "2");
+//					newNode.setOption("row", Integer.toString(group));
 					nodes.put(t.getId().toString(), newNode);
 //					newNode.addMouseListener(new EnhancementListener(this, this.vis, newNode));
 					visualisation.addNode( newNode );
@@ -286,6 +287,7 @@ public class DotGraphVisualisation {
 			curr.addAll(next.stream().sorted(Comparator.comparing(PetrinetNode::getLabel)).collect(Collectors.toList()));
 			curr.addAll(nextEdges);
 		}
+//		all end place holder
 		group++;
 		rightAnchor.setOption("group", Integer.toString(group));
 		this.visualisation.addNode(rightAnchor);

@@ -23,6 +23,7 @@ public class ExoDotPlace extends DotNode {
 					put("xlabel", label);
 				}}
 		);
+		setOption("layer", "net");
 	}
 	
 	@Override
