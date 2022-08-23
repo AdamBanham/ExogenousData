@@ -30,7 +30,9 @@ public class DecisionCluster extends DotCluster{
 		setOption("label", label);
 		setOption("color", "black");
 		setOption("margin", "10.0");
-		setOption("layer", "dp");
+		setOption("layer", "net");
+		setOption("style", "filled");
+		setOption("fillcolor", "#FFFFFF");
 		
 		setGraphOption("style", "filled,dashed");
 		setGraphOption("fillcolor", fillcolor);

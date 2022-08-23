@@ -1,7 +1,6 @@
 package org.processmining.qut.exogenousaware.gui.panels;
 
 import java.awt.Color;
-import java.awt.Component;
 import java.awt.Dimension;
 import java.awt.GridBagConstraints;
 import java.awt.GridBagLayout;
@@ -19,9 +18,12 @@ import javax.swing.JPanel;
 
 import org.processmining.datapetrinets.expression.GuardExpression;
 import org.processmining.framework.util.ui.widgets.ProMScrollPane;
+import org.processmining.models.graphbased.directed.petrinet.PetrinetNode;
+import org.processmining.models.graphbased.directed.petrinet.elements.Place;
 import org.processmining.models.graphbased.directed.petrinet.elements.Transition;
 import org.processmining.models.graphbased.directed.petrinetwithdata.newImpl.PetriNetWithData;
 import org.processmining.plugins.graphviz.dot.Dot;
+import org.processmining.plugins.graphviz.dot.DotNode;
 import org.processmining.qut.exogenousaware.gui.dot.DotGraphVisualisation;
 import org.processmining.qut.exogenousaware.gui.dot.panels.DotPanelG2;
 import org.processmining.qut.exogenousaware.gui.styles.ScrollbarStyler;
@@ -85,13 +87,117 @@ public class ExogenousInvestigatorDotPanel  {
 		this.vis.changeDot(visBuilder.getVisualisation(), false);
 	}
 	
-	private class DotController extends JPanel {
+	@Builder
+	public static class DotOverlayInformationDump {
+		
+		@NonNull DotNode node;
+		@NonNull PetrinetNode controlNode;
+		@NonNull ProcessModelStatistics statistics;
+		@NonNull DotOverlay overlay;
+		
+		public DotOverlayInformationDump setup() {
+			JPanel scrollable = overlay.getScrollable();
+			int height = 0;
+			scrollable.removeAll();
+			
+			GridBagConstraints c = overlay.createConstraints();
+			
+			scrollable.add(Box.createVerticalStrut(50), c);
+			c.gridy++;
+			
+			
+			scrollable.add(new JLabel(findSimpleLabel()), c);
+			c.gridy++;
+			
+			scrollable.add(new JLabel("Transition Guard:"), c);
+			c.gridy++;
+			
+			scrollable.add(new JLabel("TODO"), c);
+			c.gridy++;
+			
+			if (controlNode instanceof Place) {
+				if (statistics.isDecisionMoment((Place) controlNode)) {
+//					TODO add work for overlay to build out 
+				}
+			}
+			
+			if (controlNode instanceof Transition) {
+//				TODO add work for overlay to build out
+			}
+		
+			overlay.setVisible(true);
+			
+			scrollable.validate();
+			overlay.getScroller().revalidate();
+			overlay.getScroller().getParent().revalidate();
+			overlay.getScroller().getParent().repaint();
+			return this;
+		}
+		
+		private String findSimpleLabel() {
+			String label = controlNode.getLabel();
+			
+			
+			return label;
+		}
+		
+		
+		
+	}
+	
+	public static class DotOverlay {
+		
+//		internal states
+		@Getter private JPanel scrollable = new JPanel();
+		@Getter private ProMScrollPane scroller = new ProMScrollPane(scrollable);
+		private Color transGray = new Color(128, 128, 128, 175);
+		
+		public DotOverlay() {
+			GridBagConstraints c = createConstraints();
+//			setup scrollable
+			scrollable.setBackground(transGray);
+			scrollable.setLayout(new GridBagLayout());
+			scrollable.add(new JLabel("Transition A"), c);
+			c.gridy++;
+			scrollable.add( Box.createVerticalStrut(800), c);
+//			setup scroller
+			scroller.setBackground(transGray);
+			scroller.setPreferredSize(new Dimension(250,75));
+			ScrollbarStyler.styleScrollBar(scroller.getHorizontalScrollBar());
+			ScrollbarStyler.styleScrollBar(scroller.getVerticalScrollBar());
+			scroller.setVisible(false);
+		}
+		
+		public GridBagConstraints createConstraints() {
+			GridBagConstraints c = new GridBagConstraints();
+			c.weightx = 1.0;
+			c.weighty = 0.0;
+			c.fill = c.NONE;
+//			c.anchor = c.NORTH;
+			c.insets = new Insets(5,5,5,5);
+			c.gridx = 0;
+			c.gridy = 0;
+			
+			return c;
+		}
+		
+		public void setVisible(boolean visible) {
+			scroller.setVisible(visible);
+		}
+		
+		public void toggleVisible() {
+			scroller.setVisible(!scroller.isVisible());
+		}
+		
+		
+	}
+	
+	public class DotController extends JPanel {
 		
 		@Getter private DotPanelG2 vis;
 		@Getter private JPanel main;
 		@Getter private JPanel clickable;
-		@Getter private JPanel scrollable;
-		@Getter private ProMScrollPane infoPanel;
+		@Getter private DotOverlay overlay;
 		private Dot graph;
 		private ExogenousInvestigatorDotPanel source;
 		
@@ -140,30 +246,8 @@ public class ExogenousInvestigatorDotPanel  {
 			c.gridx = 4;
 			c.fill = c.VERTICAL;
 			add(clickable, c);
-//			add info panel
-			Color transGray = new Color(128, 128, 128, 175);
-			scrollable = new JPanel();
-			scrollable.setBackground(transGray);
-//			scrollable.setPreferredSize(new Dimension(50,2500));
-//			scrollable.setMinimumSize(scrollable.getPreferredSize());
-			scrollable.setLayout(new GridBagLayout());
-			c.weightx = 1.0;
-			c.weighty = 1.0;
-			c.fill = c.HORIZONTAL;
-			c.anchor = c.CENTER;
-			c.gridx = 0;
-			c.gridy = 0;
-			scrollable.add(new JLabel("Transition A"), c);
-			c.gridy++;
-			scrollable.add( Box.createVerticalStrut(800), c);
-			infoPanel = new ProMScrollPane(scrollable);
-//			infoPanel.setOpaque(false);
-			
-			infoPanel.setBackground(transGray);
-			infoPanel.setPreferredSize(new Dimension(250,75));
-			ScrollbarStyler.styleScrollBar(infoPanel.getHorizontalScrollBar());
-			ScrollbarStyler.styleScrollBar(infoPanel.getVerticalScrollBar());
-			infoPanel.setVisible(false);
+//			add overlay
+			overlay = new DotOverlay();
 			
 //			add scroll info panel
 			c.weightx = 0.1;
@@ -174,7 +258,7 @@ public class ExogenousInvestigatorDotPanel  {
 			c.gridwidth = 1;
 			c.anchor = c.EAST;
 			c.fill = c.VERTICAL;
-			add(infoPanel,c);
+			add(overlay.getScroller(),c);
 
 			
 //			make dot visualiser
@@ -190,7 +274,7 @@ public class ExogenousInvestigatorDotPanel  {
 			c.gridwidth = 5;
 			add(this.vis, c);
 //			handle repaints on info panel
-			infoPanel.getVerticalScrollBar().
+			overlay.getScroller().getVerticalScrollBar().
 			addAdjustmentListener(new AdjustmentListener() {
 				
 				private long lastBounce = -1;
@@ -201,12 +285,12 @@ public class ExogenousInvestigatorDotPanel  {
 					if (lastBounce < 0) {
 						lastBounce = time;
 						getMain().repaint();
-						getInfoPanel().repaint();
+						getOverlay().getScroller().repaint();
 					}
 					else if ((time - lastBounce) > 25) {
 						lastBounce = time;
 						getMain().repaint();
-						getInfoPanel().repaint();
+						getOverlay().getScroller().repaint();
 					}
 				}
 			});
@@ -214,12 +298,12 @@ public class ExogenousInvestigatorDotPanel  {
 //			add listener to hide info panel
 			clickable.addMouseListener(new MouseListener() {
 				
-						private Component comp = getInfoPanel();
+						private DotOverlay overlay = getOverlay();
 						private JPanel vis = getVis();
 						private JPanel host = getMain();
 											
 						public void mouseClicked(MouseEvent e) {
-							comp.setVisible(!comp.isVisible());
+							overlay.toggleVisible();
 							host.revalidate();
 							vis.repaint();
 							host.repaint();

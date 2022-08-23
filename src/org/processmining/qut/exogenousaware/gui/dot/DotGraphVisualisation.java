@@ -1,5 +1,7 @@
 package org.processmining.qut.exogenousaware.gui.dot;
 
+import java.awt.event.MouseAdapter;
+import java.awt.event.MouseEvent;
 import java.io.File;
 import java.io.IOException;
 import java.util.ArrayList;
@@ -72,7 +74,7 @@ public class DotGraphVisualisation {
 	@Default private List<Object> nextEdges = new ArrayList<>();
 	@Default private List<String> seen = new ArrayList<>();
 	@Default private int group =2;
-	@Default private Map<String, DotNode> nodes = new HashMap<String, DotNode>();
+	@Default @Getter private Map<String, DotNode> nodes = new HashMap<String, DotNode>();
 	@Default @Getter private List<ExoDotTransition> transitions = new ArrayList<ExoDotTransition>();
 	@Default private List<Place> decisionPlaces = new ArrayList();
 	@Default private DotNode leftAnchor = new DotAnchor("L");
@@ -175,7 +177,7 @@ public class DotGraphVisualisation {
 		this.visualisation.setOption("compound", "true");
 		this.visualisation.setOption("splines", "true");
 		this.visualisation.setOption("searchsize", "1000");
-		this.visualisation.setOption("layers", "dp:net:top");
+//		this.visualisation.setOption("layers", "dp:net:top");
 		this.visualisation.setDirection(GraphDirection.leftRight);
 	}
 	
@@ -392,5 +394,20 @@ public class DotGraphVisualisation {
 			}
 		}
 		return map;
+	}
+	
+	public static class ShouterListener extends MouseAdapter {
+		
+		private DotNode source;
+		
+		public ShouterListener(DotNode source) {
+			this.source = source;
+		}
+		
+		@Override
+		public void mouseClicked(MouseEvent e) {
+			// TODO Auto-generated method stub
+			System.out.println(source.getLabel()+ " Clicked!");
+		}
 	}
 }

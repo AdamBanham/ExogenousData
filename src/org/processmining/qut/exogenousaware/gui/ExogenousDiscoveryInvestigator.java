@@ -4,6 +4,8 @@ import java.awt.Color;
 import java.awt.GridBagConstraints;
 import java.awt.GridBagLayout;
 import java.awt.Insets;
+import java.awt.event.MouseAdapter;
+import java.awt.event.MouseEvent;
 import java.beans.PropertyChangeEvent;
 import java.beans.PropertyChangeListener;
 import java.util.ArrayList;
@@ -31,18 +33,24 @@ import org.processmining.datapetrinets.exception.NonExistingVariableException;
 import org.processmining.datapetrinets.expression.GuardExpression;
 import org.processmining.datapetrinets.ui.ConfigurationUIHelper;
 import org.processmining.models.graphbased.directed.petrinet.PetrinetGraph;
+import org.processmining.models.graphbased.directed.petrinet.PetrinetNode;
+import org.processmining.models.graphbased.directed.petrinet.elements.Place;
 import org.processmining.models.graphbased.directed.petrinet.elements.Transition;
 import org.processmining.models.graphbased.directed.petrinetwithdata.newImpl.DataElement;
 import org.processmining.models.graphbased.directed.petrinetwithdata.newImpl.PNWDTransition;
 import org.processmining.models.graphbased.directed.petrinetwithdata.newImpl.PetriNetWithData;
 import org.processmining.plugins.connectionfactories.logpetrinet.TransEvClassMapping;
+import org.processmining.plugins.graphviz.dot.DotNode;
 import org.processmining.plugins.petrinet.replayer.algorithms.costbasedcomplete.CostBasedCompleteParam;
 import org.processmining.plugins.petrinet.replayresult.PNRepResult;
 import org.processmining.qut.exogenousaware.data.ExogenousAnnotatedLog;
 import org.processmining.qut.exogenousaware.data.storage.ExogenousDiscoveryInvestigation;
 import org.processmining.qut.exogenousaware.gui.panels.ExogenousDiscoveryProgresser;
+import org.processmining.qut.exogenousaware.gui.panels.ExogenousDiscoveryProgresser.ProgressType;
 import org.processmining.qut.exogenousaware.gui.panels.ExogenousEnhancementGraphInvestigator;
 import org.processmining.qut.exogenousaware.gui.panels.ExogenousInvestigatorDotPanel;
+import org.processmining.qut.exogenousaware.gui.panels.ExogenousInvestigatorDotPanel.DotOverlay;
+import org.processmining.qut.exogenousaware.gui.panels.ExogenousInvestigatorDotPanel.DotOverlayInformationDump;
 import org.processmining.qut.exogenousaware.gui.panels.ExogenousInvestigatorSelectionPanel;
 import org.processmining.qut.exogenousaware.gui.workers.ExogenousDiscoveryAlignmentWorker;
 import org.processmining.qut.exogenousaware.gui.workers.ExogenousDiscoveryMeasurementWorker;
@@ -215,6 +223,34 @@ public class ExogenousDiscoveryInvestigator extends JPanel{
 		this.exoDotController.setModelLogInfo(statistics);
 		this.exoDotController.update();
 		this.exoSelectionPanel.getMeasure().setEnabled(true);
+		
+		setupDotNodeListeners();
+
+	}
+	
+	public void setupDotNodeListeners() {
+//		set up listeners for clicks on dot overlay
+		DotOverlay overlay = this.exoDotController.getController().getOverlay();
+		Map<String, DotNode> nodes = this.exoDotController.getVisBuilder().getNodes();
+		for (PetrinetNode node : this.controlflow.getNodes()) {
+			if (node instanceof Place || node instanceof Transition) {
+				DotNode dotNode = nodes.get(node.getId().toString());
+				
+				
+				dotNode.addMouseListener(new MouseAdapter() {
+				
+					public void mouseClicked(MouseEvent e) {
+						DotOverlayInformationDump.builder()
+							.controlNode(node)
+							.node(dotNode)
+							.statistics(statistics)
+							.overlay(overlay)
+							.build()
+							.setup();
+					}
+				});
+			}
+		}
 	}
 	
 	public List<String> getEndogenousVariables(){
@@ -360,8 +396,12 @@ public class ExogenousDiscoveryInvestigator extends JPanel{
 		this.exoDotController.setSwapMap(swapMap);
 		this.exoDotController.setUpdatedGraph(this.controlflow);
 		this.exoDotController.update();
+		getExoSelectionPanel().getInvestigate().setEnabled(true);
+		getExoSelectionPanel().getMeasure().setEnabled(true);
+		progresser.getState(ProgressType.Measurements).reset();
+		
+		setupDotNodeListeners();
 	}
-	
 	
 	public void createProgresser() {
 //		setup layout 
@@ -416,12 +456,17 @@ public class ExogenousDiscoveryInvestigator extends JPanel{
 			.setup();
 		System.out.println("[Exogenous Investigator] Made investigation...");
 		this.validate();
+		
+		getExoSelectionPanel().getMeasure().setEnabled(false);
+		getExoSelectionPanel().getInvestigate().setEnabled(false);
+		
 		result.run();
 	}
 	
 	public void runMeasurements() {
 		if (this.alignment != null & this.statistics != null) {
 			this.exoSelectionPanel.getMeasure().setEnabled(false);
+			this.exoSelectionPanel.getInvestigate().setEnabled(false);
 			
 			this.measureWorker = ExogenousDiscoveryMeasurementWorker.builder()
 					.endogenousLog(source.getEndogenousLog())
@@ -446,6 +491,7 @@ public class ExogenousDiscoveryInvestigator extends JPanel{
 							e.printStackTrace();
 						}
 						getExoSelectionPanel().getMeasure().setEnabled(true);
+						getExoSelectionPanel().getInvestigate().setEnabled(true);
 					}
 				}
 			});
@@ -455,7 +501,7 @@ public class ExogenousDiscoveryInvestigator extends JPanel{
 	}
 	
 	public void setMeasurements(Map<String,Double> measures) {
-		
+		System.out.println("[ExogenousDiscoveryInvestigator] new measures :: "+ measures.toString());
 	}
 	
 	public void buildEnhancementView() {

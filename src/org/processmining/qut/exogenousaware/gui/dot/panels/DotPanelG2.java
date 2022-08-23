@@ -376,7 +376,9 @@ public class DotPanelG2 extends NavigableSVGPanelG2 {
 							String id = idAttribute.getStringValue();
 
 							if (classAttribute.getStringValue().equals("node")
-									|| classAttribute.getStringValue().equals("edge")) {
+									|| classAttribute.getStringValue().equals("edge")
+									|| classAttribute.getStringValue().equals("cluster")
+								) {
 								//we have found a node or edge
 								DotElement dotElement = id2element.get(id);
 								if (dotElement != null) {
