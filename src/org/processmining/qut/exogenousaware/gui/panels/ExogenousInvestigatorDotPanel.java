@@ -19,15 +19,13 @@ import javax.swing.JPanel;
 
 import org.processmining.datapetrinets.expression.GuardExpression;
 import org.processmining.framework.util.ui.widgets.ProMScrollPane;
-import org.processmining.models.graphbased.directed.petrinet.elements.Place;
 import org.processmining.models.graphbased.directed.petrinet.elements.Transition;
 import org.processmining.models.graphbased.directed.petrinetwithdata.newImpl.PetriNetWithData;
 import org.processmining.plugins.graphviz.dot.Dot;
 import org.processmining.qut.exogenousaware.gui.dot.DotGraphVisualisation;
 import org.processmining.qut.exogenousaware.gui.dot.panels.DotPanelG2;
 import org.processmining.qut.exogenousaware.gui.styles.ScrollbarStyler;
-import org.processmining.qut.exogenousaware.gui.workers.ExogenousDiscoveryStatisticWorker.DecisionPoint;
-import org.processmining.qut.exogenousaware.stats.models.ModelStatistics;
+import org.processmining.qut.exogenousaware.stats.models.ProcessModelStatistics;
 
 import lombok.AllArgsConstructor;
 import lombok.Builder;
@@ -56,7 +54,7 @@ public class ExogenousInvestigatorDotPanel  {
 	@Default @Setter private Map<String, GuardExpression> rules = null;
 	@Default @Setter private Map<String,String> swapMap = null;
 	@Default @Setter private PetriNetWithData updatedGraph = null;
-	@Getter @Setter private ModelStatistics<Place,Transition,DecisionPoint> modelLogInfo;
+	@Getter @Setter private ProcessModelStatistics modelLogInfo;
 	@Getter @Setter private Map<Transition,Transition> transMapping;
 	
 	public ExogenousInvestigatorDotPanel setup() {

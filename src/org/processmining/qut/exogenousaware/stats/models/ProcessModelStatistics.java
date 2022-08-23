@@ -8,13 +8,15 @@ import java.util.Map;
 
 import org.processmining.models.graphbased.directed.petrinet.elements.Place;
 import org.processmining.models.graphbased.directed.petrinet.elements.Transition;
-import org.processmining.qut.exogenousaware.gui.workers.ExogenousDiscoveryStatisticWorker.DecisionPoint;
 
 import lombok.Builder;
+import lombok.Builder.Default;
+import lombok.Getter;
 import lombok.NonNull;
+import lombok.Setter;
 
 @Builder
-public class ProcessModelStatistics implements ModelStatistics<Place,Transition,DecisionPoint> {
+public class ProcessModelStatistics implements ModelStatistics<Place,Transition,ProcessModelStatistics.DecisionPoint> {
 //	builder parameters
 	@NonNull List<DecisionPoint> decisionPoints;
 	@NonNull Map<Transition, Integer> observations;
@@ -92,7 +94,44 @@ public class ProcessModelStatistics implements ModelStatistics<Place,Transition,
 	}
 	
 	
-	
+	@Builder
+	public static class DecisionPoint {
+//		builder parameters
+		@NonNull @Getter private Place decisionPlace;
+		
+//		internal states
+		@Getter @Setter private int totalInstances;
+		@Getter @Setter private float relativeFrequency;
+		@Default @Getter @Setter private List<Transition> outcomes = new ArrayList();
+		@Default @Getter private Map<Transition, Integer> mapToObservations= new HashMap();
+		@Default @Getter private Map<Transition, Float> mapToFrequency= new HashMap();
+		
+		public void addOutcome(Transition trans, int instances) {
+			outcomes.add(trans);
+			mapToObservations.put(trans, instances);
+			computeFrequencies();
+		}
+		
+		private void computeFrequencies() {
+			int total = 0;
+			for( Transition trans : outcomes) {
+				total += mapToObservations.get(trans);
+			}
+			setTotalInstances(total);
+			for( Transition trans : outcomes) {
+				float freq = 0.0f;
+				if (total > 0.0f) {
+					freq = mapToObservations.get(trans) / (total * 1.0f);
+				}
+				mapToFrequency.put(trans, freq);
+			}
+			
+		}
+		
+		public String toString() {
+			return decisionPlace.toString() + " has "+ outcomes.size() + " outcomes ("+totalInstances+String.format("/ %3.1f%%)", (relativeFrequency * 100));
+		}
+	}
 
 	
 }

@@ -22,8 +22,7 @@ import org.processmining.plugins.graphviz.dot.Dot;
 import org.processmining.plugins.graphviz.dot.Dot.GraphDirection;
 import org.processmining.plugins.graphviz.dot.DotEdge;
 import org.processmining.plugins.graphviz.dot.DotNode;
-import org.processmining.qut.exogenousaware.gui.workers.ExogenousDiscoveryStatisticWorker.DecisionPoint;
-import org.processmining.qut.exogenousaware.stats.models.ModelStatistics;
+import org.processmining.qut.exogenousaware.stats.models.ProcessModelStatistics;
 
 import lombok.Builder;
 import lombok.Builder.Default;
@@ -62,7 +61,7 @@ public class DotGraphVisualisation {
 	@Default @Setter private Map<String, GuardExpression> rules = null;
 	@Default @Setter private PetriNetWithData updatedGraph = null;
 	@Default private DotNode selectedNode = null;
-	private ModelStatistics<Place,Transition,DecisionPoint> modelLogInfo;
+	private ProcessModelStatistics modelLogInfo;
 	
 //	internal states
 	@Default @Getter private Dot visualisation = new Dot();

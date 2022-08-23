@@ -10,7 +10,6 @@ import javax.swing.JPanel;
 
 import org.apache.commons.lang.NotImplementedException;
 import org.processmining.datapetrinets.expression.GuardExpression;
-import org.processmining.models.graphbased.directed.petrinet.elements.Place;
 import org.processmining.models.graphbased.directed.petrinet.elements.Transition;
 import org.processmining.models.graphbased.directed.petrinetwithdata.newImpl.PetriNetWithData;
 import org.processmining.plugins.graphviz.dot.Dot;
@@ -19,8 +18,7 @@ import org.processmining.plugins.graphviz.visualisation.DotPanel;
 import org.processmining.qut.exogenousaware.gui.ExogenousEnhancementTracablity;
 import org.processmining.qut.exogenousaware.gui.dot.DotGraphVisualisation;
 import org.processmining.qut.exogenousaware.gui.dot.ExoDotTransition;
-import org.processmining.qut.exogenousaware.gui.workers.ExogenousDiscoveryStatisticWorker.DecisionPoint;
-import org.processmining.qut.exogenousaware.stats.models.ModelStatistics;
+import org.processmining.qut.exogenousaware.stats.models.ProcessModelStatistics;
 
 import lombok.AllArgsConstructor;
 import lombok.Builder;
@@ -49,7 +47,7 @@ public class ExogenousEnhancementDotPanel {
 	@Default @Setter @Getter private Map<String,String> swapMap = null;
 	@Default @Setter @Getter private PetriNetWithData updatedGraph = null;
 	@Default private ExoDotTransition selectedNode = null;
-	@Getter @Setter private ModelStatistics<Place,Transition,DecisionPoint> modelLogInfo;
+	@Getter @Setter private ProcessModelStatistics modelLogInfo;
 	
 	public ExogenousEnhancementDotPanel setup() {
 		this.main = new JPanel();

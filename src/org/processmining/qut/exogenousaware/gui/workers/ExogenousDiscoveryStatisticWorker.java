@@ -20,10 +20,10 @@ import org.processmining.qut.exogenousaware.gui.panels.ExogenousDiscoveryProgres
 import org.processmining.qut.exogenousaware.gui.panels.ExogenousDiscoveryProgresser.ProgressState;
 import org.processmining.qut.exogenousaware.gui.panels.ExogenousDiscoveryProgresser.ProgressType;
 import org.processmining.qut.exogenousaware.stats.models.ProcessModelStatistics;
+import org.processmining.qut.exogenousaware.stats.models.ProcessModelStatistics.DecisionPoint;
 
 import lombok.Builder;
 import lombok.Builder.Default;
-import lombok.Getter;
 import lombok.NonNull;
 import lombok.Setter;
 
@@ -183,43 +183,6 @@ public class ExogenousDiscoveryStatisticWorker extends SwingWorker<ProcessModelS
 //		state.increment(chunks.size());
 	}
 	
-	@Builder
-	public static class DecisionPoint {
-//		builder parameters
-		@NonNull @Getter private Place decisionPlace;
-		
-//		internal states
-		@Getter @Setter private int totalInstances;
-		@Getter @Setter private float relativeFrequency;
-		@Default @Getter @Setter private List<Transition> outcomes = new ArrayList();
-		@Default @Getter private Map<Transition, Integer> mapToObservations= new HashMap();
-		@Default @Getter private Map<Transition, Float> mapToFrequency= new HashMap();
-		
-		public void addOutcome(Transition trans, int instances) {
-			outcomes.add(trans);
-			mapToObservations.put(trans, instances);
-			computeFrequencies();
-		}
-		
-		private void computeFrequencies() {
-			int total = 0;
-			for( Transition trans : outcomes) {
-				total += mapToObservations.get(trans);
-			}
-			setTotalInstances(total);
-			for( Transition trans : outcomes) {
-				float freq = 0.0f;
-				if (total > 0.0f) {
-					freq = mapToObservations.get(trans) / (total * 1.0f);
-				}
-				mapToFrequency.put(trans, freq);
-			}
-			
-		}
-		
-		public String toString() {
-			return decisionPlace.toString() + " has "+ outcomes.size() + " outcomes ("+totalInstances+String.format("/ %3.1f%%)", (relativeFrequency * 100));
-		}
-	}
+	
 	
 }

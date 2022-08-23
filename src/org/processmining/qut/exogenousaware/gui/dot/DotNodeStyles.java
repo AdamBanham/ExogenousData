@@ -15,8 +15,7 @@ import org.processmining.models.graphbased.directed.petrinet.elements.Transition
 import org.processmining.plugins.graphviz.dot.DotEdge;
 import org.processmining.plugins.graphviz.dot.DotNode;
 import org.processmining.qut.exogenousaware.data.dot.GuardExpressionHandler;
-import org.processmining.qut.exogenousaware.gui.workers.ExogenousDiscoveryStatisticWorker.DecisionPoint;
-import org.processmining.qut.exogenousaware.stats.models.ModelStatistics;
+import org.processmining.qut.exogenousaware.stats.models.ProcessModelStatistics;
 
 /**
  * Static class for making exogenous dot nodes for a dot visusalisation.
@@ -64,7 +63,7 @@ public class DotNodeStyles {
 		return DecisionCluster.builder().label(label).members(members).group(group).build().setup();
 	}
 	
-	private static String buildStatLabel(Transition t, ModelStatistics<Place,Transition,DecisionPoint> stats) {
+	private static String buildStatLabel(Transition t, ProcessModelStatistics stats) {
 		int totalObs = 0;
 		float relativeFreq = 0.0f;
 		boolean relative = false;
@@ -89,7 +88,7 @@ public class DotNodeStyles {
 		return label;
 	}
 	
-	private static String buildTauStatLabel(Transition t, ModelStatistics<Place,Transition,DecisionPoint> stats) {
+	private static String buildTauStatLabel(Transition t, ProcessModelStatistics stats) {
 		int totalObs = 0;
 		float relativeFreq = 0.0f;
 		boolean relative = false;
@@ -119,7 +118,7 @@ public class DotNodeStyles {
 		return new ExoDotTransition(label, t.getId().toString(), t.getLabel(), new GuardExpressionHandler(null, null));
 	}
 	
-	public static DotNode buildTauTransition(Transition t, ModelStatistics stats) {
+	public static DotNode buildTauTransition(Transition t, ProcessModelStatistics stats) {
 		String label = createTransitionLabel(buildTauStatLabel(t, stats), true);
 		return new ExoDotTransition(label, t.getId().toString(), t.getLabel(), new GuardExpressionHandler(null, null));
 	}
@@ -130,7 +129,7 @@ public class DotNodeStyles {
 		return new ExoDotTransition(label, t.getId().toString(), t.getLabel(), new GuardExpressionHandler(null, null));
 	}
 	
-	public static DotNode buildNoRuleTransition(Transition t, ModelStatistics stats) {
+	public static DotNode buildNoRuleTransition(Transition t, ProcessModelStatistics stats) {
 		boolean istau = t.getLabel().startsWith("tau ");
 		String label = createTransitionLabel(istau ? buildTauStatLabel(t, stats) : buildStatLabel(t, stats), istau);
 		return new ExoDotTransition(label, t.getId().toString(), t.getLabel(), new GuardExpressionHandler(null, null));
@@ -142,7 +141,7 @@ public class DotNodeStyles {
 		return new ExoDotTransition(label, t.getId().toString(), t.getLabel(), new GuardExpressionHandler(null, swapper));
 	}
 	
-	public static DotNode buildNoRuleTransition(Transition t, ModelStatistics stats, Map<String,String> swapper) {
+	public static DotNode buildNoRuleTransition(Transition t, ProcessModelStatistics stats, Map<String,String> swapper) {
 		boolean istau = t.getLabel().startsWith("tau ");
 		String label = createTransitionLabel(istau ? buildTauStatLabel(t, stats) : buildStatLabel(t, stats), istau);
 		return new ExoDotTransition(label, t.getId().toString(), t.getLabel(), new GuardExpressionHandler(null, swapper));
@@ -154,7 +153,7 @@ public class DotNodeStyles {
 		return new ExoDotTransition(label,t.getId().toString(), t.getLabel(), new GuardExpressionHandler(g, swapper));
 	}
 	
-	public static DotNode buildRuleTransition(Transition t, ModelStatistics stats, GuardExpression g, Map<String,String> swapper) {
+	public static DotNode buildRuleTransition(Transition t, ProcessModelStatistics stats, GuardExpression g, Map<String,String> swapper) {
 		boolean istau = t.getLabel().startsWith("tau ");
 		String label = createTransitionLabel(istau ? buildTauStatLabel(t, stats) : buildStatLabel(t, stats), istau, g, swapper);
 		return new ExoDotTransition(label,t.getId().toString(), t.getLabel(), new GuardExpressionHandler(g, swapper));
