@@ -45,6 +45,7 @@ import org.processmining.qut.exogenousaware.gui.panels.ExogenousEnhancementGraph
 import org.processmining.qut.exogenousaware.gui.panels.ExogenousInvestigatorDotPanel;
 import org.processmining.qut.exogenousaware.gui.panels.ExogenousInvestigatorSelectionPanel;
 import org.processmining.qut.exogenousaware.gui.workers.ExogenousDiscoveryAlignmentWorker;
+import org.processmining.qut.exogenousaware.gui.workers.ExogenousDiscoveryMeasurementWorker;
 import org.processmining.qut.exogenousaware.gui.workers.ExogenousDiscoveryStatisticWorker;
 import org.processmining.qut.exogenousaware.stats.models.ProcessModelStatistics;
 
@@ -90,6 +91,7 @@ public class ExogenousDiscoveryInvestigator extends JPanel{
 	
 //	workers
 	private ExogenousDiscoveryStatisticWorker statWorker;
+	private ExogenousDiscoveryMeasurementWorker measureWorker;
 	
 	public ExogenousDiscoveryInvestigator setup() {
 //		precompute available attributes for decision mining
@@ -415,6 +417,45 @@ public class ExogenousDiscoveryInvestigator extends JPanel{
 		System.out.println("[Exogenous Investigator] Made investigation...");
 		this.validate();
 		result.run();
+	}
+	
+	public void runMeasurements() {
+		if (this.alignment != null & this.statistics != null) {
+			this.exoSelectionPanel.getMeasure().setEnabled(false);
+			
+			this.measureWorker = ExogenousDiscoveryMeasurementWorker.builder()
+					.endogenousLog(source.getEndogenousLog())
+					.model(controlflow)
+					.alignment(alignment)
+					.variableMap(exoDotController.getSwapMap() != null ? exoDotController.getSwapMap() : new HashMap())
+					.statistics(statistics)
+					.progresser(progresser)
+					.build();
+			
+			this.measureWorker.addPropertyChangeListener(new PropertyChangeListener() {
+			
+				
+				public void propertyChange(PropertyChangeEvent evt) {
+					// TODO Auto-generated method stub
+					if (evt.getNewValue() == SwingWorker.StateValue.DONE) {
+						System.out.println("[MeasurementWorker] Done");
+						try {
+							setMeasurements(measureWorker.get());
+						} catch (InterruptedException | ExecutionException e) {
+							// TODO Auto-generated catch block
+							e.printStackTrace();
+						}
+						getExoSelectionPanel().getMeasure().setEnabled(true);
+					}
+				}
+			});
+			
+			this.measureWorker.execute();
+		}
+	}
+	
+	public void setMeasurements(Map<String,Double> measures) {
+		
 	}
 	
 	public void buildEnhancementView() {

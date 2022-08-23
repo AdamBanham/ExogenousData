@@ -87,6 +87,7 @@ public class ExogenousInvestigatorSelectionPanel {
 //		add a measurement button
 		sub_c.gridx = 1;
 		this.main.add(this.measure, sub_c);
+		this.measure.addMouseListener(new MeasurementListener(this.measure, this.source));
 		this.measure.setEnabled(false);
 //		add a discovery button
 		this.enhance.setEnabled(false);
@@ -97,6 +98,45 @@ public class ExogenousInvestigatorSelectionPanel {
 //		add panel
 		this.main.setBackground(Color.DARK_GRAY);
 		return this;
+	}
+	
+	public class MeasurementListener implements MouseListener{
+		
+		private JButton clicked;
+		private ExogenousDiscoveryInvestigator source;
+		
+		public MeasurementListener(JButton clicked, ExogenousDiscoveryInvestigator source) {
+			this.clicked = clicked;
+			this.source = source;
+		}
+
+		public void mouseClicked(MouseEvent e) {
+			if (this.clicked.isEnabled()) {
+				this.source.runMeasurements();
+			}
+			
+		}
+
+		public void mousePressed(MouseEvent e) {
+			// TODO Auto-generated method stub
+			
+		}
+
+		public void mouseReleased(MouseEvent e) {
+			// TODO Auto-generated method stub
+			
+		}
+
+		public void mouseEntered(MouseEvent e) {
+			// TODO Auto-generated method stub
+			
+		}
+
+		public void mouseExited(MouseEvent e) {
+			// TODO Auto-generated method stub
+			
+		}
+		
 	}
 	
 	public class EnhancementListener implements MouseListener {
