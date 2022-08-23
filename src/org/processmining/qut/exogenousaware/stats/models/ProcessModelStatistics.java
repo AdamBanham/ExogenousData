@@ -93,6 +93,16 @@ public class ProcessModelStatistics implements ModelStatistics<Place,Transition,
 		return out;
 	}
 	
+	public void clearMeasures() {
+		for ( DecisionPoint info:  decisionInformation.values()) {
+			info.clearMeasures();
+		}
+	}
+	
+	public void addMeasureToDecisionMoment(Place moment, String key, Double measure) {
+		decisionInformation.get(moment).addMeasure(key, measure);
+	}
+	
 	
 	@Builder
 	public static class DecisionPoint {
@@ -105,6 +115,7 @@ public class ProcessModelStatistics implements ModelStatistics<Place,Transition,
 		@Default @Getter @Setter private List<Transition> outcomes = new ArrayList();
 		@Default @Getter private Map<Transition, Integer> mapToObservations= new HashMap();
 		@Default @Getter private Map<Transition, Float> mapToFrequency= new HashMap();
+		@Default @Getter private Map<String, Double> mapToMeasures= new HashMap(); 
 		
 		public void addOutcome(Transition trans, int instances) {
 			outcomes.add(trans);
@@ -126,6 +137,14 @@ public class ProcessModelStatistics implements ModelStatistics<Place,Transition,
 				mapToFrequency.put(trans, freq);
 			}
 			
+		}
+		
+		public void addMeasure(String key, Double measure) {
+			mapToMeasures.put(key, measure);
+		}
+		
+		public void clearMeasures() {
+			mapToMeasures = new HashMap();
 		}
 		
 		public String toString() {
