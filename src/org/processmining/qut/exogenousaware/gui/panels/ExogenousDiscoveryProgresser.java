@@ -328,6 +328,7 @@ public class ExogenousDiscoveryProgresser extends JPanel {
 			this.progress = 0;
 			this.caption.setText("");
 			this.update();
+			this.validate();
 		}
 		
 		public void setCaption(String caption) {
