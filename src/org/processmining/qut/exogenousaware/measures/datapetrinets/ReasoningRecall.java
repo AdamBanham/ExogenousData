@@ -42,6 +42,12 @@ public class ReasoningRecall implements PetriNetMeasure {
 	@NonNull Map<String,String> variableMapping;
 
 	
+	
+	/**
+	 * Computes reasoning recall for the given log, model and alignment, <br>
+	 * whereby, a score of 0.0 means that we have not found any related transition guards, and <br>
+	 * a score of 1.0 means that for all decision points and outcomes in the representation, we have a related transition guard.
+	 */
 	public double measure(XLog log, Object model, ModelStatistics statistics, Object alignment) {
 		ProgressState state = progresser.getState(ProgressType.Measurements);
 		
@@ -102,23 +108,35 @@ public class ReasoningRecall implements PetriNetMeasure {
 				}
 				state.increment(progressInc);
 				
-				System.out.println("[ReasoningRecall] outcome measure for "+ outcome.getLabel().toLowerCase() + " was :: "+ outcomemeasure);
+//				System.out.println("[ReasoningRecall] outcome reasoning recall for "+ outcome.getLabel().toLowerCase() + " was :: "+ outcomemeasure);
 			}
-			
 			localmeasure = decisionfreq * localmeasure;
-			System.out.println("[ReasoningRecall] local measure for "+ dplace.getLabel().toLowerCase() + " was :: "+ localmeasure);
+			statisticResult.addMeasureToDecisionMoment(dplace, "reasoning-recall", localmeasure);
+			
+			
+			System.out.println("[ReasoningRecall] local reasoning recall for "+ dplace.getLabel().toLowerCase() + " was :: "+ localmeasure);
 			measure += localmeasure;
 		}
-		System.out.println("[ReasoningRecall] computed measure was :: "+ measure);
+		System.out.println("[ReasoningRecall] computed reasoning recall was :: "+ measure);
 		return measure;
 		
 		
 	}
 	
+	/**
+	 * Tests that for a observation we have a datastate with variables within expr, thus proving that they are related.
+	 * @param obs
+	 * @param expr
+	 * @return do we have all variables for expr
+	 */
 	private Boolean couldEvaluateExpression(Observation obs, GuardExpression expr) {
+		
+		boolean test = true;
 		try {
-			expr.evaluate(obs.getDatastate());
-			return true;
+			for (String var : expr.getNormalVariables()) {
+				test = test & obs.getDatastate().containsKey(var);
+			}
+			return test;
 		} catch (Exception e) {
 			
 			if (e.getCause() instanceof VariableNotFoundException) {
