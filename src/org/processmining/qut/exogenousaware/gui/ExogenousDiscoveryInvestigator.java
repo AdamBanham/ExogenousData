@@ -507,6 +507,12 @@ public class ExogenousDiscoveryInvestigator extends JPanel{
 	
 	public void setMeasurements(Map<String,Double> measures) {
 		System.out.println("[ExogenousDiscoveryInvestigator] new measures :: "+ measures.toString());
+		
+		for ( Entry<String, Double> measure : measures.entrySet()) {
+			this.statistics.addGraphMeasure(measure.getKey(), measure.getValue());
+		}
+		
+		this.repaint();
 	}
 	
 	public void buildEnhancementView() {
