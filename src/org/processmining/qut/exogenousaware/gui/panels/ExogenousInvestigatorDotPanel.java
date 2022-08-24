@@ -85,6 +85,10 @@ public class ExogenousInvestigatorDotPanel  {
 				.build()
 				.make();
 		this.vis.changeDot(visBuilder.getVisualisation(), false);
+		
+		if (modelLogInfo != null) {
+			vis.setStatistics(modelLogInfo);
+		}
 	}
 	
 	@Builder

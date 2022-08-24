@@ -75,6 +75,7 @@ public class ExogenousEnhancementDotPanel {
 				.updatedGraph(this.updatedGraph)
 				.swapMap(this.swapMap)
 				.transMapping(transMapping)
+				.modelLogInfo(modelLogInfo)
 				.rules(this.rules)
 				.build()
 				.make();

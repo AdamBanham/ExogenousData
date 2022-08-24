@@ -30,12 +30,14 @@ import lombok.Setter;
 @Builder
 @Data
 public class ExogenousEnhancementTracablity {
-
+//	builder parameters
 	@NonNull private ExogenousDiscoveryInvestigator source;
 	@NonNull @Setter private ExogenousDiscoveryInvestigation focus;
 	@NonNull private PetriNetWithData controlflow;
 	@NonNull private PNRepResult alignment;
 	
+	
+//	internal states
 	@Default @Getter private JPanel main = new JPanel();
 	@Default private GridBagConstraints c = new GridBagConstraints();
 	@Default private ExogenousEnhancementDotPanel vis = null;
@@ -65,7 +67,7 @@ public class ExogenousEnhancementTracablity {
 						.graph(this.controlflow)
 						.rules(this.focus.getFoundExpressions())
 						.swapMap(this.focus.getTask().getConveretedNames())
-						.updatedGraph(this.focus.getOutcome())
+						.updatedGraph(this.controlflow)
 						.build()
 						.setup();
 			this.vis.update(this);
