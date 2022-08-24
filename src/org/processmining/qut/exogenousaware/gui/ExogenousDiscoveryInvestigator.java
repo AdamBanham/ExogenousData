@@ -357,6 +357,9 @@ public class ExogenousDiscoveryInvestigator extends JPanel{
 	
 	public void createModelView(Map<String,String> swapMap, DiscoveredPetriNetWithData outcome, Map<Transition,Transition> transMapping) {
 		
+		
+		this.statistics.clearMeasures();
+		
 		Map<String, GuardExpression> rules = new HashMap();
 		
 		this.controlflow.removeAllVariables();
@@ -467,6 +470,8 @@ public class ExogenousDiscoveryInvestigator extends JPanel{
 		if (this.alignment != null & this.statistics != null) {
 			this.exoSelectionPanel.getMeasure().setEnabled(false);
 			this.exoSelectionPanel.getInvestigate().setEnabled(false);
+			
+			this.statistics.clearMeasures();
 			
 			this.measureWorker = ExogenousDiscoveryMeasurementWorker.builder()
 					.endogenousLog(source.getEndogenousLog())
