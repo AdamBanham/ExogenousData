@@ -57,7 +57,7 @@ public class ExogenousDiscoveryMeasurementWorker extends SwingWorker<Map<String,
 				.variableMapping(variableMap)
 				.build()
 				.measure(endogenousLog, model, statistics, alignment);
-		measures.put("reasoning-recall", recall);
+		measures.put(ReasoningRecall.NAME, recall);
 		
 		double precision = ReasoningPrecision.builder()
 				.progressInc(1)
@@ -65,7 +65,7 @@ public class ExogenousDiscoveryMeasurementWorker extends SwingWorker<Map<String,
 				.variableMapping(variableMap)
 				.build()
 				.measure(endogenousLog, model, statistics, alignment);
-		measures.put("reasoning-precision", precision);
+		measures.put(ReasoningPrecision.NAME, precision);
 		
 		return measures;
 	}
