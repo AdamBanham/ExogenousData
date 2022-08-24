@@ -3,8 +3,10 @@ package org.processmining.qut.exogenousaware.stats.models;
 import java.util.ArrayList;
 import java.util.Collections;
 import java.util.HashMap;
+import java.util.HashSet;
 import java.util.List;
 import java.util.Map;
+import java.util.Set;
 
 import org.processmining.models.graphbased.directed.petrinet.elements.Place;
 import org.processmining.models.graphbased.directed.petrinet.elements.Transition;
@@ -26,11 +28,17 @@ public class ProcessModelStatistics implements ModelStatistics<Place,Transition,
 	private List<Place> decisionMoments;
 	private Map<Place, List<Transition>> decisionOutcomes;
 	private Map<Place, DecisionPoint> decisionInformation;
+	@Getter private Set<String> seenMomentMeasures;
+	@Getter private Map<String, Double> graphMeasures;
+	@Getter private Set<String> seenGraphMeasures;
 	
 	public ProcessModelStatistics setup() {
 		decisionMoments = new ArrayList();
 		decisionOutcomes = new HashMap();
 		decisionInformation = new HashMap();
+		seenMomentMeasures = new HashSet();
+		graphMeasures = new HashMap();
+		seenGraphMeasures = new HashSet();
 		
 //		collect decision moments and outcomes
 		for(DecisionPoint dp : decisionPoints) {
@@ -93,14 +101,45 @@ public class ProcessModelStatistics implements ModelStatistics<Place,Transition,
 		return out;
 	}
 	
+	
+	
+		
+	/**
+	 * Resets the state of measurements for decision points
+	 */
 	public void clearMeasures() {
+		seenGraphMeasures.clear();
+		seenMomentMeasures.clear();
+		graphMeasures.clear();
+		
 		for ( DecisionPoint info:  decisionInformation.values()) {
 			info.clearMeasures();
 		}
 	}
 	
+	/**
+	 * Adds a computed measure for a decision moment.
+	 * @param moment
+	 * @param key
+	 * @param measure
+	 */
 	public void addMeasureToDecisionMoment(Place moment, String key, Double measure) {
+		
+		if (!seenMomentMeasures.contains(key)) {
+			seenMomentMeasures.add(key);
+		}
+		
 		decisionInformation.get(moment).addMeasure(key, measure);
+	}
+	
+	public void addGraphMeasure(String measureName, double measure) {
+		
+		if (!seenGraphMeasures.contains(measureName)) {
+			seenGraphMeasures.add(measureName);
+		}
+		
+		graphMeasures.put(measureName, measure);
+		
 	}
 	
 	

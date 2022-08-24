@@ -41,6 +41,8 @@ public class ReasoningPrecision implements PetriNetMeasure {
 	@NonNull private ExogenousDiscoveryProgresser progresser;
 	@NonNull Map<String,String> variableMapping;
 	
+	public static String NAME = "reasoning-precision";
+	
 	/**
 	 * Computes reasoning-precision for the given log, model and alignment, whereby <br>
 	 * a score of 0.0 denotes that no transition guard is true, and <br>
@@ -129,7 +131,7 @@ public class ReasoningPrecision implements PetriNetMeasure {
 //				System.out.println("[ReasoningPrecision] outcome reasoning precision for "+ outcome.getLabel().toLowerCase() + " was :: "+ outcomemeasure);
 			}
 			localmeasure = decisionfreq * localmeasure;
-			statisticResult.addMeasureToDecisionMoment(dplace, "reasoning-precision", localmeasure);
+			statisticResult.addMeasureToDecisionMoment(dplace, NAME , localmeasure);
 			
 			System.out.println("[ReasoningPrecision] local reasoning precision for "+ dplace.getLabel().toLowerCase() + " was :: "+ localmeasure);
 			measure += localmeasure;

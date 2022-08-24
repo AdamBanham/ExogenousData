@@ -41,7 +41,8 @@ public class ReasoningRecall implements PetriNetMeasure {
 	@NonNull private ExogenousDiscoveryProgresser progresser;
 	@NonNull Map<String,String> variableMapping;
 
-	
+
+	public static String NAME = "reasoning-recall";
 	
 	/**
 	 * Computes reasoning recall for the given log, model and alignment, <br>
@@ -111,7 +112,7 @@ public class ReasoningRecall implements PetriNetMeasure {
 //				System.out.println("[ReasoningRecall] outcome reasoning recall for "+ outcome.getLabel().toLowerCase() + " was :: "+ outcomemeasure);
 			}
 			localmeasure = decisionfreq * localmeasure;
-			statisticResult.addMeasureToDecisionMoment(dplace, "reasoning-recall", localmeasure);
+			statisticResult.addMeasureToDecisionMoment(dplace, NAME, localmeasure);
 			
 			
 			System.out.println("[ReasoningRecall] local reasoning recall for "+ dplace.getLabel().toLowerCase() + " was :: "+ localmeasure);
