@@ -42,13 +42,13 @@ import javax.swing.JPanel;
 import javax.swing.KeyStroke;
 import javax.swing.SwingUtilities;
 
-import org.processmining.plugins.graphviz.visualisation.export.Exporter;
-import org.processmining.plugins.graphviz.visualisation.export.ExporterEMF;
-import org.processmining.plugins.graphviz.visualisation.export.ExporterEPS;
-import org.processmining.plugins.graphviz.visualisation.export.ExporterPDF;
-import org.processmining.plugins.graphviz.visualisation.export.ExporterPNG;
-import org.processmining.plugins.graphviz.visualisation.export.ExporterSVG;
 import org.processmining.plugins.graphviz.visualisation.listeners.ImageTransformationChangedListener;
+import org.processmining.qut.exogenousaware.gui.dot.panels.helpers.ExportDialogG2;
+import org.processmining.qut.exogenousaware.gui.dot.panels.helpers.ExporterG2;
+import org.processmining.qut.exogenousaware.gui.dot.panels.helpers.ExporterG2Dot;
+import org.processmining.qut.exogenousaware.gui.dot.panels.helpers.ExporterG2PDF;
+import org.processmining.qut.exogenousaware.gui.dot.panels.helpers.ExporterG2PNG;
+import org.processmining.qut.exogenousaware.gui.dot.panels.helpers.ExporterG2SVG;
 
 import com.kitfox.svg.SVGDiagram;
 import com.kitfox.svg.SVGException;
@@ -731,7 +731,7 @@ public class NavigableSVGPanelG2 extends JPanel implements Printable {
 	 * 
 	 * @return The width of the navigation part in user coordinates.
 	 */
-	private double getNavigationWidth() {
+	public double getNavigationWidth() {
 		return getWidth() * navigationImageWidthInPartOfPanel * navigationScale;
 	}
 
@@ -739,7 +739,7 @@ public class NavigableSVGPanelG2 extends JPanel implements Printable {
 	 * 
 	 * @return The height of the navigation part in user coordinates.
 	 */
-	private double getNavigationHeight() {
+	public double getNavigationHeight() {
 		return (getNavigationWidth() / image.getWidth()) * image.getHeight();
 	}
 
@@ -1440,13 +1440,12 @@ public class NavigableSVGPanelG2 extends JPanel implements Printable {
 	 * @return The list of exporters. Subclasses can override this to a relevant
 	 *         list. Called everytime the user attempts to export the image.
 	 */
-	public List<Exporter> getExporters() {
-		List<Exporter> exporters = new ArrayList<>();
-		exporters.add(new ExporterPDF());
-		exporters.add(new ExporterPNG());
-		exporters.add(new ExporterSVG());
-		exporters.add(new ExporterEPS());
-		exporters.add(new ExporterEMF());
+	public List<ExporterG2> getExporters() {
+		List<ExporterG2> exporters = new ArrayList<>();
+		exporters.add(new ExporterG2Dot());
+		exporters.add(new ExporterG2PDF());
+		exporters.add(new ExporterG2PNG());
+		exporters.add(new ExporterG2SVG());
 		return exporters;
 	}
 
@@ -1454,7 +1453,7 @@ public class NavigableSVGPanelG2 extends JPanel implements Printable {
 	 * Prompts the user for a file name and saves the view under that file name.
 	 */
 	public void exportView() {
-//		new ExportDialog(this, getExporters());
+		new ExportDialogG2(this, getExporters());
 	}
 
 	public int print(Graphics g, PageFormat pageFormat, int page) throws PrinterException {
