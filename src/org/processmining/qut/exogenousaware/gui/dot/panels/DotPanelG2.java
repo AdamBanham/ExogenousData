@@ -1,7 +1,11 @@
 package org.processmining.qut.exogenousaware.gui.dot.panels;
 
 import java.awt.Color;
+import java.awt.Graphics;
+import java.awt.Graphics2D;
 import java.awt.Point;
+import java.awt.RadialGradientPaint;
+import java.awt.RenderingHints;
 import java.awt.event.ActionEvent;
 import java.awt.event.InputEvent;
 import java.awt.event.KeyEvent;
@@ -24,6 +28,7 @@ import javax.swing.Action;
 import javax.swing.KeyStroke;
 import javax.swing.SwingUtilities;
 
+import org.processmining.models.graphbased.directed.petrinet.elements.Place;
 import org.processmining.plugins.graphviz.colourMaps.ColourMap;
 import org.processmining.plugins.graphviz.dot.Dot;
 import org.processmining.plugins.graphviz.dot.Dot.GraphDirection;
@@ -33,13 +38,16 @@ import org.processmining.plugins.graphviz.dot.DotEdge;
 import org.processmining.plugins.graphviz.dot.DotElement;
 import org.processmining.plugins.graphviz.dot.DotNode;
 import org.processmining.plugins.graphviz.visualisation.DotPanelUserSettings;
-import org.processmining.plugins.graphviz.visualisation.export.Exporter;
-import org.processmining.plugins.graphviz.visualisation.export.ExporterDot;
 import org.processmining.plugins.graphviz.visualisation.listeners.DotElementSelectionListener;
 import org.processmining.plugins.graphviz.visualisation.listeners.GraphChangedListener;
 import org.processmining.plugins.graphviz.visualisation.listeners.GraphChangedListener.GraphChangedReason;
 import org.processmining.plugins.graphviz.visualisation.listeners.MouseInElementsChangedListener;
 import org.processmining.plugins.graphviz.visualisation.listeners.SelectionChangedListener;
+import org.processmining.qut.exogenousaware.gui.colours.ColourScheme;
+import org.processmining.qut.exogenousaware.measures.datapetrinets.ReasoningPrecision;
+import org.processmining.qut.exogenousaware.measures.datapetrinets.ReasoningRecall;
+import org.processmining.qut.exogenousaware.stats.models.ProcessModelStatistics;
+import org.processmining.qut.exogenousaware.stats.models.ProcessModelStatistics.DecisionPoint;
 
 import com.kitfox.svg.Group;
 import com.kitfox.svg.RenderableElement;
@@ -50,6 +58,9 @@ import com.kitfox.svg.SVGException;
 import com.kitfox.svg.SVGUniverse;
 import com.kitfox.svg.animation.AnimationElement;
 import com.kitfox.svg.xml.StyleAttribute;
+
+import lombok.Getter;
+import lombok.Setter;
 
 public class DotPanelG2 extends NavigableSVGPanelG2 {
 
@@ -115,6 +126,14 @@ public class DotPanelG2 extends NavigableSVGPanelG2 {
 	private final CopyOnWriteArrayList<MouseInElementsChangedListener<DotElement>> mouseInElementsChangedListeners = new CopyOnWriteArrayList<>();
 	private final CopyOnWriteArrayList<GraphChangedListener> graphChangedListeners = new CopyOnWriteArrayList<>();
 
+	
+//	internal states
+	@Setter @Getter private ProcessModelStatistics statistics;
+	
+//	Colours
+	private Color GAUGE_COLOUR = ColourScheme.green;
+	private Color GAUGE_DP_COLOUR =ColourScheme.yellow;
+	
 	public DotPanelG2(Dot dot) {
 		super(dot2svg(dot));
 		this.dot = dot;
@@ -156,6 +175,178 @@ public class DotPanelG2 extends NavigableSVGPanelG2 {
 				}
 			}
 		});
+	}
+	
+	@Override
+	protected void paintComponent(Graphics g) {
+		// do normal painting but lets make our own at the same time
+		super.paintComponent(g);
+		
+		int topRunnerHeight = 20;
+		
+		g.setColor(Color.black);
+		g.fillRect( (int)getNavigationWidth(), 0, (int) (getWidth() - getNavigationWidth()), topRunnerHeight);
+		
+		if (this.statistics != null) {
+			double gmeasure = 0.0;
+			int gaugeHeight = 150;
+			int gaugeWidth = 150;
+			int gaugeSpacing = 50;
+			double internalGaugeSpacing = (gaugeWidth * 0.25) / 2.0;
+			
+			int decisionMoments = this.statistics.getDecisionMoments().size();
+			double[] localmeasures = new double[decisionMoments];
+			int localIndex = 0;
+			
+			double startX = getNavigationWidth() + gaugeSpacing;
+			
+			Graphics2D g2d = (Graphics2D) g.create();
+			g2d.setRenderingHint(RenderingHints.KEY_ANTIALIASING, RenderingHints.VALUE_ANTIALIAS_ON);
+			
+//			create gauge for reasoning-recall
+			g2d.setColor(Color.LIGHT_GRAY);
+			double textX = startX + (gaugeWidth/2) - (ReasoningRecall.NAME.length()/2) * 6;
+			g2d.drawString(ReasoningRecall.NAME, (int) (textX) , 14 );
+			
+			if (this.statistics.getSeenGraphMeasures().contains(ReasoningRecall.NAME)) {
+				gmeasure = this.statistics.getGraphMeasures().get(ReasoningRecall.NAME);
+			}
+			
+			createMeasureGauge(g2d, (int)startX, topRunnerHeight , gaugeWidth , gaugeHeight, gmeasure);
+			
+//			check for internal states for reasoning-recall
+			localIndex = 0;
+			for( Place moment : this.statistics.getDecisionMoments()) {
+				DecisionPoint dp = this.statistics.getInformation(moment);
+				if (dp.getMapToMeasures().containsKey(ReasoningRecall.NAME)) {
+					double dpmeasure = dp.getMapToMeasures().get(ReasoningRecall.NAME);
+					double dpfreq = dp.getRelativeFrequency();
+					localmeasures[localIndex] = (dpmeasure / dpfreq);
+				}
+				localIndex++;
+			}
+			createInternalGauge(g2d, (int) (startX + internalGaugeSpacing), topRunnerHeight, gaugeWidth, gaugeHeight, localmeasures);
+			
+			gmeasure = 0.0;
+			localmeasures = new double[decisionMoments];
+			
+			
+//			create gauge for reasoning-precision
+			startX += gaugeWidth + gaugeSpacing;
+			
+			g2d.setColor(Color.LIGHT_GRAY);
+			textX = startX + (gaugeWidth/2) - (ReasoningPrecision.NAME.length()/2) * 6;
+			g2d.drawString(ReasoningPrecision.NAME, (int) (textX) , 14 );
+			
+			if (this.statistics.getSeenGraphMeasures().contains(ReasoningPrecision.NAME)) {
+				gmeasure = this.statistics.getGraphMeasures().get(ReasoningPrecision.NAME);
+			}
+			createMeasureGauge(g2d, (int)startX, topRunnerHeight, gaugeWidth , gaugeHeight, gmeasure);
+			
+//			check for internal states for reasoning-precision
+			localIndex = 0;
+			for( Place moment : this.statistics.getDecisionMoments()) {
+				DecisionPoint dp = this.statistics.getInformation(moment);
+				if (dp.getMapToMeasures().containsKey(ReasoningPrecision.NAME)) {
+					double dpmeasure = dp.getMapToMeasures().get(ReasoningPrecision.NAME);
+					double dpfreq = dp.getRelativeFrequency();
+					localmeasures[localIndex] = (dpmeasure / dpfreq);
+				}
+				localIndex++;
+			}
+			createInternalGauge(g2d, (int) (startX + internalGaugeSpacing), topRunnerHeight, gaugeWidth, gaugeHeight, localmeasures);
+			
+			gmeasure = 0.0;
+			localmeasures = new double[decisionMoments];
+		}
+	}
+	
+	protected void createInternalGauge(Graphics2D g2d, int internalX, int yOffset, int gaugeWidth, int gaugeHeight, double[] measures) {
+//		compute states for internal gauge
+		double currentDeg = 180;
+		double gaugePadding = 0.01;
+		double internalGaugeWidth = gaugeWidth - (gaugeWidth * 0.25);
+		double internalGaugeHeight = gaugeHeight - (gaugeHeight * 0.25);
+		double arcSpacing = 0.5;
+		double arcTotalSpacing = measures.length * arcSpacing;
+		double arcSegements = (180.0 - (arcTotalSpacing)) / measures.length;
+		
+//		painter states
+		float[] fractions = new float[3];
+		Color[] colors = new Color[3];
+		colors[0] = GAUGE_DP_COLOUR;
+		colors[1] = Color.black;
+		colors[2] = Color.black;
+		Point2D point = new Point();
+		point.setLocation( 
+				internalX + internalGaugeWidth / 2.0, 
+				yOffset
+		);
+		
+//		paint background for internal gauge
+		g2d.setColor(Color.black);
+		g2d.fillArc(
+				(int) (internalX - (internalGaugeWidth * gaugePadding)),
+				(int) (-1 * (internalGaugeHeight*(1+gaugePadding)) / 2.0) + yOffset,
+				(int) (internalGaugeWidth * (1. + gaugePadding*2)),
+				(int) (internalGaugeHeight * (1. + gaugePadding*2)),
+				178,
+				182
+		);
+		
+//		paint local measure gauges
+		for (double measure : measures) {
+			fractions[0] = (float) (Math.min(0.97, measure));
+			fractions[1] = fractions[0]+0.02f;
+			fractions[2] = 1;
+			
+			
+			RadialGradientPaint gp = new RadialGradientPaint(
+					point,
+					(float) (internalGaugeHeight / 2.0f),
+					fractions,
+					colors
+			);
+			g2d.setPaint(gp);
+			
+			g2d.fillArc(
+					internalX,
+					(int) (-1 * internalGaugeHeight / 2.0) + yOffset,
+					(int)internalGaugeWidth,
+					(int)internalGaugeHeight,
+					(int)currentDeg,
+					(int)arcSegements
+			);
+			currentDeg += arcSegements + arcSpacing;
+		}
+		
+		
+		
+	}
+	
+	protected void createMeasureGauge(Graphics2D g2d, int startX, int yOffset, int width, int height, double measure) {
+		
+//      create gauge bg
+		g2d.setColor(Color.black);
+		g2d.fillArc(
+				(int)startX,
+				-1 * (height/2) + yOffset,
+				width,
+				height,
+				178,
+				182
+		);
+		
+//		create gauge outline
+		g2d.setColor(GAUGE_COLOUR);
+		g2d.fillArc(
+				(int)startX,
+				-1 * (height/2) + yOffset,
+				width,
+				height,
+				180,
+				(int) (180 * measure)
+		);
 	}
 
 	@Override
@@ -262,13 +453,6 @@ public class DotPanelG2 extends NavigableSVGPanelG2 {
 		changed |= exitAllElements(e);
 
 		return changed;
-	}
-
-	@Override
-	public List<Exporter> getExporters() {
-		List<Exporter> exporters = super.getExporters();
-		exporters.add(new ExporterDot());
-		return exporters;
 	}
 
 	/**
