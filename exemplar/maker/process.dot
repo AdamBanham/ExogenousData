@@ -1,0 +1,70 @@
+digraph {
+    rankdir="LR"
+    start [style=filled,shape=circle,fillcolor=green,width="0.5"]
+    end [style=filled,shape=circle,fillcolor=red,width="0.5"]
+
+    subgraph places {
+        node [shape=circle, style=filled, fillcolor="white",width="0.35",fixedsize="true"]
+
+        p2;
+        p3;
+        p4;
+        p5;
+        p6;
+        p7;
+        p8;
+        p9;
+    }
+
+    subgraph transitions {
+        node [shape=rectangle,style=filled,fillcolor="grey"]
+
+        A;
+        B;
+        C;
+        D;
+        E;
+        F;
+        G;
+        F;
+        H;
+        I;
+        J;
+        K;
+        L;
+        M;
+    }
+
+    start -> A;
+    A -> p2;
+    p2 -> B;
+    B -> p3;
+    p3 -> C;
+    C -> p4;
+    p4 -> D;
+    p4 -> E;
+    p4 -> F;
+    D -> p5;
+    E -> p5;
+    F -> p5;
+    p5 -> G;
+    G -> p6; 
+
+    p6 -> H;
+    I -> p6 [dir="back"];
+
+    p7 -> I [dir="back"];
+    J -> p7 [dir="back"];
+    p8 -> J [dir="back"];
+    K -> p8 [dir="back"];
+    L -> p8 [dir="back"];
+    p9 -> K [dir="back"];
+    p9 -> L [dir="back"];
+    M -> p9 [dir="back"];
+    p2 -> M [dir="back"];
+
+
+
+    H -> end
+
+}
