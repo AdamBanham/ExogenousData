@@ -2,7 +2,16 @@
 
 # Exogenous Data ProM Plugin
 
-This package for the ProM framework, implements several features around the xPM framework for process mining with exogenous data. The main feature of this plugin is an interface for viewing the output from several steps of the framework. i.e. viewing an xlog, performing decision mining with exogenous data and generating EESA visualisation (and ranking a collection). While this plugin creates a user-friendly way to interface with xPM, the inputs and outputs (exo-panels and their creation) are still unstable and require a complete formalisation. Furthermore, only a limited set of transformers and slicers are supported. Thus, customised implementations are required for non-trivial slices or transforms. Please get in contact with me if you require assistance with the creation of exo-panels or exo-descriptions, or non-trivial options for creating determinations in a xPM instantiation.
+This is a plugin for the ProM framework, which implements several tools around xPM, a framework for process mining with exogenous data. One of the main features for this plugin is an interative interface for several steps of the framework. i.e. viewing an xlog, performing decision mining with exogenous data and generating Explorative Exogenous Signal Anylsis (EESA) visualisations (and ranking a collection). While this plugin creates a user-friendly way to interface with the xPM framework, the inputs and outputs (exo-panels and their creations) are still unstable and require a complete formalisation. Furthermore, only a limited set of transformers and slicers are supported. Thus, customised implementations are required for non-trivial slices or transforms. Please get in contact if you require assistance with the creation of exo-panels or exo-descriptions, or non-trivial options for creating determinations in a xPM instantiation.
+
+The development cycle for this plugin, is that this repo is the source of truth, while the T/ue svn server treated as a production server. As such, only major releases are pushed to the nightly build of ProM. We tag released versions and an automated workflow is triggered to push to the svn server.
+If you do run into any issues using our plugin, please attempt to reproduce the issue using the code in this repo for testing, as the nightly build may be several commits behind. The current development goals can be seen in the projects attached to this repo, where each interface has ideas and features highlighted by their progress to release.
+
+# Exemplar Usage
+
+For thoses that are interested in seeing what the xPM framework can do or want to check out the plugin's tools, we have provided some exemplar logs and an video overview of the plugin.
+
+See the following write up for more infomation on the exemplar use case [here](exemplar/readme.md).
 
 ## Features 
 
@@ -86,7 +95,7 @@ To request new features to be implemented or where hard coding exists and should
 
 ## Contact
 
-To get in contact, see https://www.adambanham.io/#/contact for my current email addresses and socials.
+To get in contact, see https://www.adambanham.io/contact for my current email addresses and socials.
 
 # References
 
