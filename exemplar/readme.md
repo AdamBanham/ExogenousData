@@ -20,7 +20,14 @@ The control flow the process, from which we build upon for this exemplar can be 
 ![Exemplar control flow](maker/process.svg)
 <br>
 
+The control flow of this process, describes a linear process with a rework loop. 
+In this process, there are three decision points, a deicision between D,E,F at p4, a decision to rework at p6, and a choice of K or L at p8. 
+The process itself is not based on any real-world environment or use case but can be used to showcase the tools provided in our plugin. 
+The process is about making products for a customer, adjusting the costs of products to maximunise profit by forecasting future costs of materials for a just in time supply chain.
+In order to offset future costs, during a process more products may be upsold to the customer to offset price increases but the company only has a fixed amount of production capacity so decisions are made upon the future capacity of the company.
+
 ## Endogenous Data
+
 
 
 
