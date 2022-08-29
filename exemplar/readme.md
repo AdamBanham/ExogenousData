@@ -17,7 +17,7 @@ Exemplar Inputs:
 
 The control flow the process, from which we build upon for this exemplar can be seen as a Petri net below:
 <br>
-![Exemplar control flow](maker/process.png)
+![Exemplar control flow](maker/process.svg)
 <br>
 
 ## Endogenous Data
