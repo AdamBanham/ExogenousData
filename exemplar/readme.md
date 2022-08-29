@@ -28,8 +28,16 @@ In order to offset future costs, during a process more products may be upsold to
 
 ## Endogenous Data
 
+For each event in the endogenous event log, we have the following mandatory attributes
+ - concept:name = activity label associated with this event
+ - lifecycle:transition = state of execution
+ - time:timestamp = when an event occured
 
-
+The following optional attributes could also be attached to events
+ - profit = the amount of profit from invoice
+ - cost = the amount of cost associated with the event
+ - org:resource = the actor responsible for the event
+ - items = the total number of products related to the invoice after the event occured
 
 ## Exogenous Data
 
