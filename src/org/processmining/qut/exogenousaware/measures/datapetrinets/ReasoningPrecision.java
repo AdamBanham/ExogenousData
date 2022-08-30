@@ -316,7 +316,16 @@ public class ReasoningPrecision implements PetriNetMeasure {
 			} else if (value instanceof XAttributeDiscrete) {
 				realValue = ((XAttributeDiscrete) value).getValue();
 			} else {
-				realValue = value.toString();
+				try {
+					realValue = Double.valueOf(value.toString());
+				} catch (Exception e) {
+					
+//					System.out.println("process failback occured on :: " + value.getClass().toGenericString());
+					realValue = value.toString();
+				}
+				
+				
+				
 			}
 			
 			mapper.put(key,realValue);
