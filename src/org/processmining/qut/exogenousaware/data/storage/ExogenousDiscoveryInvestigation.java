@@ -18,7 +18,6 @@ import org.deckfour.xes.model.XAttribute;
 import org.deckfour.xes.model.XAttributeBoolean;
 import org.deckfour.xes.model.XAttributeContinuous;
 import org.deckfour.xes.model.XAttributeDiscrete;
-import org.deckfour.xes.model.XAttributeLiteral;
 import org.deckfour.xes.model.XAttributeMap;
 import org.deckfour.xes.model.XAttributeTimestamp;
 import org.deckfour.xes.model.XEvent;
@@ -167,11 +166,9 @@ public class ExogenousDiscoveryInvestigation {
 			return Type.DISCRETE;
 		} else if (xAttrib instanceof XAttributeTimestamp) {
 			return Type.TIMESTAMP;
-		} else if (xAttrib instanceof XAttributeLiteral) {
+		} else {
 			return Type.LITERAL;
 		}
-
-		return null;
 	}
 	
 	public Map<String, Set<String>> makeLiteralValues () {
