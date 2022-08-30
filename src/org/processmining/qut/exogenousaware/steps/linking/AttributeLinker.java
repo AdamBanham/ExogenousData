@@ -42,6 +42,7 @@ public class AttributeLinker implements Linker {
 
 	public Boolean linkedTo(XTrace endogenous, XTrace exogenous) {
 		//	check that endogenous trace has attribute of focus
+//		System.out.println("looking for attriibute :: "+this.attributeName.toString());
 		Object endoAttr = endogenous.getAttributes().get(this.attributeName);
 		if (endoAttr == null) {
 			return false;
@@ -50,7 +51,15 @@ public class AttributeLinker implements Linker {
 		if (exoAttr == null) {
 			return false;
 		}
-		return exoAttr.toString().equals(endoAttr.toString());
+		
+//		System.out.println("Checking values :: "+ exoAttr.toString() + " :: " + endoAttr.toString());
+		
+		if (exoAttr.getClass().equals(endoAttr.getClass())) {
+//			System.out.println("classes were the same");
+			return exoAttr.equals(endoAttr);
+		}
+		
+		return exoAttr.toString().contentEquals(endoAttr.toString());
 	}
 
 
