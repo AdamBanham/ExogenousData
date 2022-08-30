@@ -134,9 +134,9 @@ def make_trace(id:int, panels:Dict[str,EventLog], start:pd.Timestamp) -> Trace:
     # setup trace and datastate
     trace_ins = build_trace_attrs(id)
     datastate = {
-        EXTRA_ATTR_COST : 0,
-        EXTRA_ATTR_ITEMS : 0,
-        EXTRA_ATTR_PROFIT : 0
+        EXTRA_ATTR_COST : 0.0,
+        EXTRA_ATTR_ITEMS : 0.0,
+        EXTRA_ATTR_PROFIT : 0.0
     }
 
     for key,time in panels.items():
@@ -213,12 +213,12 @@ def make_A(time:pd.Timestamp, datastate:Dict[str,float]) -> Event:
     event_ins = make_event(time, "A")
 
     # Update datastate
-    datastate[EXTRA_ATTR_ITEMS] = np.random.randint(1,10)
+    datastate[EXTRA_ATTR_ITEMS] = np.random.randint(1,10) * 1.0
     datastate[EXTRA_ATTR_PROFIT] = profit_per_time(time) * datastate[EXTRA_ATTR_ITEMS]
 
     # build extra info
-    event_ins[EXTRA_ATTR_ITEMS] = datastate[EXTRA_ATTR_ITEMS]
-    event_ins[EXTRA_ATTR_PROFIT] = datastate[EXTRA_ATTR_PROFIT]
+    event_ins[EXTRA_ATTR_ITEMS] = float(f"{datastate[EXTRA_ATTR_ITEMS]:.2f}")
+    event_ins[EXTRA_ATTR_PROFIT] = float(f"{datastate[EXTRA_ATTR_PROFIT]:.2f}")
     event_ins[XES_RES] = np.random.choice(RESOURCES_A)
 
     return event_ins
@@ -231,7 +231,7 @@ def make_B(time:pd.Timestamp, datastate:Dict[str,float]) -> Event:
     datastate[EXTRA_ATTR_COST] += datastate[EXTRA_ATTR_ITEMS] * 5.25 
 
     # build extra info
-    event_ins[EXTRA_ATTR_COST] = datastate[EXTRA_ATTR_COST]
+    event_ins[EXTRA_ATTR_COST] = float(f"{datastate[EXTRA_ATTR_COST]:.2f}")
 
     return event_ins
 
@@ -241,12 +241,12 @@ def make_C(time:pd.Timestamp, datastate:Dict[str,float]) -> Event:
 
     # update datastate 
     new_items = np.random.randint(0,10)
-    datastate[EXTRA_ATTR_ITEMS] += new_items
+    datastate[EXTRA_ATTR_ITEMS] += new_items * 1.0
     datastate[EXTRA_ATTR_PROFIT] += profit_per_time(time) * datastate[EXTRA_ATTR_ITEMS]
 
     # build extra info
-    event_ins[EXTRA_ATTR_ITEMS] = datastate[EXTRA_ATTR_ITEMS]
-    event_ins[EXTRA_ATTR_PROFIT] = datastate[EXTRA_ATTR_PROFIT]
+    event_ins[EXTRA_ATTR_ITEMS] = float(f"{datastate[EXTRA_ATTR_ITEMS]:.2f}")
+    event_ins[EXTRA_ATTR_PROFIT] = float(f"{datastate[EXTRA_ATTR_PROFIT]:.2f}")
     event_ins[XES_RES] = np.random.choice(RESOURCES_C)
 
     return event_ins
@@ -289,7 +289,7 @@ def make_F(time:pd.Timestamp, datastate:Dict[str,float]) -> Event:
     datastate[EXTRA_ATTR_COST] += np.random.randint(50,100) * datastate[EXTRA_ATTR_ITEMS]
 
     # build extra info
-    event_ins[EXTRA_ATTR_COST] = datastate[EXTRA_ATTR_COST]
+    event_ins[EXTRA_ATTR_COST] = float(f"{datastate[EXTRA_ATTR_COST]:.2f}")
     event_ins[XES_RES] = np.random.choice(RESOURCES_DP_1)
 
     return event_ins 
@@ -302,7 +302,7 @@ def make_D(time:pd.Timestamp, datastate:Dict[str,float]) -> Event:
     datastate[EXTRA_ATTR_COST] += np.random.randint(3,15) * datastate[EXTRA_ATTR_ITEMS]
 
     # build extra info
-    event_ins[EXTRA_ATTR_COST] = datastate[EXTRA_ATTR_COST]
+    event_ins[EXTRA_ATTR_COST] = float(f"{datastate[EXTRA_ATTR_COST]:.2f}")
     event_ins[XES_RES] = np.random.choice(RESOURCES_DP_1)
 
     return event_ins
@@ -313,12 +313,12 @@ def make_E(time:pd.Timestamp, datastate:Dict[str,float]) -> Event:
 
     # update datastate 
     new_items = np.random.randint(0,3)
-    datastate[EXTRA_ATTR_ITEMS] += new_items
+    datastate[EXTRA_ATTR_ITEMS] += new_items * 1.0
     datastate[EXTRA_ATTR_PROFIT] += profit_per_time(time) * datastate[EXTRA_ATTR_ITEMS]
 
     # build extra info
-    event_ins[EXTRA_ATTR_ITEMS] = datastate[EXTRA_ATTR_ITEMS]
-    event_ins[EXTRA_ATTR_PROFIT] = datastate[EXTRA_ATTR_PROFIT]
+    event_ins[EXTRA_ATTR_ITEMS] = float(f"{datastate[EXTRA_ATTR_ITEMS]:.2f}")
+    event_ins[EXTRA_ATTR_PROFIT] = float(f"{datastate[EXTRA_ATTR_PROFIT]:.2f}")
     event_ins[XES_RES] = np.random.choice(RESOURCES_DP_1)
 
     return event_ins
@@ -387,7 +387,7 @@ def make_J(time:pd.Timestamp, datastate:Dict[str,float]) -> Event:
     datastate[EXTRA_ATTR_PROFIT] -= datastate[EXTRA_ATTR_PROFIT] * 0.03
 
     # build extra info
-    event_ins[EXTRA_ATTR_PROFIT] = datastate[EXTRA_ATTR_PROFIT]
+    event_ins[EXTRA_ATTR_PROFIT] = float(f"{datastate[EXTRA_ATTR_PROFIT]:.2f}")
     event_ins[XES_RES] = np.random.choice(RESOURCES_J)
 
     return event_ins
@@ -436,12 +436,12 @@ def make_K(time:pd.Timestamp, datastate:Dict[str,float]) -> Event:
 
     # update datastate
     new_items = np.random.randint(3,15)
-    datastate[EXTRA_ATTR_ITEMS] += new_items
+    datastate[EXTRA_ATTR_ITEMS] += new_items * 1.0
     datastate[EXTRA_ATTR_PROFIT] += profit_per_time(time) * datastate[EXTRA_ATTR_ITEMS] 
 
     # build extra info
-    event_ins[EXTRA_ATTR_ITEMS] = datastate[EXTRA_ATTR_ITEMS]
-    event_ins[EXTRA_ATTR_PROFIT] = datastate[EXTRA_ATTR_PROFIT]
+    event_ins[EXTRA_ATTR_ITEMS] = float(f"{datastate[EXTRA_ATTR_ITEMS]:.2f}")
+    event_ins[EXTRA_ATTR_PROFIT] = float(f"{datastate[EXTRA_ATTR_PROFIT]:.2f}")
     event_ins[XES_RES] = np.random.choice(RESOURCES_DP_3)
 
     return event_ins 
@@ -455,16 +455,16 @@ def make_L(time:pd.Timestamp, datastate:Dict[str,float]) -> Event:
     total_items = datastate[EXTRA_ATTR_ITEMS]
 
     if (total_items > less_items):
-        datastate[EXTRA_ATTR_ITEMS] = np.min([0, datastate[EXTRA_ATTR_ITEMS] - less_items])
+        datastate[EXTRA_ATTR_ITEMS] = np.min([0.0, datastate[EXTRA_ATTR_ITEMS] - less_items])
         datastate[EXTRA_ATTR_COST] += 50
         datastate[EXTRA_ATTR_PROFIT] += profit_per_time(time) * datastate[EXTRA_ATTR_ITEMS] 
     else:
         datastate[EXTRA_ATTR_COST] += 15
 
     # build extra info
-    event_ins[EXTRA_ATTR_ITEMS] = datastate[EXTRA_ATTR_ITEMS]
-    event_ins[EXTRA_ATTR_COST] = datastate[EXTRA_ATTR_COST]
-    event_ins[EXTRA_ATTR_PROFIT] = datastate[EXTRA_ATTR_PROFIT]
+    event_ins[EXTRA_ATTR_ITEMS] = float(f"{datastate[EXTRA_ATTR_ITEMS]:.2f}")
+    event_ins[EXTRA_ATTR_COST] = float(f"{datastate[EXTRA_ATTR_COST]:.2f}")
+    event_ins[EXTRA_ATTR_PROFIT] = float(f"{datastate[EXTRA_ATTR_PROFIT]:.2f}")
     event_ins[XES_RES] = np.random.choice(RESOURCES_DP_3)
 
     return event_ins 

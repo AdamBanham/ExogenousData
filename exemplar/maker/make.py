@@ -13,6 +13,7 @@ from vispm.helpers.colours.colourmaps import EARTH,COOL_WINTER
 from matplotlib.cm import get_cmap
 
 import controlflow
+from model import PetriNetWithData, Place, Transition, Arc
 
 from os.path import join
 
@@ -22,6 +23,8 @@ EXO_PANEL_02_OUT = join(".","..","exo_panel_02.xes")
 EXO_PANEL_03_OUT = join(".","..","exo_panel_03.xes")
 
 DESCRIBE_PIC = join(".","..","dotted_description.png")
+
+MODEL_OUT = join(".","..","model.pnml")
 
 def capacity_left(time:float) -> float:
     """
@@ -160,10 +163,76 @@ def make_vis(log:EventLog):
     presentor.plot()
     presentor.get_figure().savefig(DESCRIBE_PIC, dpi=300, bbox_inches="tight")
 
+
+def make_model() -> PetriNetWithData:
+    model = PetriNetWithData("ExogenousData - Exemplar - Petri net with data")
+
+    # make places
+    places = dict()
+    place_id = 1
+    # start
+    place = Place(place_id,'start',True,False)
+    places['start'] = place
+    model.add_place(place)
+    place_id += 1
+    # middles
+    for _ in range(8):
+        place = Place(place_id,f'p{place_id}',False,False)
+        places[f'p{place_id}'] = place
+        model.add_place(place)
+        place_id += 1
+    # end
+    place = Place(place_id,'end',False,True)
+    places['end'] = place
+    model.add_place(place)
+
+    # make transitions
+    tran_id = 1
+    trans = dict()
+    for label in ["A","B","C","D","E","F","G","H","I","J","K","L","M"]:
+        transition = Transition(tran_id, False, label)
+        trans[label] = transition
+        model.add_transition(transition)
+        tran_id += 1
+
+    # make arcs
+    arc_list = [ 
+        ('start', 'A'), ('A','p2'), ('p2', 'B'), ('B','p3'),
+        ('p3','C'),('C','p4'),('p4','D'),('p4','E'),('p4','F'),
+        ('D','p5'),('E','p5'),('F','p5'),('p5','G'),('G','p6'),
+        ('p6',"I"), ('I','p7'), ('p7',"J"), ("J",'p8'),
+        ('p8',"K"), ('p8','L'), ('L','p9'), ("K",'p9'),
+        ('p9',"M"), ("M","p2"), ("p6","H"), ("H",'end')
+    ]
+
+    arc_id = 1
+    for s,t in arc_list:
+        # find source
+        source = None
+        if (s in places.keys()):
+            source = places[s]
+        else:
+            source = trans[s]
+        # find target
+        target = None
+        if (t in places.keys()):
+            target = places[t]
+        else:
+            target = trans[t]
+        arc = Arc(arc_id, source, target)
+        model.add_arcs(arc)
+        arc_id += 1
+
+    return model
+
 def main():
     panels = make_exo_panels()
     log = make_endogenous(panels)
     make_vis(log)
+
+    with open(MODEL_OUT,"w") as f:
+        model = make_model()
+        f.write(str(model).encode("UTF-8").decode("UTF-8"))
 
 
 if __name__ == "__main__":
