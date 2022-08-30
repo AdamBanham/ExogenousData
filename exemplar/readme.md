@@ -55,11 +55,12 @@ Three exo-panels have been perpared for this exemplar:
 These three exogenous factors generally follow three equations, which given the relative time from 01/01/2122 return a fixed number.
 However in our simulation, these numbers are shifted by a random amount (either postive or negative).
 
-To see the general trend for each such equation used in the simulation, check out the following graph plotting them over time (in terms of days).
+To see the general trend for each such equation used in the simulation, check out the following graph plotting them over time (in terms of days, 365 days are highlighted by the grey area).
 Red outlines the price of copper,
 Green outlines the price of iron,
 Blue outlines the capacity of the production factory, and
 Orange outlines the profit from a product.
+<br>
 ![Exogenous Data Example](maker/exo_panel_growth.PNG)
 
 ## Python make process
