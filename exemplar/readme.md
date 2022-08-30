@@ -65,4 +65,17 @@ Orange outlines the profit from a product.
 
 ## Python make process
 
+In the [make directory](maker/) you can find the following pieces of code that have been used to generate exemplar:
+  - make.py; the main python file to generate logs, visualisations and process model
+  - controlflow.py; the code used to generate the endogenous event log.
+  - utils.py; some helper functions
+  - process.dot, process.png, process.svg; used to generate a diagram of the control-flow. (using Graphviz)
+  - Pipfile, Pipfile.lock; pipenv virtual environments that were used to generate log, expecting some version of python 3.9.
+    - to generate the same virtual python environment, install [pipenv](https://github.com/pypa/pipenv).
+    - then, using a terminal in the maker directory, run the following commands to generate the exemplar logs.
+        - pipenv install
+        - pipenv shell
+        - py make.py
+
+
 
