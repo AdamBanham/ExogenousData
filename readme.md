@@ -1,21 +1,21 @@
 [![ProM Updated](https://github.com/AdamBanham/ExogenousData/actions/workflows/update_prod.yml/badge.svg)](https://github.com/AdamBanham/ExogenousData/actions/workflows/update_prod.yml)
 
-# Exogenous Data ProM Plugin
+# Exogenous Data ProM Plug-in
 
-This is a plugin for the ProM framework, which implements several tools around xPM, a framework for process mining with exogenous data. One of the main features for this plugin is an interative interface for several steps of the framework. i.e. viewing an xlog, performing decision mining with exogenous data and generating Explorative Exogenous Signal Anylsis (EESA) visualisations (and ranking a collection). While this plugin creates a user-friendly way to interface with the xPM framework, the inputs and outputs (exo-panels and their creations) are still unstable and require a complete formalisation. Furthermore, only a limited set of transformers and slicers are supported. Thus, customised implementations are required for non-trivial slices or transforms. Please get in contact if you require assistance with the creation of exo-panels or exo-descriptions, or non-trivial options for creating determinations in a xPM instantiation.
+This is a plug-in for the ProM framework, which implements several tools around xPM, a framework for process mining with exogenous data. One of the main features for this plug-in is an interactive interface for several steps of the framework. i.e. viewing an xlog, performing decision mining with exogenous data and generating Explorative Exogenous Signal Analysis (EESA) visualisations (and ranking a collection). While this plug-in creates a user-friendly way to interface with the xPM framework, the inputs and outputs (exo-panels and their creations) are still unstable and require a complete formalisation. Furthermore, only a limited set of transformers and slicers are supported. Thus, customised implementations are required for non-trivial slices or transforms. Please get in contact if you require assistance with the creation of exo-panels or exo-descriptions, or non-trivial options for creating determinations in a xPM instantiation.
 
-The development cycle for this plugin, is that this repo is the source of truth, while the T/ue svn server treated as a production server. As such, only [major releases](https://github.com/AdamBanham/ExogenousData/releases) are pushed to the nightly build of ProM. We tag released versions and an automated workflow is triggered to push to the svn server.
-If you do run into any issues using our plugin, please attempt to reproduce the issue using the code in this repo for testing, as the nightly build may be several commits behind. The current development goals can be seen in the projects attached to this repo, where each interface has ideas and features highlighted by their progress to release.
+The development cycle for this plug-in, is that this repo is the source of truth, while the T/ue svn server is treated as a production server. As such, only [major releases](https://github.com/AdamBanham/ExogenousData/releases) are pushed to the nightly build of ProM. We tag released versions and an automated workflow is triggered to push to the svn server.
+If you do run into any issues using our plug-in, please attempt to reproduce the issue using the code in this repo for testing, as the nightly build may be several commits behind. The current development goals can be seen in the projects attached to this repo, where each interface has ideas and features highlighted by their progress to release.
 
 # Exemplar Usage
 
-For thoses that are interested in seeing what the xPM framework can do or want to check out the plugin's tools, we have provided some exemplar logs and an video overview of the plugin.
+For those that are interested in seeing what the xPM framework can do or want to check out the plugin's tools, we have provided some exemplar logs and an video overview of the plug-in.
 
-See the following write up for more infomation on the exemplar use case [here](exemplar/readme.md).
+See the following write up for more information on the exemplar use case [here](exemplar/readme.md).
 
 ## Features 
 
-The following features have been implemented and can be accessed within ProM via the appropriate plugin. Each the following sections outline the plugin functions and outcomes.
+The following features have been implemented and can be accessed within ProM via the appropriate plug-in. Each the following sections outlines a tool that is implemented within this plug-in and the related outcomes.
 
 ### Exogenous Annotated  Log Explorer
 
@@ -99,8 +99,8 @@ To get in contact, see https://www.adambanham.io/contact for my current email ad
 
 # References
 
-[1] F. Mannhardt, M. de Leoni, H. A. Reijers, and W. M. P. van der Aalst, “Decision Mining Revisited - Discovering Overlapping Rules,” in Advanced Information Systems Engineering, Cham, 2016, pp. 377–392.
+[1] F. Mannhardt, M. de Leoni, H. A. Reijers, and W. M. P. van der Aalst, Decision Mining Revisited - Discovering Overlapping Rules, in Advanced Information Systems Engineering, Cham, 2016, pp. 377-392.
 <br>
 or 
 <br>
-F. Mannhardt, M. De Leoni, and H. A. Reijers, “The multi-perspective process explorer,” in CEUR Workshop Proceedings, Innsbruck, Austria, Sep. 2015, vol. 1418, pp. 130–134.
+F. Mannhardt, M. De Leoni, and H. A. Reijers, The multi-perspective process explorer, in CEUR Workshop Proceedings, Innsbruck, Austria, Sep. 2015, vol. 1418, pp. 130-134.
