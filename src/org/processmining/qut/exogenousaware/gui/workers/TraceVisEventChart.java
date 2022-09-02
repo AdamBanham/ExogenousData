@@ -262,9 +262,9 @@ public class TraceVisEventChart {
 		);
 		chart.setBackgroundPaint(Color.LIGHT_GRAY);
 		chart.getLegend().setBackgroundPaint(Color.LIGHT_GRAY);
-		graph.setPreferredSize(new Dimension(800,400));
-		graph.setMinimumSize(new Dimension(800,400));
-		graph.setMaximumSize(new Dimension(800,400));
+		graph.setPreferredSize(new Dimension(600,300));
+		graph.setMinimumSize(new Dimension(600,300));
+		graph.setMaximumSize(new Dimension(600,300));
 		mainView.add(graph, c);
 //		add a list of transformed attributes
 		c.gridy = 0;

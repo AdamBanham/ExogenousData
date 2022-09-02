@@ -246,9 +246,11 @@ public class TraceVisOverviewChart extends SwingWorker<JPanel, String> {
 		this.chart = new ChartPanel(
 				chart
 		);
-		
-		chart.setBackgroundPaint(Color.LIGHT_GRAY);
-		chart.getLegend().setBackgroundPaint(Color.LIGHT_GRAY);
+		Color trans = new Color(255,255,255,0);
+		this.chart.setBackground(Color.LIGHT_GRAY);
+		chart.setBackgroundPaint(trans);
+		chart.getLegend().setBackgroundPaint(trans);
+		chart.getPlot().setBackgroundAlpha(0.0f);
 		return this.chart;
 	}
 	
@@ -271,7 +273,9 @@ public class TraceVisOverviewChart extends SwingWorker<JPanel, String> {
             JPanel graph = get();
             this.source.setTraceOverviewChart(chart);
             this.progress.setVisible(false);
+            graph.repaint();
             this.target.add(graph);
+            this.target.repaint();
             this.target.validate();
         } 
         catch (InterruptedException e) 

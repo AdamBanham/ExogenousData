@@ -104,6 +104,7 @@ public class ExogenousTraceView extends JPanel {
 		this.leftRight.setRightComponent(this.rightTopBottom);
 		this.rightTopBottom.setTopComponent(this.buildTraceVis());
 		this.rightTopBottom.setBottomComponent(this.buildTraceBreakdown());
+		this.rightTopBottom.setBackground(Color.red);
 		add(this.leftRight);
 		this.validate();
 		return this;
@@ -144,7 +145,7 @@ public class ExogenousTraceView extends JPanel {
 		this.stylePanel(topPanel);
 		topPanel.setLayout(new GridLayout(0,1));
 		topPanel.validate();
-		topPanel.setMinimumSize(new Dimension(800,400));
+		topPanel.setMinimumSize(new Dimension(800,200));
 		return topPanel;
 	}
 	
@@ -158,9 +159,10 @@ public class ExogenousTraceView extends JPanel {
 		
 //		style panels
 		this.stylePanel(topPanel);
+		topPanel.setOpaque(false);
 		topPanel.setLayout(new GridLayout(0,1));
 		topPanel.validate();
-		topPanel.setMinimumSize(new Dimension(800,400));
+		topPanel.setMinimumSize(new Dimension(800,200));
 		return topPanel;
 	}
 	
@@ -354,7 +356,7 @@ public class ExogenousTraceView extends JPanel {
 			this.traceBreakdownView.removeFilter(this.eventfilter);
 			this.eventfilter = null;
 		}
-		
+		this.rightTopBottom.repaint();
 		this.rightTopBottom.validate();
 	}
 	
