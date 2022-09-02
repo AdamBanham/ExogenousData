@@ -211,7 +211,7 @@ public class TraceVisEventChart {
 		dataset.addSeries(evSeries);
 //		create plot
 		JFreeChart chart = ChartFactory.createXYLineChart(
-				"Subseries for "+ exoSet, 
+				"Slice for "+ exoSet, 
 				"time:timestamp (hours)", 
 				"value", 
 				dataset
@@ -245,7 +245,7 @@ public class TraceVisEventChart {
 		JPanel mainView = new JPanel();
 		mainView.setLayout(new GridBagLayout());
 		c = new GridBagConstraints();
-		c.fill = c.HORIZONTAL;
+		c.fill = c.NONE;
 //		c.gridheight = 3;
 //		c.gridwidth = 2;
 		c.gridx= 0;
@@ -256,15 +256,15 @@ public class TraceVisEventChart {
 		c.gridy++;
 //		add a graph panel to main view
 		chart = new JFreeChart(plot);
-		chart.setTitle("Subseries for "+ exoSet);
+		chart.setTitle("Slice for "+ exoSet);
 		ChartPanel graph = new ChartPanel(
 				chart
 		);
 		chart.setBackgroundPaint(Color.LIGHT_GRAY);
 		chart.getLegend().setBackgroundPaint(Color.LIGHT_GRAY);
-		graph.setPreferredSize(new Dimension(600,300));
-		graph.setMinimumSize(new Dimension(600,300));
-		graph.setMaximumSize(new Dimension(600,300));
+		graph.setPreferredSize(new Dimension(400,300));
+		graph.setMinimumSize(new Dimension(400,300));
+		graph.setMaximumSize(new Dimension(400,300));
 		mainView.add(graph, c);
 //		add a list of transformed attributes
 		c.gridy = 0;
@@ -307,9 +307,9 @@ public class TraceVisEventChart {
 
 	public JLabel makeTitle() {
 		JLabel label;
-		String eventString = "<html><p>Event Breakdown of ''%s'' @ %s</p></html>";
+		String eventString = "<html><p>Event %d @ %s</p></html>";
 		eventString = String.format(eventString,
-			endogenous.getAttributes().get("concept:name").toString(),
+			this.eventIndex + 1,
 			endogenous.getAttributes().get("time:timestamp").toString()
 		);
 		label = ExogenousTraceView.createLeftAlignedLabel(eventString, true, 18);
