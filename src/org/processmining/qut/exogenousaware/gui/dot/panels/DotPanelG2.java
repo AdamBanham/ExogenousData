@@ -204,13 +204,17 @@ public class DotPanelG2 extends NavigableSVGPanelG2 {
 			g2d.setRenderingHint(RenderingHints.KEY_ANTIALIASING, RenderingHints.VALUE_ANTIALIAS_ON);
 			
 //			create gauge for reasoning-recall
+			String label = ReasoningRecall.NAME;
 			g2d.setColor(Color.LIGHT_GRAY);
-			double textX = startX + (gaugeWidth/2) - (ReasoningRecall.NAME.length()/2) * 6;
-			g2d.drawString(ReasoningRecall.NAME, (int) (textX) , 14 );
+			
 			
 			if (this.statistics.getSeenGraphMeasures().contains(ReasoningRecall.NAME)) {
 				gmeasure = this.statistics.getGraphMeasures().get(ReasoningRecall.NAME);
+				label = label + String.format(" (%.2f)", gmeasure);
 			}
+			
+			double textX = startX + (gaugeWidth/2) - (label.length()/2) * 5.7;
+			g2d.drawString(label, (int) (textX) , 14 );
 			
 			createMeasureGauge(g2d, (int)startX, topRunnerHeight , gaugeWidth , gaugeHeight, gmeasure);
 			
@@ -233,14 +237,18 @@ public class DotPanelG2 extends NavigableSVGPanelG2 {
 			
 //			create gauge for reasoning-precision
 			startX += gaugeWidth + gaugeSpacing;
-			
+			label = ReasoningPrecision.NAME;
 			g2d.setColor(Color.LIGHT_GRAY);
-			textX = startX + (gaugeWidth/2) - (ReasoningPrecision.NAME.length()/2) * 6;
-			g2d.drawString(ReasoningPrecision.NAME, (int) (textX) , 14 );
+			
 			
 			if (this.statistics.getSeenGraphMeasures().contains(ReasoningPrecision.NAME)) {
 				gmeasure = this.statistics.getGraphMeasures().get(ReasoningPrecision.NAME);
+				label = label + String.format(" (%.2f)", gmeasure);
 			}
+			
+			textX = startX + (gaugeWidth/2) - (label.length()/2) * 5.7;
+			g2d.drawString(label, (int) (textX) , 14 );
+			
 			createMeasureGauge(g2d, (int)startX, topRunnerHeight, gaugeWidth , gaugeHeight, gmeasure);
 			
 //			check for internal states for reasoning-precision
@@ -347,6 +355,23 @@ public class DotPanelG2 extends NavigableSVGPanelG2 {
 				180,
 				(int) (180 * measure)
 		);
+		
+//		add breaks at eigths
+		g2d.setColor(Color.LIGHT_GRAY);
+		double breakerStep = (180 - 7) / 8;
+		double breaker = 180 + breakerStep;
+		while (breaker < 360) {
+			g2d.fillArc(
+				(int) (startX),
+				(int)((-1 * (height/2) + yOffset)),
+				(int)(width),
+				(int)(height),
+				(int)breaker,
+				1				
+			);
+			breaker = breaker + breakerStep;
+		}
+		
 	}
 
 	@Override
