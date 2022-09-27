@@ -5,11 +5,13 @@ import java.util.List;
 
 import javax.swing.JComponent;
 
+import org.apache.commons.lang.NotImplementedException;
 import org.deckfour.xes.model.XLog;
 import org.processmining.contexts.uitopia.UIPluginContext;
 import org.processmining.contexts.uitopia.annotations.UITopiaVariant;
 import org.processmining.contexts.uitopia.annotations.Visualizer;
 import org.processmining.framework.plugin.annotations.Plugin;
+import org.processmining.framework.plugin.annotations.PluginCategory;
 import org.processmining.framework.plugin.annotations.PluginLevel;
 import org.processmining.models.graphbased.directed.petrinetwithdata.newImpl.PetriNetWithData;
 import org.processmining.qut.exogenousaware.data.ExogenousAnnotatedLog;
@@ -18,7 +20,7 @@ import org.processmining.qut.exogenousaware.exceptions.CannotConvertException;
 import org.processmining.qut.exogenousaware.gui.ExogenousDiscoveryInvestigator;
 import org.processmining.qut.exogenousaware.gui.ExogenousTraceExplorer;
 import org.processmining.qut.exogenousaware.gui.ExogenousTraceView;
-import org.processmining.qut.exogenousaware.steps.determination.configs.AIME2022;
+import org.processmining.qut.exogenousaware.steps.determination.configs.AIIM2022;
 
 
 
@@ -28,18 +30,20 @@ import org.processmining.qut.exogenousaware.steps.determination.configs.AIME2022
  * <br>
  * Current plugins are:<br>
  * <ul>
- * <li>Exogenous Aware Log Preperation [1]</li>
- * <li>Exogenous Trace Visualisation (Visualiser) [1]</li>
- * <li>Exogenous Aware Discovery [1]</li>
- * <li>Exogenous Discovery Investigator (Visualiser)</li>
- * <li>Exogenous Aware Enhancement (EESA Visualisations and Ranking) [x]</li>
+ * <li>Exogenous Aware Log Preperation [1,2]</li>
+ * <li>Exogenous Trace Visualisation (Visualiser) [1,2]</li>
+ * <li>Exogenous Aware Discovery [1,2]</li>
+ * <li>Exogenous Discovery Investigator (Visualiser) [1,2]</li>
+ * <li>Exogenous Aware Enhancement (EESA Visualisations and Ranking) [2]</li>
  *</ul>
  *<br>
- *[1] 	A. Banham, S. J. J. Leemans, M. T. Wynn, R. Andrews, xPM: A framework for process mining
-		with exogenous data, in: Process Mining Workshops - ICPM 2021 International Workshops, volume 
-		433 of Lecture Notes in Business Information Processing,
-		Springer, 2021, pp. 85–97.
- *[x]	A journal article in the coming future (under review as-of 12/07/2022).
+ *[1] 	A. Banham, S. J. J. Leemans, M. T. Wynn, R. Andrews, xPM: A framework 
+ *       for process mining with exogenous data, in: Process Mining Workshops - 
+ *       ICPM 2021 International Workshops, volume 433 of Lecture Notes in 
+ *       Business Information Processing, Springer, 2021, pp. 85–97.
+ *[2]	xPM: Enhancing Exogenous Data Visibility. Adam Banham, Sander J.J. 
+ *		 Leemans, Moe T. Wynn, Robert Andrews, Kevin B. Laupland, Lucy Shinners.
+ *		 Artificial Intelligence in Medicine 2022 (Accepted as-of 24/09/2022).
 */
 public class ExogenousAwareDiscoveryPlugin {
 	
@@ -48,6 +52,19 @@ public class ExogenousAwareDiscoveryPlugin {
 			parameterLabels = {"Event Log", "Exo-Panels"},
 			returnLabels = {"Exogenous Annotated Log"},
 			returnTypes = {ExogenousAnnotatedLog.class},
+			help="Given an event log and several exo-panels, this plugin allows"
+					+ "users to create determinations as identified by xPM [1]."
+					+ " After building determinations, each one will be applied"
+					+ " to all traces seen in the event log. Note that an xlog "
+					+ "will be made but all changes will be done in place. This"
+					+ " process is not memory efficient and may require systems "
+					+ "to have more than 12 GB of heap available depending on the"
+					+ " size of the exo-panels and event log. [1] xPM: Enhancing"
+					+ " Exogenous Data Visibility. Adam Banham et. al. Artificial"
+					+ " Intelligence in Medicine 2022 <br> See "
+					+ " <a href=\"https://youtu.be/iSklEeNUJSc\" target=\"_blank\">"
+					+ "https://youtu.be/iSklEeNUJSc</a> for a walkthough of tooling.",
+			categories={PluginCategory.Analytics, PluginCategory.Enhancement},
 			userAccessible = true
 	)
 	@UITopiaVariant(
@@ -55,7 +72,8 @@ public class ExogenousAwareDiscoveryPlugin {
 			author = "A. Banham",
 			email = "adam.banham@hdr.qut.edu.au"
 	)
-	public ExogenousAnnotatedLog preperation(UIPluginContext context, XLog endogenous, XLog[] exogenous) throws Throwable{
+	public ExogenousAnnotatedLog preperation(UIPluginContext context, 
+			XLog endogenous, XLog[] exogenous) throws Throwable{
 		List<ExogenousDataset> exoLogs = new ArrayList<ExogenousDataset>();
 		for(XLog elog: exogenous) {
 			ExogenousDataset temp;
@@ -66,7 +84,10 @@ public class ExogenousAwareDiscoveryPlugin {
 						.setup();
 			} catch (CannotConvertException e) {
 				// if log cannot naively be convert to dataset then move on
-				System.out.println("[ExogenousAnnotatedLog] Cannot convert log='"+ elog.getAttributes().get("concept:name").toString()+"' to an exogenous dataset.");
+				System.out.println(
+					"[ExogenousAnnotatedLog] Cannot convert log='"
+					+ elog.getAttributes().get("concept:name").toString()+"' "
+					+ "to an exogenous dataset.");
 				continue;
 			}
 			exoLogs.add(temp);
@@ -89,10 +110,15 @@ public class ExogenousAwareDiscoveryPlugin {
 	}
 	
 	@Plugin(
-			name = "Exogenous Annotated Log Preparation (AIME 2022)",
+			name = "Exogenous Annotated Log Preparation (AIIM 2022)",
 			parameterLabels = {"Event Log", "Exo-Panels"},
 			returnLabels = {"Exogenous Annotated Log"},
 			returnTypes = {ExogenousAnnotatedLog.class},
+			help="Given an event log and several exo-panels, this plugin allows"
+				 + " users to reproduce the xPM instantition used in :"
+				 + " xPM: Enhancing Exogenous Data Visibility. Adam "
+				 + "Banham et. al. Artificial Intelligence in Medicine 2022",
+			categories={PluginCategory.Analytics, PluginCategory.Enhancement},
 			userAccessible = true
 	)
 	@UITopiaVariant(
@@ -100,7 +126,8 @@ public class ExogenousAwareDiscoveryPlugin {
 			author = "A. Banham",
 			email = "adam.banham@hdr.qut.edu.au"
 	)
-	public ExogenousAnnotatedLog AIME2022preperation(UIPluginContext context, XLog endogenous, XLog[] exogenous) throws Throwable{
+	public ExogenousAnnotatedLog AIIM2022preperation(UIPluginContext context, 
+			XLog endogenous, XLog[] exogenous) throws Throwable {
 		List<ExogenousDataset> exoLogs = new ArrayList<ExogenousDataset>();
 		for(XLog elog: exogenous) {
 			ExogenousDataset temp;
@@ -111,7 +138,10 @@ public class ExogenousAwareDiscoveryPlugin {
 						.setup();
 			} catch (CannotConvertException e) {
 				// if log cannot naively be convert to dataset then move on
-				System.out.println("[ExogenousAnnotatedLog] Cannot convert log='"+ elog.getAttributes().get("concept:name").toString()+"' to an exogenous dataset.");
+				System.out.println("[ExogenousAnnotatedLog] Cannot convert log="
+						+ "'"
+						+ elog.getAttributes().get("concept:name").toString()
+						+"' to an exogenous dataset.");
 				continue;
 			}
 			exoLogs.add(temp);
@@ -123,7 +153,7 @@ public class ExogenousAwareDiscoveryPlugin {
 				.classifiers(endogenous.getClassifiers())
 				.extensions(endogenous.getExtensions())
 				.useDefaultConfiguration(true)
-				.determinations(AIME2022.getConfiguration(exoLogs))
+				.determinations(AIIM2022.getConfiguration(exoLogs))
 				.globalEventAttributes(endogenous.getGlobalEventAttributes())
 				.globalTraceAttributes(endogenous.getGlobalTraceAttributes())
 				.attributes(endogenous.getAttributes())
@@ -138,7 +168,14 @@ public class ExogenousAwareDiscoveryPlugin {
 			name = "Exogenous Annotated Log Explorer",
 			parameterLabels = {"Exogenous Annotated Log"},
 			returnLabels = {"ExogenousTraceExplorer"}, 
-			returnTypes = {ExogenousTraceView.class}, 
+			returnTypes = {ExogenousTraceView.class},
+			help="This plugin allows users to explore an xlog through a GUI. "
+					+ "Users can see slices that were related to events and "
+					+ "see how the original exo-series evolved in comparision to"
+					+ " the execution of the trace. See "
+					+ " <a href=\"https://youtu.be/iSklEeNUJSc\" target=\"_blank\">"
+					+ "https://youtu.be/iSklEeNUJSc</a> for a walkthough of tooling.",
+			categories={PluginCategory.Analytics, PluginCategory.Enhancement},
 			userAccessible = true
 	)
 	@UITopiaVariant(
@@ -147,7 +184,8 @@ public class ExogenousAwareDiscoveryPlugin {
 			email = "adam.banham@hdr.qut.edu.au"
 	)
 	@Visualizer
-	public JComponent exogenousAnnotationViewing(UIPluginContext context, ExogenousAnnotatedLog xlog) throws Throwable{
+	public JComponent exogenousAnnotationViewing(UIPluginContext context, 
+			ExogenousAnnotatedLog xlog) throws Throwable {
 		return new ExogenousTraceExplorer().visualise(
 				context
 				,
@@ -159,9 +197,29 @@ public class ExogenousAwareDiscoveryPlugin {
 		);
 	}
 	
-	@Plugin(name = "Exogenous Aware Discovery", parameterLabels = {"Exogenous Annotated Log(xlog)","Control Flow DPN"}, returnLabels = {"Exogenous Discovery Investigator"}, returnTypes = {ExogenousDiscoveryInvestigator.class}, userAccessible = true)
-	@UITopiaVariant(affiliation = "QUT", author = "A. Banham", email = "adam.banham@hdr.qut.edu.au")
-	public ExogenousDiscoveryInvestigator exogenousDiscovery(UIPluginContext context, ExogenousAnnotatedLog exogenous, PetriNetWithData dpn) throws Throwable{
+	@Plugin(
+			name = "Exogenous Aware Discovery",
+			parameterLabels = {"Exogenous Annotated Log (xlog)","Control Flow (DPN)"},
+			returnLabels = {"Exogenous Discovery Investigator"},
+			returnTypes = {ExogenousDiscoveryInvestigator.class},
+			categories={PluginCategory.Analytics, PluginCategory.Enhancement,
+						PluginCategory.Discovery
+			},
+			help="This plugin allows users to perform various process discovery "
+					+ "methods using an xlog and a control flow description. "
+					+ " Such as performing decision mining and then exploring "
+					+ "annotated transition guards using a visual format."
+					+ "<br> See "
+					+ " <a href=\"https://youtu.be/iSklEeNUJSc\" target=\"_blank\">"
+					+ "https://youtu.be/iSklEeNUJSc</a> for a walkthough of tooling.",
+			userAccessible = true
+	)
+	@UITopiaVariant(affiliation = "QUT", author = "A. Banham", 
+		email = "adam.banham@hdr.qut.edu.au"
+	)
+	public ExogenousDiscoveryInvestigator exogenousDiscovery(
+			UIPluginContext context, ExogenousAnnotatedLog exogenous,
+			PetriNetWithData dpn) throws Throwable {
 		
 		ExogenousDiscoveryInvestigator edi = ExogenousDiscoveryInvestigator.builder()
 				.source(exogenous)
@@ -183,13 +241,27 @@ public class ExogenousAwareDiscoveryPlugin {
 			parameterLabels = { "" }
 	)
 	@Visualizer
-	public JComponent exogenousDiscoveryViewing(UIPluginContext context, ExogenousDiscoveryInvestigator edi) {
+	public JComponent exogenousDiscoveryViewing(UIPluginContext context, 
+			ExogenousDiscoveryInvestigator edi) {
 		return edi;
 	}
 	
-	@Plugin(name = "Exogenous Aware Enhancement", parameterLabels = {"Exogenous Annotated Log", "xDPN",}, returnLabels = {}, returnTypes = {}, userAccessible = true)
-	@UITopiaVariant(affiliation = "QUT", author = "A. Banham", email = "adam.banham@hdr.qut.edu.au")
-	public void exogenousEnhancement(UIPluginContext context, XLog exogenous, PetriNetWithData model) throws Throwable{
-		System.out.println("hello world again again again!");
+	@Plugin(
+			name = "Exogenous Aware Enhancement",
+			parameterLabels = {"Exogenous Annotated Log", "xDPN",},
+			categories={PluginCategory.Analytics, PluginCategory.Enhancement},
+			help="This plugin allows users to build and extract EESA visualisations."
+					+ " This plugin is currently under construction, and as such"
+					+ " is not fully implemented for use via a GUI.",
+			returnLabels = {}, returnTypes = {}, userAccessible = true
+	)
+	@UITopiaVariant(
+			affiliation = "QUT",
+			author = "A. Banham",
+			email = "adam.banham@hdr.qut.edu.au"
+	)
+	public void exogenousEnhancement(UIPluginContext context, 
+			XLog exogenous, PetriNetWithData model) throws Throwable {
+		throw new NotImplementedException("Still under construction...");
 	}
 }
