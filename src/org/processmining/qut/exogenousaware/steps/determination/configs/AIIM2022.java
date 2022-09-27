@@ -11,7 +11,7 @@ import org.processmining.qut.exogenousaware.steps.slicing.TimeAwareSlicer;
 import org.processmining.qut.exogenousaware.steps.transform.type.PossibleOutcomeTransformer;
 import org.processmining.qut.exogenousaware.steps.transform.type.linear.SlopeTransformer;
 
-public class AIME2022 {
+public class AIIM2022 {
 
 	static private List<Double> slicingRanges = new ArrayList<Double>() {{ 
 		add(2.0);
@@ -22,7 +22,7 @@ public class AIME2022 {
 	
 	static private long HOUR = 1000 * 60 * 60;
 	
-	private AIME2022() {}
+	private AIIM2022() {}
 	
 	static public List<Determination> getConfiguration(List<ExogenousDataset> datasets) {
 		List<Determination> configuration = new ArrayList();
