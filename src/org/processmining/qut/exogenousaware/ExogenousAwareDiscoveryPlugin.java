@@ -49,6 +49,9 @@ import org.processmining.qut.exogenousaware.steps.determination.configs.AIIM2022
 */
 public class ExogenousAwareDiscoveryPlugin {
 	
+	public static final String version = "<br> Package Version: 0.0.5.beta";
+	
+	
 	@Plugin(
 			name = "Exogenous Annotated Log Preparation",
 			parameterLabels = {"Event Log", "Exo-Panels"},
@@ -65,7 +68,8 @@ public class ExogenousAwareDiscoveryPlugin {
 					+ " Exogenous Data Visibility. Adam Banham et. al. Artificial"
 					+ " Intelligence in Medicine 2022 <br> See "
 					+ " <a href=\"https://youtu.be/iSklEeNUJSc\" target=\"_blank\">"
-					+ "https://youtu.be/iSklEeNUJSc</a> for a walkthough of tooling.",
+					+ "https://youtu.be/iSklEeNUJSc</a> for a walkthough of tooling."
+					+ version,
 			categories={PluginCategory.Analytics, PluginCategory.Enhancement},
 			userAccessible = true
 	)
@@ -120,7 +124,8 @@ public class ExogenousAwareDiscoveryPlugin {
 			help="Given an event log and several exo-panels, this plugin allows"
 				 + " users to reproduce the xPM instantition used in :"
 				 + " xPM: Enhancing Exogenous Data Visibility. Adam "
-				 + "Banham et. al. Artificial Intelligence in Medicine 2022",
+				 + "Banham et. al. Artificial Intelligence in Medicine 2022"
+				 + version,
 			categories={PluginCategory.Analytics, PluginCategory.Enhancement},
 			userAccessible = true
 	)
@@ -178,7 +183,8 @@ public class ExogenousAwareDiscoveryPlugin {
 					+ "see how the original exo-series evolved in comparision to"
 					+ " the execution of the trace. See "
 					+ " <a href=\"https://youtu.be/iSklEeNUJSc\" target=\"_blank\">"
-					+ "https://youtu.be/iSklEeNUJSc</a> for a walkthough of tooling.",
+					+ "https://youtu.be/iSklEeNUJSc</a> for a walkthough of tooling."
+					+ version,
 			categories={PluginCategory.Analytics, PluginCategory.Enhancement},
 			userAccessible = true
 	)
@@ -216,7 +222,8 @@ public class ExogenousAwareDiscoveryPlugin {
 					+ "annotated transition guards using a visual format."
 					+ "<br> See "
 					+ " <a href=\"https://youtu.be/iSklEeNUJSc\" target=\"_blank\">"
-					+ "https://youtu.be/iSklEeNUJSc</a> for a walkthough of tooling.",
+					+ "https://youtu.be/iSklEeNUJSc</a> for a walkthough of tooling."
+					+ version,
 			userAccessible = true
 	)
 	@UITopiaVariant(affiliation = "QUT",
@@ -253,7 +260,8 @@ public class ExogenousAwareDiscoveryPlugin {
 					+ "annotated transition guards using a visual format."
 					+ "<br> See "
 					+ " <a href=\"https://youtu.be/iSklEeNUJSc\" target=\"_blank\">"
-					+ "https://youtu.be/iSklEeNUJSc</a> for a walkthough of tooling.",
+					+ "https://youtu.be/iSklEeNUJSc</a> for a walkthough of tooling."
+					+ version,
 			userAccessible = true
 	)
 	@UITopiaVariant(affiliation = "QUT",
@@ -300,7 +308,8 @@ public class ExogenousAwareDiscoveryPlugin {
 			categories={PluginCategory.Analytics, PluginCategory.Enhancement},
 			help="This plugin allows users to build and extract EESA visualisations."
 					+ " This plugin is currently under construction, and as such"
-					+ " is not fully implemented for use via a GUI.",
+					+ " is not fully implemented for use via a GUI."
+					+ version,
 			returnLabels = {}, returnTypes = {}, userAccessible = true
 	)
 	@UITopiaVariant(
