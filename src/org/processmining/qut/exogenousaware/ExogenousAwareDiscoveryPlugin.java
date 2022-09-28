@@ -27,7 +27,7 @@ import org.processmining.qut.exogenousaware.steps.determination.configs.AIIM2022
 
 
 /**
- * Plugins to perform Exogenous-Aware Discovery using the framework presented in:<br>
+ * Plugins for process mining with exogenous data as presented in:<br>
  * <b>xPM: Process Mining with Exogenous Data [1]</b><br>
  * <br>
  * Current plugins are:<br>
