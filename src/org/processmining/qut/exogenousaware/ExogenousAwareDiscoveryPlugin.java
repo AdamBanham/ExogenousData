@@ -13,9 +13,14 @@ import org.processmining.contexts.uitopia.annotations.Visualizer;
 import org.processmining.framework.plugin.annotations.Plugin;
 import org.processmining.framework.plugin.annotations.PluginCategory;
 import org.processmining.framework.plugin.annotations.PluginLevel;
+import org.processmining.models.connections.petrinets.behavioral.FinalMarkingConnection;
+import org.processmining.models.connections.petrinets.behavioral.InitialMarkingConnection;
 import org.processmining.models.graphbased.directed.petrinet.Petrinet;
 import org.processmining.models.graphbased.directed.petrinetwithdata.newImpl.PetriNetWithData;
 import org.processmining.models.graphbased.directed.petrinetwithdata.newImpl.PetriNetWithDataFactory;
+import org.processmining.processtree.ProcessTree;
+import org.processmining.ptconversions.pn.ProcessTree2Petrinet;
+import org.processmining.ptconversions.pn.ProcessTree2Petrinet.PetrinetWithMarkings;
 import org.processmining.qut.exogenousaware.data.ExogenousAnnotatedLog;
 import org.processmining.qut.exogenousaware.data.ExogenousDataset;
 import org.processmining.qut.exogenousaware.exceptions.CannotConvertException;
@@ -272,6 +277,55 @@ public class ExogenousAwareDiscoveryPlugin {
 	public ExogenousDiscoveryInvestigator ExogenousDiscovery_PN(
 			UIPluginContext context, ExogenousAnnotatedLog exogenous,
 			Petrinet pn) throws Throwable {
+		
+		PetriNetWithDataFactory factory = new PetriNetWithDataFactory(pn, pn.getLabel());
+		factory.cloneInitialAndFinalConnection(context);
+		PetriNetWithData dpn = factory.getRetValue();
+		
+		ExogenousDiscoveryInvestigator edi = ExogenousDiscoveryInvestigator.builder()
+				.source(exogenous)
+				.controlflow(dpn)
+				.context(context)
+				.build()
+				.setup()
+				.precompute();
+		
+		return edi;
+	}
+	
+	@Plugin(
+			name = "Exogenous Aware Discovery (PT)",
+			parameterLabels = {"Exogenous Annotated Log (xlog)","Control Flow (PT)"},
+			returnLabels = {"Exogenous Discovery Investigator"},
+			returnTypes = {ExogenousDiscoveryInvestigator.class},
+			categories={PluginCategory.Analytics, PluginCategory.Enhancement,
+						PluginCategory.Discovery
+			},
+			help="This plugin allows users to perform various process discovery "
+					+ "methods using an xlog and a control flow description. "
+					+ " Such as performing decision mining and then exploring "
+					+ "annotated transition guards using a visual format."
+					+ "<br> See "
+					+ " <a href=\"https://youtu.be/iSklEeNUJSc\" target=\"_blank\">"
+					+ "https://youtu.be/iSklEeNUJSc</a> for a walkthough of tooling."
+					+ version,
+			userAccessible = true
+	)
+	@UITopiaVariant(affiliation = "QUT",
+		author = "A. Banham", 
+		email = "adam.banham@hdr.qut.edu.au",
+		pack = "ExogenousData"
+	)
+	public ExogenousDiscoveryInvestigator ExogenousDiscovery_PT(
+			UIPluginContext context, ExogenousAnnotatedLog exogenous,
+			ProcessTree pt) throws Throwable {
+		
+		PetrinetWithMarkings result = ProcessTree2Petrinet.convert(pt, true);
+		
+		Petrinet pn = result.petrinet;
+		
+		context.addConnection(new InitialMarkingConnection(pn, result.initialMarking));
+		context.addConnection(new FinalMarkingConnection(pn, result.finalMarking));
 		
 		PetriNetWithDataFactory factory = new PetriNetWithDataFactory(pn, pn.getLabel());
 		factory.cloneInitialAndFinalConnection(context);
