@@ -30,7 +30,8 @@
     	<dependency org="prom" name="LogEnhancement" rev="latest" changing="true" transitive="true" />
     	<dependency org="prom" name="InductiveMiner" rev="latest" changing="true" transitive="true" />
     	<dependency org="prom" name="PetriNets" rev="latest" changing="true" transitive="true" />
-    	<dependency org="prom" name="GraphViz" rev="latest" changing="true" transitive="true" />    	
+    	<dependency org="prom" name="PetriNets" rev="latest" changing="true" transitive="true" />
+    	<dependency org="prom" name="PTConversions" rev="latest" changing="true" transitive="true" />    	
     	<dependency org="prom" name="EfficientStorage" rev="latest" changing="true" transitive="true" />
     	<dependency org="prom" name="XESAlignmentExtension" rev="latest" changing="true" transitive="true" />
     	<dependency org="prom" name="XESLite" rev="latest" changing="true" transitive="true" />
