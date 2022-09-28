@@ -70,7 +70,8 @@ public class ExogenousAwareDiscoveryPlugin {
 	@UITopiaVariant(
 			affiliation = "QUT",
 			author = "A. Banham",
-			email = "adam.banham@hdr.qut.edu.au"
+			email = "adam.banham@hdr.qut.edu.au",
+			pack = "ExogenousData"
 	)
 	public ExogenousAnnotatedLog preperation(UIPluginContext context, 
 			XLog endogenous, XLog[] exogenous) throws Throwable{
@@ -124,7 +125,8 @@ public class ExogenousAwareDiscoveryPlugin {
 	@UITopiaVariant(
 			affiliation = "QUT",
 			author = "A. Banham",
-			email = "adam.banham@hdr.qut.edu.au"
+			email = "adam.banham@hdr.qut.edu.au",
+			pack = "ExogenousData"
 	)
 	public ExogenousAnnotatedLog AIIM2022preperation(UIPluginContext context, 
 			XLog endogenous, XLog[] exogenous) throws Throwable {
@@ -181,7 +183,8 @@ public class ExogenousAwareDiscoveryPlugin {
 	@UITopiaVariant(
 			affiliation = "QUT",
 			author = "A. Banham",
-			email = "adam.banham@hdr.qut.edu.au"
+			email = "adam.banham@hdr.qut.edu.au",
+			pack = "ExogenousData"
 	)
 	@Visualizer
 	public JComponent exogenousAnnotationViewing(UIPluginContext context, 
@@ -258,7 +261,8 @@ public class ExogenousAwareDiscoveryPlugin {
 	@UITopiaVariant(
 			affiliation = "QUT",
 			author = "A. Banham",
-			email = "adam.banham@hdr.qut.edu.au"
+			email = "adam.banham@hdr.qut.edu.au",
+			pack = "ExogenousData"
 	)
 	public void exogenousEnhancement(UIPluginContext context, 
 			XLog exogenous, PetriNetWithData model) throws Throwable {
