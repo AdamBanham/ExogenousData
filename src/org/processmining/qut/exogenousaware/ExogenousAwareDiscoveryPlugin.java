@@ -13,7 +13,9 @@ import org.processmining.contexts.uitopia.annotations.Visualizer;
 import org.processmining.framework.plugin.annotations.Plugin;
 import org.processmining.framework.plugin.annotations.PluginCategory;
 import org.processmining.framework.plugin.annotations.PluginLevel;
+import org.processmining.models.graphbased.directed.petrinet.Petrinet;
 import org.processmining.models.graphbased.directed.petrinetwithdata.newImpl.PetriNetWithData;
+import org.processmining.models.graphbased.directed.petrinetwithdata.newImpl.PetriNetWithDataFactory;
 import org.processmining.qut.exogenousaware.data.ExogenousAnnotatedLog;
 import org.processmining.qut.exogenousaware.data.ExogenousDataset;
 import org.processmining.qut.exogenousaware.exceptions.CannotConvertException;
@@ -201,7 +203,7 @@ public class ExogenousAwareDiscoveryPlugin {
 	}
 	
 	@Plugin(
-			name = "Exogenous Aware Discovery",
+			name = "Exogenous Aware Discovery (DPN)",
 			parameterLabels = {"Exogenous Annotated Log (xlog)","Control Flow (DPN)"},
 			returnLabels = {"Exogenous Discovery Investigator"},
 			returnTypes = {ExogenousDiscoveryInvestigator.class},
@@ -217,12 +219,55 @@ public class ExogenousAwareDiscoveryPlugin {
 					+ "https://youtu.be/iSklEeNUJSc</a> for a walkthough of tooling.",
 			userAccessible = true
 	)
-	@UITopiaVariant(affiliation = "QUT", author = "A. Banham", 
-		email = "adam.banham@hdr.qut.edu.au"
+	@UITopiaVariant(affiliation = "QUT",
+		author = "A. Banham", 
+		email = "adam.banham@hdr.qut.edu.au",
+		pack = "ExogenousData"
 	)
-	public ExogenousDiscoveryInvestigator exogenousDiscovery(
+	public ExogenousDiscoveryInvestigator ExogenousDiscovery_DPN(
 			UIPluginContext context, ExogenousAnnotatedLog exogenous,
 			PetriNetWithData dpn) throws Throwable {
+		
+		ExogenousDiscoveryInvestigator edi = ExogenousDiscoveryInvestigator.builder()
+				.source(exogenous)
+				.controlflow(dpn)
+				.context(context)
+				.build()
+				.setup()
+				.precompute();
+		
+		return edi;
+	}
+	
+	@Plugin(
+			name = "Exogenous Aware Discovery (PN)",
+			parameterLabels = {"Exogenous Annotated Log (xlog)","Control Flow (PN)"},
+			returnLabels = {"Exogenous Discovery Investigator"},
+			returnTypes = {ExogenousDiscoveryInvestigator.class},
+			categories={PluginCategory.Analytics, PluginCategory.Enhancement,
+						PluginCategory.Discovery
+			},
+			help="This plugin allows users to perform various process discovery "
+					+ "methods using an xlog and a control flow description. "
+					+ " Such as performing decision mining and then exploring "
+					+ "annotated transition guards using a visual format."
+					+ "<br> See "
+					+ " <a href=\"https://youtu.be/iSklEeNUJSc\" target=\"_blank\">"
+					+ "https://youtu.be/iSklEeNUJSc</a> for a walkthough of tooling.",
+			userAccessible = true
+	)
+	@UITopiaVariant(affiliation = "QUT",
+		author = "A. Banham", 
+		email = "adam.banham@hdr.qut.edu.au",
+		pack = "ExogenousData"
+	)
+	public ExogenousDiscoveryInvestigator ExogenousDiscovery_PN(
+			UIPluginContext context, ExogenousAnnotatedLog exogenous,
+			Petrinet pn) throws Throwable {
+		
+		PetriNetWithDataFactory factory = new PetriNetWithDataFactory(pn, pn.getLabel());
+		factory.cloneInitialAndFinalConnection(context);
+		PetriNetWithData dpn = factory.getRetValue();
 		
 		ExogenousDiscoveryInvestigator edi = ExogenousDiscoveryInvestigator.builder()
 				.source(exogenous)
