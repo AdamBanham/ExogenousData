@@ -53,7 +53,7 @@ public class ExogenousAwareDiscoveryPlugin {
 			returnLabels = {"Exogenous Annotated Log"},
 			returnTypes = {ExogenousAnnotatedLog.class},
 			help="Given an event log and several exo-panels, this plugin allows"
-					+ "users to create determinations as identified by xPM [1]."
+					+ " users to create determinations as identified by xPM [1]."
 					+ " After building determinations, each one will be applied"
 					+ " to all traces seen in the event log. Note that an xlog "
 					+ "will be made but all changes will be done in place. This"
