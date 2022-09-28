@@ -52,7 +52,7 @@ import org.processmining.qut.exogenousaware.steps.determination.configs.AIIM2022
  *		 Leemans, Moe T. Wynn, Robert Andrews, Kevin B. Laupland, Lucy Shinners.
  *		 Artificial Intelligence in Medicine 2022 (Accepted as-of 24/09/2022).
 */
-public class ExogenousAwareDiscoveryPlugin {
+public class ExogenousDataPlugins {
 	
 	public static final String version = "<br> Package Version: 0.0.5.beta";
 	
