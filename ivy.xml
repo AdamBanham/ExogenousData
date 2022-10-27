@@ -47,5 +47,6 @@
     	<!-- <dependency conf="lib->default" org="qut.pm" name="prom-helpers" rev="0.8.4"/> /-->
     	<dependency conf="lib->default" org="org.projectlombok" name="lombok" rev="1.18.20" />
      	<dependency conf="lib->default" org="org.jfree" name="jfreechart" rev="1.5.3" /> 
+     	<dependency conf="lib->default" org="org.jfree" name="jfreesvg" rev="3.4.3" />
     </dependencies>
 </ivy-module>
