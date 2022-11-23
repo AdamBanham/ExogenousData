@@ -224,8 +224,7 @@ public class DotPanelG2 extends NavigableSVGPanelG2 {
 				DecisionPoint dp = this.statistics.getInformation(moment);
 				if (dp.getMapToMeasures().containsKey(ReasoningRecall.NAME)) {
 					double dpmeasure = dp.getMapToMeasures().get(ReasoningRecall.NAME);
-					double dpfreq = dp.getRelativeFrequency();
-					localmeasures[localIndex] = (dpmeasure / dpfreq);
+					localmeasures[localIndex] = dpmeasure;
 				}
 				localIndex++;
 			}
@@ -257,8 +256,7 @@ public class DotPanelG2 extends NavigableSVGPanelG2 {
 				DecisionPoint dp = this.statistics.getInformation(moment);
 				if (dp.getMapToMeasures().containsKey(ReasoningPrecision.NAME)) {
 					double dpmeasure = dp.getMapToMeasures().get(ReasoningPrecision.NAME);
-					double dpfreq = dp.getRelativeFrequency();
-					localmeasures[localIndex] = (dpmeasure / dpfreq);
+					localmeasures[localIndex] = dpmeasure;
 				}
 				localIndex++;
 			}
