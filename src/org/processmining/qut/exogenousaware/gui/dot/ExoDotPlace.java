@@ -17,8 +17,8 @@ public class ExoDotPlace extends DotNode {
 					put("style", "filled");
 					put("fillcolor", "white");
 					put("shape", "circle");
-					put("height", "0.25");
-					put("width" , "0.25");
+					put("height", "1");
+					put("width" , "1");
 					put("fixedsize", "true");
 					put("xlabel", label);
 				}}

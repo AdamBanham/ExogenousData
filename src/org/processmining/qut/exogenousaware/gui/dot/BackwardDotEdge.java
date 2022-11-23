@@ -17,6 +17,7 @@ public class BackwardDotEdge extends DotEdge {
 		}
 		
 		setOption("dir","back");
+		setOption("penwidth", "3.0");
 	}
 	
 	@Override

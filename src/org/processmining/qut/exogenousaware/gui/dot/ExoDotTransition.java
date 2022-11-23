@@ -60,7 +60,7 @@ public class ExoDotTransition extends DotNode {
 	}
 	
 	public String makeHighlightLabel(String label) {
-		return label.replaceFirst("BGCOLOR=\".*?\"","COLOR=\"YELLOW\" BGCOLOR=\"YELLOW\"");
+		return label.replaceFirst("BGCOLOR=\".*?\"","BGCOLOR=\"YELLOW\"");
 	}
 	
 	public void highlightNode() {

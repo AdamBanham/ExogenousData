@@ -14,7 +14,7 @@ public class ExoDotEdge extends DotEdge {
 		if (target.getClass().equals(ExoDotTransition.class)) {
 			setOption("headport", "HEAD");
 		}
-		
+		setOption("penwidth", "3.0");
 		setOption("xlabel", "");
 		setOption("layer", "net");
 //		setOption("label", null);
