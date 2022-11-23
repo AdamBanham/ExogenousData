@@ -6,7 +6,6 @@ import java.util.Map;
 import javax.swing.SwingWorker;
 
 import org.deckfour.xes.model.XLog;
-import org.processmining.models.graphbased.directed.petrinet.elements.Place;
 import org.processmining.plugins.petrinet.replayresult.PNRepResult;
 import org.processmining.qut.exogenousaware.gui.panels.ExogenousDiscoveryProgresser;
 import org.processmining.qut.exogenousaware.gui.panels.ExogenousDiscoveryProgresser.ProgressState;
@@ -41,12 +40,9 @@ public class ExogenousDiscoveryMeasurementWorker extends SwingWorker<Map<String,
 		
 //		setup measure state
 		int total = 0;
-		double weightedTotal = 0.0;
 		for(Object moment : statistics.getDecisionMoments()) {
 			total += statistics.getDecisionOutcomes(moment).size();
-			weightedTotal += ((ProcessModelStatistics) statistics ).getInformation((Place) moment).getRelativeFrequency() * statistics.getDecisionOutcomes(moment).size(); 
 		}
-		System.out.println("weighted total :: " + weightedTotal);
 		ProgressState state = progresser.getState(ProgressType.Measurements);
 		state.setTotal(total * 2);
 		state.setProgress(0);
