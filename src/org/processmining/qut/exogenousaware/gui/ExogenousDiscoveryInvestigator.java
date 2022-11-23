@@ -45,6 +45,7 @@ import org.processmining.plugins.petrinet.replayer.algorithms.costbasedcomplete.
 import org.processmining.plugins.petrinet.replayresult.PNRepResult;
 import org.processmining.qut.exogenousaware.data.ExogenousAnnotatedLog;
 import org.processmining.qut.exogenousaware.data.storage.ExogenousDiscoveryInvestigation;
+import org.processmining.qut.exogenousaware.gui.dot.ExoDotTransition;
 import org.processmining.qut.exogenousaware.gui.panels.ExogenousDiscoveryProgresser;
 import org.processmining.qut.exogenousaware.gui.panels.ExogenousDiscoveryProgresser.ProgressType;
 import org.processmining.qut.exogenousaware.gui.panels.ExogenousEnhancementGraphInvestigator;
@@ -236,10 +237,19 @@ public class ExogenousDiscoveryInvestigator extends JPanel{
 			if (node instanceof Place || node instanceof Transition) {
 				DotNode dotNode = nodes.get(node.getId().toString());
 				
-				
 				dotNode.addMouseListener(new MouseAdapter() {
-				
+					
 					public void mouseClicked(MouseEvent e) {
+//						de-highlight other nodes
+						for ( Entry<String, DotNode> other : nodes.entrySet()) {
+							if (other.getValue() instanceof ExoDotTransition) {
+								((ExoDotTransition)other.getValue()).revertHighlight();
+							}
+						}
+//						highlight this node
+						if (dotNode instanceof ExoDotTransition) {
+							((ExoDotTransition) dotNode).highlightNode();
+						}
 						DotOverlayInformationDump.builder()
 							.controlNode(node)
 							.node(dotNode)
@@ -247,6 +257,8 @@ public class ExogenousDiscoveryInvestigator extends JPanel{
 							.overlay(overlay)
 							.build()
 							.setup();
+//						update dot vis
+						exoDotController.getVis().changeDot(exoDotController.getVis().getDot(), false);
 					}
 				});
 			}
@@ -511,7 +523,8 @@ public class ExogenousDiscoveryInvestigator extends JPanel{
 		for ( Entry<String, Double> measure : measures.entrySet()) {
 			this.statistics.addGraphMeasure(measure.getKey(), measure.getValue());
 		}
-		
+		this.exoDotController.update();
+		setupDotNodeListeners();
 		this.repaint();
 	}
 	
