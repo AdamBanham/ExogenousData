@@ -53,6 +53,19 @@ public class ProcessModelStatistics implements ModelStatistics<Place,Transition,
 	public List<Place> getDecisionMoments() {
 		return Collections.unmodifiableList(decisionMoments);
 	}
+	
+	public DecisionPoint findDecision(Transition outcome) {
+		DecisionPoint point = null;
+		
+		for (Place dpplace : getDecisionMoments()) {
+			if (isOutcome(outcome, dpplace)) {
+				point = getInformation(dpplace);
+				break;
+			}
+		}
+				
+		return point;
+	}
 
 	public List<Transition> getDecisionOutcomes(Place moment) {
 		List<Transition> out = null;

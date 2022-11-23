@@ -5,6 +5,7 @@ import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 import java.util.Map.Entry;
+import java.util.Optional;
 import java.util.stream.Collectors;
 
 import org.deckfour.xes.model.XAttribute;
@@ -76,11 +77,12 @@ public class ReasoningRecall implements PetriNetMeasure {
 			modeller = (PetriNetWithData) model;
 		}
 		
-		
+		double totalrfsum = 0.0;
 //		compute total measure but store local measures in statistics
 		for( Place dplace : statisticResult.getDecisionMoments()) {
 			double decisionfreq = statisticResult.getInformation(dplace).getRelativeFrequency();
 			double localmeasure = 0.0;
+			double localrfsum = 0.0;
 			List<Observation> obs = getObservations(log, alignmentResult, dplace, statisticResult);
 			for(Transition outcome : statisticResult.getDecisionOutcomes(dplace)) {
 				double outcomemeasure = 0.0;
@@ -88,38 +90,35 @@ public class ReasoningRecall implements PetriNetMeasure {
 				if (statisticResult.getInformation(dplace).getMapToFrequency().containsKey(outcome)) {
 					outcomefreq = statisticResult.getInformation(dplace).getMapToFrequency().get(outcome);
 				}
-				
+				final double freq = outcomefreq * decisionfreq;
 				List<Observation> outcomeObs = obs.stream().filter(o -> o.getOutcome().equals(outcome)).collect(Collectors.toList());
 				if (outcome instanceof PNWDTransition) {
 					PNWDTransition trans = (PNWDTransition) outcome;
+					Optional<Double> totalOutcomeRF = null;
 					if (trans.hasGuardExpression()) {
 						GuardExpression  expr = trans.getGuardExpression();
-						List<Observation> possibleEvals = outcomeObs.stream()
+						totalOutcomeRF = outcomeObs.stream()
 								.filter(o -> couldEvaluateExpression(o, expr))
-								.collect(Collectors.toList());
-						outcomemeasure += possibleEvals.size();
+								.map( o -> o.likelihood * freq)
+								.reduce(Double::sum);
+						outcomemeasure += totalOutcomeRF.get();
+						double guardwise = (totalOutcomeRF.get()/(freq * outcomeObs.size())) ;
+						statisticResult.getInformation(dplace).addMeasure(outcome.getId().toString()+"-recall", guardwise);
 					}
+					localrfsum += freq * outcomeObs.size();
 				}
-				
-				
-				if (outcomeObs.size() > 0) {
-					outcomemeasure = outcomemeasure / outcomeObs.size();
-					outcomemeasure = outcomefreq * outcomemeasure;
-					localmeasure += outcomemeasure;
-				}
+//				add to decision point's measure
+				localmeasure += outcomemeasure;
 				state.increment(progressInc);
-				
-//				System.out.println("[ReasoningRecall] outcome reasoning recall for "+ outcome.getLabel().toLowerCase() + " was :: "+ outcomemeasure);
+				System.out.println("[ReasoningRecall] outcome ("+outcome.getLabel()+") reasoning recall for "+ outcome.getLabel().toLowerCase() + " was :: "+ outcomemeasure+ "/"+ freq * outcomeObs.size());
 			}
-			localmeasure = decisionfreq * localmeasure;
-			statisticResult.addMeasureToDecisionMoment(dplace, NAME, localmeasure);
-			
-			
-			System.out.println("[ReasoningRecall] local reasoning recall for "+ dplace.getLabel().toLowerCase() + " was :: "+ localmeasure);
+			statisticResult.addMeasureToDecisionMoment(dplace, NAME, (localmeasure/localrfsum));
+			totalrfsum += localrfsum;
+			System.out.println("[ReasoningRecall] local reasoning recall for "+ dplace.getLabel().toLowerCase() + " was :: "+localmeasure+"/"+localrfsum);
 			measure += localmeasure;
 		}
-		System.out.println("[ReasoningRecall] computed reasoning recall was :: "+ measure);
-		return measure;
+		System.out.println("[ReasoningRecall] computed reasoning recall was :: "+ measure+"/"+totalrfsum);
+		return (measure/totalrfsum);
 		
 		
 	}
@@ -159,6 +158,8 @@ public class ReasoningRecall implements PetriNetMeasure {
 //			walk alignment and count when needed
 			
 			int partialTracePoint = -1;
+			double missteps = 0;
+			double steps = 0;
 			for(int i=0; i < alignment.getNodeInstance().size(); i++) {
 				
 				StepTypes step = alignment.getStepTypes().get(i);
@@ -166,6 +167,11 @@ public class ReasoningRecall implements PetriNetMeasure {
 				if (step == StepTypes.L || step == StepTypes.LMGOOD) {
 					partialTracePoint++;
 				}
+				
+				if (step != StepTypes.LMGOOD && step != StepTypes.MINVI) {
+					missteps += 1;
+				}
+				steps += 1;
 				
 //				(1) search for decision outcome node, such that it was correctly aligned or routing
 				Object node = alignment.getNodeInstance().get(i);
@@ -178,10 +184,11 @@ public class ReasoningRecall implements PetriNetMeasure {
 							if (partialTracePoint > -1) {
 								partial = log.get(traceIndex).subList(0, partialTracePoint);
 							}
-							
+//							System.out.println("[ReasoningRecall] Computed likelihood is :: "+(1.0f - (missteps/steps)));
 							obs.add(Observation.builder()
 								.outcome((Transition) node)
 								.partial(partial)
+								.likelihood(1.0f - (missteps/steps))
 								.variableMapping(variableMapping)
 								.build()
 								.setup()
@@ -204,6 +211,7 @@ public class ReasoningRecall implements PetriNetMeasure {
 		@NonNull @Getter Transition outcome;
 		@NonNull List<XEvent> partial;
 		@NonNull Map<String,String> variableMapping;
+		@NonNull @Default @Getter double likelihood = 0.0f;
 		
 		@Default @Getter Map<String, Object> datastate = new HashMap();
 		@Default @Getter Map<String, Object> postDatastate = new HashMap();

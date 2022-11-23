@@ -5,6 +5,7 @@ import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 import java.util.Map.Entry;
+import java.util.Optional;
 import java.util.stream.Collectors;
 
 import org.deckfour.xes.model.XAttribute;
@@ -75,11 +76,12 @@ public class ReasoningPrecision implements PetriNetMeasure {
 			modeller = (PetriNetWithData) model;
 		}
 		
-		
+		double totalrfsum = 0.0;
 //		compute total measure but store local measures in statistics
 		for( Place dplace : statisticResult.getDecisionMoments()) {
 			double decisionfreq = statisticResult.getInformation(dplace).getRelativeFrequency();
 			double localmeasure = 0.0;
+			double localrfsum = 0.0;
 			List<Observation> obs = getObservations(log, alignmentResult, dplace, statisticResult);
 			for(Transition outcome : statisticResult.getDecisionOutcomes(dplace)) {
 				double outcomemeasure = 0.0;
@@ -92,14 +94,19 @@ public class ReasoningPrecision implements PetriNetMeasure {
 				}
 				
 				List<Observation> outcomeObs = obs.stream().filter(o -> o.getOutcome().equals(outcome)).collect(Collectors.toList());
-				
+				final double freq = outcomefreq * decisionfreq;
 				if (outcome instanceof PNWDTransition) {
 					PNWDTransition trans = (PNWDTransition) outcome;
 					GuardExpression  expr = trans.getGuardExpression();
-					List<Observation> possibleEvals = outcomeObs.stream()
+					
+					Optional<Double> possibleEvals = outcomeObs.stream()
 							.filter(o -> isExpressionTrue(o, expr))
-							.collect(Collectors.toList());
-					trueOutcomeTruths = possibleEvals.size();
+							.map( o -> o.likelihood * freq)
+							.reduce(Double::sum);
+					if (possibleEvals.isPresent()) {
+						trueOutcomeTruths = possibleEvals.get();
+					}
+					localrfsum += freq * outcomeObs.size();
 				}
 				
 				for(Transition otherOutcome : statisticResult.getDecisionOutcomes(dplace)) {
@@ -107,38 +114,36 @@ public class ReasoningPrecision implements PetriNetMeasure {
 					if (otherOutcome.equals(outcome)) {
 						continue;
 					}
-					
+					final double otherFreq = decisionfreq * statisticResult.getInformation(dplace).getMapToFrequency().get(otherOutcome);
 					PNWDTransition trans = (PNWDTransition) otherOutcome;
 					GuardExpression  expr = trans.getGuardExpression();
-					List<Observation> possibleEvals = outcomeObs.stream()
+					Optional<Double> possibleEvals = outcomeObs.stream()
 							.filter(o -> isExpressionTrue(o, expr))
-							.collect(Collectors.toList());
-					
-					untrueOutcomeTruths += possibleEvals.size();
+							.map( o -> o.likelihood * otherFreq)
+							.reduce(Double::sum);
+					if (possibleEvals.isPresent()) {
+						untrueOutcomeTruths += possibleEvals.get();
+					}
 				}
 				
 				
 				if (outcomeObs.size() > 0) {
-//					System.out.println(String.format(
-//							"[ReasoningPrecision] Calculating Precision = %.3f * (%.0f/(%d + %.0f)) "
-//							, outcomefreq, trueOutcomeTruths, outcomeObs.size(), untrueOutcomeTruths));
-					outcomemeasure = trueOutcomeTruths / (outcomeObs.size() + untrueOutcomeTruths);
-					outcomemeasure = outcomefreq * outcomemeasure;
+					outcomemeasure = (trueOutcomeTruths) * (1.0/(1.0+untrueOutcomeTruths));
 					localmeasure += outcomemeasure;
 				}
+				double guardwise = (1.0/(freq * outcomeObs.size())) * outcomemeasure;
+				statisticResult.getInformation(dplace).addMeasure(outcome.getId().toString()+"-precision", guardwise);
 				state.increment(progressInc);
-				
-//				System.out.println("[ReasoningPrecision] outcome reasoning precision for "+ outcome.getLabel().toLowerCase() + " was :: "+ outcomemeasure);
+				System.out.println("[ReasoningPrecision] outcome reasoning precision for "+ outcome.getLabel().toLowerCase() + " was :: "+ outcomemeasure);
 			}
-			localmeasure = decisionfreq * localmeasure;
-			statisticResult.addMeasureToDecisionMoment(dplace, NAME , localmeasure);
-			
-			System.out.println("[ReasoningPrecision] local reasoning precision for "+ dplace.getLabel().toLowerCase() + " was :: "+ localmeasure);
 			measure += localmeasure;
+			totalrfsum += localrfsum;
+			localmeasure = (1.0 / localrfsum) * localmeasure;
+			statisticResult.addMeasureToDecisionMoment(dplace, NAME , localmeasure);
+			System.out.println("[ReasoningPrecision] local reasoning precision for "+ dplace.getLabel().toLowerCase() + " was :: "+ localmeasure);
 		}
-		System.out.println("[ReasoningPrecision] computed reasoning precision was :: "+ measure);
-		
-		
+		System.out.println("[ReasoningPrecision] computed reasoning precision was :: "+ measure +"/"+totalrfsum);
+		measure = (1.0 / totalrfsum) * measure;
 		return measure;
 	}
 	
@@ -212,6 +217,8 @@ public class ReasoningPrecision implements PetriNetMeasure {
 //			walk alignment and count when needed
 			
 			int partialTracePoint = -1;
+			double missteps = 0;
+			double steps = 0;
 			for(int i=0; i < alignment.getNodeInstance().size(); i++) {
 				
 				StepTypes step = alignment.getStepTypes().get(i);
@@ -219,6 +226,11 @@ public class ReasoningPrecision implements PetriNetMeasure {
 				if (step == StepTypes.L || step == StepTypes.LMGOOD) {
 					partialTracePoint++;
 				}
+				
+				if (step != StepTypes.LMGOOD && step != StepTypes.MINVI) {
+					missteps += 1;
+				}
+				steps += 1;
 				
 //				(1) search for decision outcome node, such that it was correctly aligned or routing
 				Object node = alignment.getNodeInstance().get(i);
@@ -235,6 +247,7 @@ public class ReasoningPrecision implements PetriNetMeasure {
 							obs.add(Observation.builder()
 								.outcome((Transition) node)
 								.partial(partial)
+								.likelihood(1.0f - (missteps/steps))
 								.variableMapping(variableMapping)
 								.build()
 								.setup()
@@ -257,6 +270,7 @@ public class ReasoningPrecision implements PetriNetMeasure {
 		@NonNull @Getter Transition outcome;
 		@NonNull List<XEvent> partial;
 		@NonNull Map<String,String> variableMapping;
+		@NonNull @Default @Getter double likelihood = 0.0;
 		
 		@Default @Getter Map<String, Object> datastate = new HashMap();
 		@Default @Getter Map<String, Object> postDatastate = new HashMap();
