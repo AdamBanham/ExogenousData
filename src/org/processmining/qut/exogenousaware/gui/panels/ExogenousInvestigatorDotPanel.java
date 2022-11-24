@@ -62,7 +62,8 @@ public class ExogenousInvestigatorDotPanel  {
 	public ExogenousInvestigatorDotPanel setup() {
 		this.visBuilder = DotGraphVisualisation.builder()
 				.graph(graph)
-				.swapMap(new HashMap())
+				.rules(rules)
+				.swapMap(swapMap)
 				.build()
 				.make();
 		this.controller = new DotController(this, visBuilder.getVisualisation());

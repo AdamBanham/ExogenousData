@@ -357,10 +357,23 @@ public class ExogenousDiscoveryInvestigator extends JPanel{
 //		setup layout manager
 		this.c.gridx = 0;
 		this.c.ipady = 300;
+//		check for pre-existing rules
+		Map<String, GuardExpression> rules= new HashMap();
+		for( Transition T : this.controlflow.getTransitions()) {
+			if (T instanceof PNWDTransition) {
+				PNWDTransition t = (PNWDTransition)T;
+				if (t.hasGuardExpression()) {
+					rules.put(T.getId().toString(), t.getGuardExpression());
+				}
+			}
+		}
+		System.out.println("guards found in existing model :: "+ rules.toString());
 //		create panel
 		this.exoDotController = ExogenousInvestigatorDotPanel
 				.builder()
 				.graph(this.controlflow)
+				.swapMap(new HashMap())
+				.rules(rules)
 				.build()
 				.setup();
 //		add panel
