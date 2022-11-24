@@ -178,6 +178,8 @@ public class ExogenousDataPlugins {
 		
 	}
 	
+	
+	
 	@Plugin(
 			name = "Exogenous Annotated Log Explorer",
 			parameterLabels = {"Exogenous Annotated Log"},
@@ -211,6 +213,52 @@ public class ExogenousDataPlugins {
 				   .build()
 				   .setup()
 		);
+	}
+	
+	@Plugin(
+			name = "(Non) Exogenous Aware Discovery (DPN)",
+			parameterLabels = {"Event log","Control Flow (DPN)"},
+			returnLabels = {"Exogenous Discovery Investigator"},
+			returnTypes = {ExogenousDiscoveryInvestigator.class},
+			categories={PluginCategory.Analytics, PluginCategory.Enhancement,
+						PluginCategory.Discovery
+			},
+			help="This plugin allows users to perform various process discovery "
+					+ "methods using an event log (converted without exogenous data)"
+					+ "and a control flow description. "
+					+ " Such as performing decision mining and then exploring "
+					+ "annotated transition guards using a visual format."
+					+ "<br> See "
+					+ " <a href=\"https://youtu.be/iSklEeNUJSc\" target=\"_blank\">"
+					+ "https://youtu.be/iSklEeNUJSc</a> for a walkthough of tooling."
+					+ version,
+			userAccessible = true
+	)
+	@UITopiaVariant(affiliation = "QUT",
+		author = "A. Banham", 
+		email = "adam.banham@hdr.qut.edu.au",
+		pack = "ExogenousData"
+	)
+	public ExogenousDiscoveryInvestigator NonExogenousDiscovery_DPN(
+			UIPluginContext context, XLog eventlog,
+			PetriNetWithData dpn) throws Throwable {
+		
+		ExogenousAnnotatedLog xlog = ExogenousAnnotatedLog.builder()
+				.endogenousLog(eventlog)
+				.parsed(false)
+				.showConfiguration(false)
+				.build()
+				.setup(context);
+		
+		ExogenousDiscoveryInvestigator edi = ExogenousDiscoveryInvestigator.builder()
+				.source(xlog)
+				.controlflow(dpn)
+				.context(context)
+				.build()
+				.setup()
+				.precompute();
+		
+		return edi;
 	}
 	
 	@Plugin(
