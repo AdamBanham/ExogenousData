@@ -18,8 +18,10 @@ import org.processmining.models.graphbased.directed.petrinet.PetrinetNode;
 import org.processmining.models.graphbased.directed.petrinet.elements.Arc;
 import org.processmining.models.graphbased.directed.petrinet.elements.Place;
 import org.processmining.models.graphbased.directed.petrinet.elements.Transition;
+import org.processmining.models.graphbased.directed.petrinetwithdata.newImpl.DataElement;
 import org.processmining.models.graphbased.directed.petrinetwithdata.newImpl.PNWDTransition;
 import org.processmining.models.graphbased.directed.petrinetwithdata.newImpl.PetriNetWithData;
+import org.processmining.models.graphbased.directed.petrinetwithdata.newImpl.VariableAccess;
 import org.processmining.plugins.graphviz.dot.Dot;
 import org.processmining.plugins.graphviz.dot.Dot.GraphDirection;
 import org.processmining.plugins.graphviz.dot.DotEdge;
@@ -211,6 +213,10 @@ public class DotGraphVisualisation {
 			next = new ArrayList<PetrinetNode>();
 			nextEdges = new ArrayList<>();
 			for(Object node : curr) {
+//				ignore data elements
+				if (node instanceof VariableAccess || node instanceof DataElement) {
+					continue;
+				}			
 //				check that we have not seen this node before
 				String id = node.getClass().equals(Arc.class) ? ((Arc)node).getLocalID().toString() : ((PetrinetNode)node).getId().toString();
 //				System.out.println("Comparing '"+id+"'");
@@ -281,6 +287,7 @@ public class DotGraphVisualisation {
 //			System.out.println("Number of new elements:: "+next.size());
 //			add elements to seen
 			seen.addAll(curr.stream()
+					.filter(node -> !(node instanceof VariableAccess))
 					.map(node -> node.getClass().equals(Arc.class) ? ((Arc)node).getLocalID().toString() : ((PetrinetNode)node).getId().toString())
 					.collect(Collectors.toList()));
 //			System.out.println("Number of seen elements:: "+seen.size());
