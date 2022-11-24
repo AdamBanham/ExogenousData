@@ -72,6 +72,7 @@ public class ExogenousAnnotatedLog implements XLog {
 	
 //	configuration setup for exogenous aware log
 	@Default private Boolean useDefaultConfiguration = false;
+	@Default private Boolean showConfiguration = true;
 	@Default @Getter private SlicingConfiguration slicingConfig = null; 
 	
 	
@@ -96,11 +97,15 @@ public class ExogenousAnnotatedLog implements XLog {
 				this.determinations,
 				false,
 				false,
+				true,
 				this.slicingConfig
 		);
 	}
 	
 	private void handleConfigurationSetup(UIPluginContext context) {
+		if (!this.showConfiguration) {
+			return;
+		}
 //		TODO #2 ask for user setup if no configuration is given
 		if (slicingConfig == null) {
 			SlicingConfigurationDialog sdialog = SlicingConfigurationDialog.builder()
