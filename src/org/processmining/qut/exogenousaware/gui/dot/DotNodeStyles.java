@@ -253,10 +253,14 @@ public class DotNodeStyles {
 		
 		String precisionMeasure;
 		String precisionBarColoured = "green;%.2f:gray";
+		String precisionBarFullColour = "green";
 		String precisionBarUnColoured = "gray";
 		String precisionBar = "";
-		if (precision > 0.01) {
+		if (precision > 0.01 && precision < 0.98) {
 			precisionBar = String.format(precisionBarColoured, precision);
+			precisionMeasure = String.format("%.2f%%", precision * 100.0);
+		} else if (precision >= 0.98) {
+			precisionBar = precisionBarFullColour;
 			precisionMeasure = String.format("%.2f%%", precision * 100.0);
 		} else {
 			precisionBar = precisionBarUnColoured;
@@ -265,10 +269,14 @@ public class DotNodeStyles {
 		
 		String recallMeasure;
 		String recallBarColoured = "gold;%.2f:gray";
+		String recallBarFullColour = "gold";
 		String recallBarUnColoured = "gray";
 		String recallBar = "";
-		if (recall > 0.01) {
+		if (recall > 0.01 && recall < 0.98) {
 			recallBar = String.format(recallBarColoured, recall);
+			recallMeasure = String.format("%.2f%%", recall * 100.0);
+		} else if (recall >= 0.98) {
+			recallBar = recallBarFullColour;
 			recallMeasure = String.format("%.2f%%", recall * 100.0);
 		} else {
 			recallBar = recallBarUnColoured;
