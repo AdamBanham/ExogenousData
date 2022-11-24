@@ -241,7 +241,7 @@ public class ReasoningPrecision implements PetriNetMeasure {
 							
 							List<XEvent> partial = new ArrayList();
 							if (partialTracePoint > -1) {
-								partial = log.get(traceIndex).subList(0, partialTracePoint);
+								partial = log.get(traceIndex).subList(0, partialTracePoint+1);
 							}
 							
 							obs.add(Observation.builder()

@@ -101,8 +101,12 @@ public class ReasoningRecall implements PetriNetMeasure {
 								.filter(o -> couldEvaluateExpression(o, expr))
 								.map( o -> o.likelihood * freq)
 								.reduce(Double::sum);
-						outcomemeasure += totalOutcomeRF.get();
-						double guardwise = (totalOutcomeRF.get()/(freq * outcomeObs.size())) ;
+						double measurerf = 0.0;
+						if (totalOutcomeRF.isPresent()) {
+							measurerf = totalOutcomeRF.get();
+						}
+						outcomemeasure += measurerf;
+						double guardwise = (measurerf/(freq * outcomeObs.size())) ;
 						statisticResult.getInformation(dplace).addMeasure(outcome.getId().toString()+"-recall", guardwise);
 					}
 					localrfsum += freq * outcomeObs.size();
@@ -130,7 +134,6 @@ public class ReasoningRecall implements PetriNetMeasure {
 	 * @return do we have all variables for expr
 	 */
 	private Boolean couldEvaluateExpression(Observation obs, GuardExpression expr) {
-		
 		boolean test = true;
 		try {
 			for (String var : expr.getNormalVariables()) {
@@ -182,7 +185,7 @@ public class ReasoningRecall implements PetriNetMeasure {
 							
 							List<XEvent> partial = new ArrayList();
 							if (partialTracePoint > -1) {
-								partial = log.get(traceIndex).subList(0, partialTracePoint);
+								partial = log.get(traceIndex).subList(0, partialTracePoint+1);
 							}
 //							System.out.println("[ReasoningRecall] Computed likelihood is :: "+(1.0f - (missteps/steps)));
 							obs.add(Observation.builder()
@@ -225,7 +228,7 @@ public class ReasoningRecall implements PetriNetMeasure {
 			}
 			XEvent postEvent = null;
 			if (partial.size() > 0) {
-				postEvent = partial.get(partial.size() -1);
+				postEvent = partial.get(partial.size()-1);
 			}
 			
 			for( XEvent ev: preEvents) {
@@ -241,6 +244,8 @@ public class ReasoningRecall implements PetriNetMeasure {
 					processValue(key, datastate, attr.getValue());
 				}
 			}
+			
+//			System.out.println("Final pre-transition state :: "+datastate.toString());
 			
 //			create post state
 			postDatastate.putAll(datastate);
@@ -273,7 +278,7 @@ public class ReasoningRecall implements PetriNetMeasure {
 			} else {
 				realValue = value.toString();
 			}
-			
+//			System.out.println("Addding :: ("+key+","+realValue+")");
 			mapper.put(key,realValue);
 		}
 		
