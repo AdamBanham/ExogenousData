@@ -98,6 +98,7 @@ public class ReasoningRecall implements PetriNetMeasure {
 					if (trans.hasGuardExpression()) {
 						GuardExpression  expr = trans.getGuardExpression();
 						totalOutcomeRF = outcomeObs.stream()
+								.filter(o -> !isExpressionSimpleTruth(expr))
 								.filter(o -> couldEvaluateExpression(o, expr))
 								.map( o -> o.likelihood * freq)
 								.reduce(Double::sum);
@@ -125,6 +126,22 @@ public class ReasoningRecall implements PetriNetMeasure {
 		return (measure/totalrfsum);
 		
 		
+	}
+	
+	/**
+	 * Tests the given expression, to see its a (simple) truth or not.
+	 * @param obs
+	 * @param expr
+	 * @return the result of the test
+	 */
+	private Boolean isExpressionSimpleTruth(GuardExpression expr) {
+		boolean test = true;
+		
+		if (expr == null) {
+			test = true;
+		}
+		test = expr.isTrue();
+		return test;
 	}
 	
 	/**
