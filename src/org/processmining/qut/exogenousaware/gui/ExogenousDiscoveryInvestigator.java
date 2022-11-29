@@ -34,7 +34,6 @@ import org.processmining.datapetrinets.expression.GuardExpression;
 import org.processmining.datapetrinets.ui.ConfigurationUIHelper;
 import org.processmining.models.graphbased.directed.petrinet.PetrinetGraph;
 import org.processmining.models.graphbased.directed.petrinet.PetrinetNode;
-import org.processmining.models.graphbased.directed.petrinet.elements.Place;
 import org.processmining.models.graphbased.directed.petrinet.elements.Transition;
 import org.processmining.models.graphbased.directed.petrinetwithdata.newImpl.DataElement;
 import org.processmining.models.graphbased.directed.petrinetwithdata.newImpl.PNWDTransition;
@@ -234,29 +233,31 @@ public class ExogenousDiscoveryInvestigator extends JPanel{
 		DotOverlay overlay = this.exoDotController.getController().getOverlay();
 		Map<String, DotNode> nodes = this.exoDotController.getVisBuilder().getNodes();
 		for (PetrinetNode node : this.controlflow.getNodes()) {
-			if (node instanceof Place || node instanceof Transition) {
+			if (node instanceof Transition) {
 				DotNode dotNode = nodes.get(node.getId().toString());
 				
 				dotNode.addMouseListener(new MouseAdapter() {
 					
 					public void mouseClicked(MouseEvent e) {
+						boolean highlighted = ((ExoDotTransition)dotNode).isHighlighted();
 //						de-highlight other nodes
 						for ( Entry<String, DotNode> other : nodes.entrySet()) {
 							if (other.getValue() instanceof ExoDotTransition) {
-								((ExoDotTransition)other.getValue()).revertHighlight();
+								ExoDotTransition otherNode = (ExoDotTransition)other.getValue();
+								otherNode.revertHighlight();
 							}
 						}
 //						highlight this node
-						if (dotNode instanceof ExoDotTransition) {
+						if (dotNode instanceof ExoDotTransition && !highlighted) {
 							((ExoDotTransition) dotNode).highlightNode();
+							DotOverlayInformationDump.builder()
+								.controlNode(node)
+								.node(dotNode)
+								.statistics(statistics)
+								.overlay(overlay)
+								.build()
+								.setup();
 						}
-						DotOverlayInformationDump.builder()
-							.controlNode(node)
-							.node(dotNode)
-							.statistics(statistics)
-							.overlay(overlay)
-							.build()
-							.setup();
 //						update dot vis
 						exoDotController.getVis().changeDot(exoDotController.getVis().getDot(), false);
 					}
