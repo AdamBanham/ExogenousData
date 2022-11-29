@@ -131,10 +131,11 @@ public class ReasoningPrecision implements PetriNetMeasure {
 					outcomemeasure = (trueOutcomeTruths) * (1.0/(1.0+untrueOutcomeTruths));
 					localmeasure += outcomemeasure;
 				}
-				double guardwise = (1.0/(freq * outcomeObs.size())) * outcomemeasure;
+				double limit = (freq * outcomeObs.size());
+				double guardwise = (1.0/limit) * outcomemeasure;
 				statisticResult.getInformation(dplace).addMeasure(outcome.getId().toString()+"-precision", guardwise);
 				state.increment(progressInc);
-				System.out.println("[ReasoningPrecision] outcome reasoning precision for "+ outcome.getLabel().toLowerCase() + " was :: "+ outcomemeasure);
+				System.out.println("[ReasoningPrecision] outcome reasoning precision for "+ outcome.getLabel().toLowerCase() + " was :: "+ outcomemeasure +"/"+limit);
 			}
 			measure += localmeasure;
 			totalrfsum += localrfsum;
