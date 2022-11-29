@@ -296,95 +296,105 @@ public class DotNodeStyles {
 		
 		String anyExprBar = "<TR><TD WIDTH=\"15\" ROWSPAN=\"3\" BORDER=\"1\"  STYLE=\"ROUNDED\" ALIGN=\"CENTER\" VALIGN=\"MIDDLE\">A<BR ALIGN=\"LEFT\"/>N (||)<BR ALIGN=\"LEFT\"/>Y<BR ALIGN=\"LEFT\"/></TD></TR>";
 		String allExprBar = "<TR><TD WIDTH=\"15\" ROWSPAN=\"%d\" BORDER=\"1\"  STYLE=\"ROUNDED\" ALIGN=\"CENTER\" VALIGN=\"MIDDLE\">A<BR ALIGN=\"LEFT\"/>L (&amp;&amp;)<BR ALIGN=\"LEFT\"/>L<BR ALIGN=\"LEFT\"/></TD></TR>";
-		try {
-			String expr = g.toString();
-			SimpleNode root  = new ExpressionParser(g.toString()).parse();
-			int curr_left = 1;
-			int curr_right = 0;
-			System.out.println("number of root nodes :: "+ root.jjtGetNumChildren());
-			for(int i=0;i < root.jjtGetNumChildren(); i++) {
-				SimpleNode node = (SimpleNode) root.jjtGetChild(i);
-				System.out.println("number of children :: "+ node.jjtGetNumChildren());
-				if (node.jjtGetFirstToken().kind == 16) {
-					exprList.add(anyExprBar);
-//					If the first conjuction is a OR, make rows
-					curr_right = node.jjtGetFirstToken().beginColumn-1;
-					exprList.add(formatExpression(expr.substring(curr_left, curr_right),exprList.size(), swapper));
-					curr_left = node.jjtGetFirstToken().endColumn;
-					exprList.add(formatExpression(expr.substring(curr_left, expr.length()-1),exprList.size(), swapper));
-				} else if (node.jjtGetFirstToken().kind == 15) {
-//					If the first conjuction is a AND, make a table
-					List<String> tmp = new ArrayList<String>();
-					List<String> nextRun = new ArrayList<String>();
-//					flatten all && into a single group 
-					List<SimpleNode> possibleJoins = new ArrayList<>();
-					System.out.println("Given :: "+expr.substring(root.jjtGetFirstToken().beginColumn, root.jjtGetLastToken().endColumn));
-					for(int j=0; j < node.jjtGetNumChildren(); j++) {
-						SimpleNode child = (SimpleNode)node.jjtGetChild(j);
-						String subexpr = expr.substring(curr_left, child.jjtGetLastToken().endColumn);
-						System.out.println("starting with :: " + subexpr);
-						possibleJoins.add(child);
-						curr_left = child.jjtGetLastToken().endColumn;
-					}
-					do {
-						System.out.println("starting flatenning");
-						tmp.clear();
-						tmp.addAll(nextRun);
-						nextRun.clear();						
-						List<SimpleNode> nextJoins = new ArrayList<>();
-						for (SimpleNode proot : possibleJoins) {
-							SimpleNode child = (SimpleNode) proot.jjtGetChild(0);
-							System.out.println("possible child :: "+child.jjtGetNumChildren());
-							if (proot.jjtGetFirstToken().kind == 15) {
-								nextJoins.add((SimpleNode) proot.jjtGetChild(0));
-								nextJoins.add((SimpleNode) proot.jjtGetChild(1));
-							}
-							else {
-								nextJoins.add(proot);
-							}
+		
+		if (g.isTrue()) {
+			String guard = "<TR><TD BGCOLOR=\"WHITE\" CELLPADDING=\"5\" ALIGN=\"CENTER\" BORDER=\"0\" style=\"rounded\"><FONT POINT-SIZE=\"8\" COLOR=\"BLACK\">TRUE</FONT></TD></TR>";
+			exprList.add(guard);
+		} else if (g.isFalse()) {
+			String guard = "<TR><TD BGCOLOR=\"WHITE\" CELLPADDING=\"5\" ALIGN=\"CENTER\" BORDER=\"0\" style=\"rounded\"><FONT POINT-SIZE=\"8\" COLOR=\"BLACK\">FALSE</FONT></TD></TR>";
+			exprList.add(guard);
+		} else {
+			
+			try {
+				String expr = g.toString();
+				SimpleNode root  = new ExpressionParser(g.toString()).parse();
+				int curr_left = 1;
+				int curr_right = 0;
+				System.out.println("number of root nodes :: "+ root.jjtGetNumChildren());
+				for(int i=0;i < root.jjtGetNumChildren(); i++) {
+					SimpleNode node = (SimpleNode) root.jjtGetChild(i);
+					System.out.println("number of children :: "+ node.jjtGetNumChildren());
+					if (node.jjtGetFirstToken().kind == 16) {
+						exprList.add(anyExprBar);
+	//					If the first conjuction is a OR, make rows
+						curr_right = node.jjtGetFirstToken().beginColumn-1;
+						exprList.add(formatExpression(expr.substring(curr_left, curr_right),exprList.size(), swapper));
+						curr_left = node.jjtGetFirstToken().endColumn;
+						exprList.add(formatExpression(expr.substring(curr_left, expr.length()-1),exprList.size(), swapper));
+					} else if (node.jjtGetFirstToken().kind == 15) {
+	//					If the first conjuction is a AND, make a table
+						List<String> tmp = new ArrayList<String>();
+						List<String> nextRun = new ArrayList<String>();
+	//					flatten all && into a single group 
+						List<SimpleNode> possibleJoins = new ArrayList<>();
+						System.out.println("Given :: "+expr.substring(root.jjtGetFirstToken().beginColumn, root.jjtGetLastToken().endColumn));
+						for(int j=0; j < node.jjtGetNumChildren(); j++) {
+							SimpleNode child = (SimpleNode)node.jjtGetChild(j);
+							String subexpr = expr.substring(curr_left, child.jjtGetLastToken().endColumn);
+							System.out.println("starting with :: " + subexpr);
+							possibleJoins.add(child);
+							curr_left = child.jjtGetLastToken().endColumn;
 						}
-						for (SimpleNode children: nextJoins) {
-							String subexpr;
-							if (children.jjtGetFirstToken().kind != 15) {
-								String left = ((SimpleNode)children.jjtGetChild(0)).jjtGetValue().toString(); 
-								String mid = children.jjtGetFirstToken().image; 
-								String right = ((SimpleNode)children.jjtGetChild(1)).jjtGetValue().toString(); ;
-								subexpr = left + mid +right;
-							} else {
-								subexpr = "still building";
+						do {
+							System.out.println("starting flatenning");
+							tmp.clear();
+							tmp.addAll(nextRun);
+							nextRun.clear();						
+							List<SimpleNode> nextJoins = new ArrayList<>();
+							for (SimpleNode proot : possibleJoins) {
+								SimpleNode child = (SimpleNode) proot.jjtGetChild(0);
+								System.out.println("possible child :: "+child.jjtGetNumChildren());
+								if (proot.jjtGetFirstToken().kind == 15) {
+									nextJoins.add((SimpleNode) proot.jjtGetChild(0));
+									nextJoins.add((SimpleNode) proot.jjtGetChild(1));
+								}
+								else {
+									nextJoins.add(proot);
+								}
 							}
-							System.out.println("Adding :: "+subexpr);
-							nextRun.add(subexpr);
+							for (SimpleNode children: nextJoins) {
+								String subexpr;
+								if (children.jjtGetFirstToken().kind != 15) {
+									String left = ((SimpleNode)children.jjtGetChild(0)).jjtGetValue().toString(); 
+									String mid = children.jjtGetFirstToken().image; 
+									String right = ((SimpleNode)children.jjtGetChild(1)).jjtGetValue().toString(); ;
+									subexpr = left + mid +right;
+								} else {
+									subexpr = "still building";
+								}
+								System.out.println("Adding :: "+subexpr);
+								nextRun.add(subexpr);
+							}
+							possibleJoins.clear();
+							possibleJoins.addAll(nextJoins);
+						} while ( tmp.size() != nextRun.size());
+						
+						nextRun.clear();
+						for (String child : tmp) {
+							nextRun.add(formatExpression(child,nextRun.size()+exprList.size(),swapper));
 						}
-						possibleJoins.clear();
-						possibleJoins.addAll(nextJoins);
-					} while ( tmp.size() != nextRun.size());
-					
-					nextRun.clear();
-					for (String child : tmp) {
-						nextRun.add(formatExpression(child,nextRun.size()+exprList.size(),swapper));
+						exprList.add(String.format(allExprBar, nextRun.size()+1));
+						for (String subexpr : nextRun) {
+							exprList.add(subexpr);
+						}
+	//					old table formatting
+	//					curr_right = node.jjtGetFirstToken().beginColumn-1;
+	//					tmp.add(expr.substring(curr_left, curr_right));
+	//					curr_left = node.jjtGetFirstToken().endColumn;
+	//					tmp.add(expr.substring(curr_left, expr.length()-1));
+	//					exprList.add(createTableRow(tmp, exprList.size(), swapper));
+						
+					} else {
+	//					for anything else just make a row
+						exprList.add(formatExpression(expr, exprList.size(), swapper));
 					}
-					exprList.add(String.format(allExprBar, nextRun.size()+1));
-					for (String subexpr : nextRun) {
-						exprList.add(subexpr);
-					}
-//					old table formatting
-//					curr_right = node.jjtGetFirstToken().beginColumn-1;
-//					tmp.add(expr.substring(curr_left, curr_right));
-//					curr_left = node.jjtGetFirstToken().endColumn;
-//					tmp.add(expr.substring(curr_left, expr.length()-1));
-//					exprList.add(createTableRow(tmp, exprList.size(), swapper));
+	
 					
-				} else {
-//					for anything else just make a row
-					exprList.add(formatExpression(expr, exprList.size(), swapper));
 				}
-
-				
+			} catch (Exception e) {
+				System.out.println(e);
+				e.printStackTrace();
 			}
-		} catch (Exception e) {
-			System.out.println(e);
-			e.printStackTrace();
 		}
 		String expression = "";
 		for( String element: exprList) {
