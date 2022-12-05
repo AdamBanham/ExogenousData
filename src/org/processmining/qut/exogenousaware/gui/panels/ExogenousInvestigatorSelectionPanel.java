@@ -34,8 +34,8 @@ public class ExogenousInvestigatorSelectionPanel {
 	@Getter @Default private JPanel main = new JPanel();
 	@Getter @Default private ProMList<String> selectedEndoVariables = null;
 	@Getter @Default private ProMList<String> selectedExoVariables = null;
-	@Getter @Default private JButton investigate = new JButton("Start Investigation");
-	@Getter @Default private JButton enhance = new JButton("Open Enhancement");
+	@Getter @Default private JButton investigate = new JButton("Start Decision Mining");
+	@Getter @Default private JButton enhance = new JButton("Move to Enhancement");
 	@Getter @Default private JButton measure = new JButton("Measure Model");
 	
 //	grid view of panel
@@ -52,7 +52,7 @@ public class ExogenousInvestigatorSelectionPanel {
 		sub_c.gridy = 0;
 		sub_c.weightx = 0;
 		sub_c.weighty = 0;
-		sub_c.insets = new Insets(5,15,5,15);
+		sub_c.insets = new Insets(5,5,5,5);
 		sub_c.anchor = GridBagConstraints.LINE_START;
 //		add compontents
 //		add a description at top of panel
@@ -80,8 +80,10 @@ public class ExogenousInvestigatorSelectionPanel {
 		sub_c.fill = GridBagConstraints.NONE;
 		sub_c.gridwidth = 1;
 		sub_c.gridx = 0;
-		sub_c.gridy = 2;
+		sub_c.gridy = 3;
 		sub_c.weightx = 0;
+		sub_c.weighty = 0.05;
+		sub_c.anchor = GridBagConstraints.SOUTH;
 		this.investigate.addMouseListener(new InvestigationListener(this.source));
 		this.main.add(this.investigate, sub_c);
 //		add a measurement button
@@ -91,7 +93,7 @@ public class ExogenousInvestigatorSelectionPanel {
 		this.measure.setEnabled(false);
 //		add a discovery button
 		this.enhance.setEnabled(false);
-		sub_c.anchor = GridBagConstraints.LINE_END;
+		sub_c.anchor = GridBagConstraints.SOUTHEAST;
 		sub_c.gridx = 9;
 		this.enhance.addMouseListener(new EnhancementListener(this.enhance,this.source));
 		this.main.add(this.enhance, sub_c);
