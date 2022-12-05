@@ -168,20 +168,18 @@ public class DotNodeStyles {
 			}
 			if (dp.getMapToMeasures().containsKey(precisionKey)) {
 				precisionMeasure = dp.getMapToMeasures().get(precisionKey);
+				System.out.println("recorded measure was :: "+precisionMeasure);
 			}
 		}
 //		call the big function if recall is set
 		String label;
-		if (recallMeasure > 0.0 && precisionMeasure < 0.01) {
-			label = createTransitionLabel(istau ? buildTauStatLabel(t, stats) : buildStatLabel(t, stats), istau, g, swapper, recallMeasure, true);
-		} 
-		else if (recallMeasure < 0.01 && precisionMeasure > 0.00) {
-			label = createTransitionLabel(istau ? buildTauStatLabel(t, stats) : buildStatLabel(t, stats), istau, g, swapper, precisionMeasure, false);
-		}	
-		else if (recallMeasure > 0.00 && precisionMeasure > 0.00) {
+		if (recallMeasure > 0.00 && precisionMeasure > 0.00) {
 			label = createTransitionLabel(istau ? buildTauStatLabel(t, stats) : buildStatLabel(t, stats), istau, g, swapper, recallMeasure, precisionMeasure);
-		}
-		else {
+		} else if (recallMeasure > 0.0 && precisionMeasure < 0.01) {
+			label = createTransitionLabel(istau ? buildTauStatLabel(t, stats) : buildStatLabel(t, stats), istau, g, swapper, recallMeasure, true);
+		} else if (recallMeasure < 0.01 && precisionMeasure > 0.00) {
+			label = createTransitionLabel(istau ? buildTauStatLabel(t, stats) : buildStatLabel(t, stats), istau, g, swapper, precisionMeasure, false);
+		} else {
 			label = createTransitionLabel(istau ? buildTauStatLabel(t, stats) : buildStatLabel(t, stats), istau, g, swapper);
 		}
 		return new ExoDotTransition(label,t.getId().toString(), t.getLabel(), new GuardExpressionHandler(g, swapper));
@@ -196,11 +194,11 @@ public class DotNodeStyles {
 				+ "</TD>"
 				+ "</TR>"
 				+ "<TR>"
-				+ "<TD colspan=\"10\" BORDER=\"0\" HEIGHT=\"18\" ALIGN=\"CENTER\" VALIGN=\"MIDDLE\"><FONT COLOR=\"red\">(Guard-wise) Reasoning-Recall:</FONT></TD>"
+				+ "<TD colspan=\"10\" BORDER=\"0\" HEIGHT=\"18\" ALIGN=\"CENTER\" VALIGN=\"MIDDLE\"><FONT COLOR=\"red\">(Guard-wise) Decision-Recall:</FONT></TD>"
 				+ "</TR><TR>"
 				+ "<TD colspan=\"10\" HEIGHT=\"10\" WIDTH=\"110\" BGCOLOR=\"gray\" style=\"rounded\"  ALIGN=\"LEFT\" BORDER=\"0\" CELLPADDING=\"2\"   CELLSPACING=\"0\"></TD>"
 				+ "</TR><TR>"
-				+ "<TD colspan=\"10\" BORDER=\"0\" HEIGHT=\"18\" ALIGN=\"CENTER\"><FONT COLOR=\"red\">(Guard-wise) Reasoning-Precision:</FONT></TD>"
+				+ "<TD colspan=\"10\" BORDER=\"0\" HEIGHT=\"18\" ALIGN=\"CENTER\"><FONT COLOR=\"red\">(Guard-wise) Decision-Precision:</FONT></TD>"
 				+ "</TR><TR>"
 				+ "<TD colspan=\"10\" HEIGHT=\"10\" WIDTH=\"110\" BGCOLOR=\"gray\" style=\"rounded\"  ALIGN=\"LEFT\" BORDER=\"0\" CELLPADDING=\"2\"   CELLSPACING=\"0\"></TD>"
 				+ "</TR>"
@@ -238,11 +236,11 @@ public class DotNodeStyles {
 				+ "</TD>"
 				+ "</TR>"
 				+ "<TR>"
-				+ "<TD colspan=\"10\" BORDER=\"0\" HEIGHT=\"18\" ALIGN=\"CENTER\" VALIGN=\"MIDDLE\"><FONT COLOR=\"red\">(Guard-wise) Reasoning-Recall: %s</FONT></TD>"
+				+ "<TD colspan=\"10\" BORDER=\"0\" HEIGHT=\"18\" ALIGN=\"CENTER\" VALIGN=\"MIDDLE\"><FONT COLOR=\"red\">(Guard-wise) Decision-Recall: %s</FONT></TD>"
 				+ "</TR><TR>"
 				+ "<TD colspan=\"10\" HEIGHT=\"10\" WIDTH=\"110\" BGCOLOR=\"%s\" style=\"rounded\"  ALIGN=\"LEFT\" BORDER=\"0\" CELLPADDING=\"2\"   CELLSPACING=\"0\"></TD>"
 				+ "</TR><TR>"
-				+ "<TD colspan=\"10\" BORDER=\"0\" HEIGHT=\"18\" ALIGN=\"CENTER\"><FONT COLOR=\"red\">(Guard-wise) Reasoning-Precision: %s</FONT></TD>"
+				+ "<TD colspan=\"10\" BORDER=\"0\" HEIGHT=\"18\" ALIGN=\"CENTER\"><FONT COLOR=\"red\">(Guard-wise) Decision-Precision: %s</FONT></TD>"
 				+ "</TR><TR>"
 				+ "<TD colspan=\"10\" HEIGHT=\"10\" WIDTH=\"110\" BGCOLOR=\"%s\" style=\"rounded\"  ALIGN=\"LEFT\" BORDER=\"0\" CELLPADDING=\"2\"   CELLSPACING=\"0\"></TD>"
 				+ "</TR>"
@@ -264,7 +262,7 @@ public class DotNodeStyles {
 			precisionMeasure = String.format("%.2f%%", precision * 100.0);
 		} else {
 			precisionBar = precisionBarUnColoured;
-			precisionMeasure = "";
+			precisionMeasure = "&lt; 0.01";
 		}
 		
 		String recallMeasure;
@@ -280,7 +278,7 @@ public class DotNodeStyles {
 			recallMeasure = String.format("%.2f%%", recall * 100.0);
 		} else {
 			recallBar = recallBarUnColoured;
-			recallMeasure = "";
+			recallMeasure = "&lt; 0.01";
 		}
 		
 		String formattedlabel = String.format(labelFortmat, 
@@ -294,9 +292,6 @@ public class DotNodeStyles {
 		);
 		List<String> exprList = new ArrayList<String>();
 		
-		String anyExprBar = "<TR><TD WIDTH=\"15\" ROWSPAN=\"3\" BORDER=\"1\"  STYLE=\"ROUNDED\" ALIGN=\"CENTER\" VALIGN=\"MIDDLE\">A<BR ALIGN=\"LEFT\"/>N (||)<BR ALIGN=\"LEFT\"/>Y<BR ALIGN=\"LEFT\"/></TD></TR>";
-		String allExprBar = "<TR><TD WIDTH=\"15\" ROWSPAN=\"%d\" BORDER=\"1\"  STYLE=\"ROUNDED\" ALIGN=\"CENTER\" VALIGN=\"MIDDLE\">A<BR ALIGN=\"LEFT\"/>L (&amp;&amp;)<BR ALIGN=\"LEFT\"/>L<BR ALIGN=\"LEFT\"/></TD></TR>";
-		
 		if (g.isTrue()) {
 			String guard = "<TR><TD BGCOLOR=\"WHITE\" CELLPADDING=\"5\" ALIGN=\"CENTER\" BORDER=\"0\" style=\"rounded\"><FONT POINT-SIZE=\"8\" COLOR=\"BLACK\">TRUE</FONT></TD></TR>";
 			exprList.add(guard);
@@ -304,95 +299,15 @@ public class DotNodeStyles {
 			String guard = "<TR><TD BGCOLOR=\"WHITE\" CELLPADDING=\"5\" ALIGN=\"CENTER\" BORDER=\"0\" style=\"rounded\"><FONT POINT-SIZE=\"8\" COLOR=\"BLACK\">FALSE</FONT></TD></TR>";
 			exprList.add(guard);
 		} else {
-			
 			try {
 				String expr = g.toString();
 				SimpleNode root  = new ExpressionParser(g.toString()).parse();
-				int curr_left = 1;
-				int curr_right = 0;
-				System.out.println("number of root nodes :: "+ root.jjtGetNumChildren());
 				for(int i=0;i < root.jjtGetNumChildren(); i++) {
 					SimpleNode node = (SimpleNode) root.jjtGetChild(i);
-					System.out.println("number of children :: "+ node.jjtGetNumChildren());
-					if (node.jjtGetFirstToken().kind == 16) {
-						exprList.add(anyExprBar);
-	//					If the first conjuction is a OR, make rows
-						curr_right = node.jjtGetFirstToken().beginColumn-1;
-						exprList.add(formatExpression(expr.substring(curr_left, curr_right),exprList.size(), swapper));
-						curr_left = node.jjtGetFirstToken().endColumn;
-						exprList.add(formatExpression(expr.substring(curr_left, expr.length()-1),exprList.size(), swapper));
-					} else if (node.jjtGetFirstToken().kind == 15) {
-	//					If the first conjuction is a AND, make a table
-						List<String> tmp = new ArrayList<String>();
-						List<String> nextRun = new ArrayList<String>();
-	//					flatten all && into a single group 
-						List<SimpleNode> possibleJoins = new ArrayList<>();
-						System.out.println("Given :: "+expr.substring(root.jjtGetFirstToken().beginColumn, root.jjtGetLastToken().endColumn));
-						for(int j=0; j < node.jjtGetNumChildren(); j++) {
-							SimpleNode child = (SimpleNode)node.jjtGetChild(j);
-							String subexpr = expr.substring(curr_left, child.jjtGetLastToken().endColumn);
-							System.out.println("starting with :: " + subexpr);
-							possibleJoins.add(child);
-							curr_left = child.jjtGetLastToken().endColumn;
-						}
-						do {
-							System.out.println("starting flatenning");
-							tmp.clear();
-							tmp.addAll(nextRun);
-							nextRun.clear();						
-							List<SimpleNode> nextJoins = new ArrayList<>();
-							for (SimpleNode proot : possibleJoins) {
-								SimpleNode child = (SimpleNode) proot.jjtGetChild(0);
-								System.out.println("possible child :: "+child.jjtGetNumChildren());
-								if (proot.jjtGetFirstToken().kind == 15) {
-									nextJoins.add((SimpleNode) proot.jjtGetChild(0));
-									nextJoins.add((SimpleNode) proot.jjtGetChild(1));
-								}
-								else {
-									nextJoins.add(proot);
-								}
-							}
-							for (SimpleNode children: nextJoins) {
-								String subexpr;
-								if (children.jjtGetFirstToken().kind != 15) {
-									String left = ((SimpleNode)children.jjtGetChild(0)).jjtGetValue().toString(); 
-									String mid = children.jjtGetFirstToken().image; 
-									String right = ((SimpleNode)children.jjtGetChild(1)).jjtGetValue().toString(); ;
-									subexpr = left + mid +right;
-								} else {
-									subexpr = "still building";
-								}
-								System.out.println("Adding :: "+subexpr);
-								nextRun.add(subexpr);
-							}
-							possibleJoins.clear();
-							possibleJoins.addAll(nextJoins);
-						} while ( tmp.size() != nextRun.size());
-						
-						nextRun.clear();
-						for (String child : tmp) {
-							nextRun.add(formatExpression(child,nextRun.size()+exprList.size(),swapper));
-						}
-						exprList.add(String.format(allExprBar, nextRun.size()+1));
-						for (String subexpr : nextRun) {
-							exprList.add(subexpr);
-						}
-	//					old table formatting
-	//					curr_right = node.jjtGetFirstToken().beginColumn-1;
-	//					tmp.add(expr.substring(curr_left, curr_right));
-	//					curr_left = node.jjtGetFirstToken().endColumn;
-	//					tmp.add(expr.substring(curr_left, expr.length()-1));
-	//					exprList.add(createTableRow(tmp, exprList.size(), swapper));
-						
-					} else {
-	//					for anything else just make a row
-						exprList.add(formatExpression(expr, exprList.size(), swapper));
-					}
-	
-					
+					exprList.addAll(createGuardLabel(node,expr,swapper,0));	
 				}
 			} catch (Exception e) {
-				System.out.println(e);
+				System.out.println("[ExogenousData-DotStyling] error occured while building transition guard :: " + e.getCause());
 				e.printStackTrace();
 			}
 		}
@@ -405,19 +320,123 @@ public class DotNodeStyles {
 		return formattedlabel;
 	}
 	
-	private static String formatExpression(String expr, int key, String prefix, Map<String,String> swapper) {
-		String ruleFormat = "<TR><TD BGCOLOR=\"WHITE\" CELLPADDING=\"5\" ALIGN=\"LEFT\" BORDER=\"0\" style=\"rounded\"><FONT COLOR=\"RED\" POINT-SIZE=\"9\">[%s%d]</FONT><FONT POINT-SIZE=\"8\" COLOR=\"BLACK\"> %s </FONT> </TD></TR>";
-		for (Entry<String, String> val : swapper.entrySet()) {
-			expr = expr.replace(val.getValue(), val.getKey());
+//	variables for guard label expansion 
+	private static int ORKIND = 16;
+	private static int ANDKIND = 15;
+	private static String OREXPRBAR = "<TR><TD WIDTH=\"15\" ROWSPAN=\"%d\" BORDER=\"1\" "+
+			"STYLE=\"ROUNDED\" ALIGN=\"CENTER\" BGCOLOR=\"#5eafcc\" VALIGN=\"MIDDLE\">A<BR ALIGN=\"LEFT\"/>"+
+			"N (||)<BR ALIGN=\"LEFT\"/>Y<BR ALIGN=\"LEFT\"/></TD></TR>";
+	private static String ANDEXPRBAR = "<TR><TD WIDTH=\"15\" ROWSPAN=\"%d\" BORDER=\"1\" "+
+			"STYLE=\"ROUNDED\" ALIGN=\"CENTER\" BGCOLOR=\"#cc5e5e\" VALIGN=\"MIDDLE\">A<BR ALIGN=\"LEFT\"/>"+
+			"L (&amp;&amp;)<BR ALIGN=\"LEFT\"/>L<BR ALIGN=\"LEFT\"/></TD></TR>";
+	
+	/**
+	 * Entry Point for recursively building guard label.
+	 * @return a list of formatted table rows for the guard.
+	 */
+	private static List<String> createGuardLabel(SimpleNode node, String expr, 
+				Map<String,String> varSwapper, int ruleNumber){
+		List<String> exprList = new ArrayList();
+		
+		if (node.jjtGetFirstToken().kind == ORKIND) {
+			List<String> tempExpr = formatOrKind(node, expr, varSwapper, ruleNumber);
+			exprList.add(createRowSpan(tempExpr.size()+1, ORKIND));
+			exprList.addAll(tempExpr);
+		} else if (node.jjtGetFirstToken().kind == ANDKIND) {
+			List<String> tempExpr = formatAndKind(node, expr, varSwapper, ruleNumber);
+			exprList.add(createRowSpan(tempExpr.size()+1, ANDKIND));
+			exprList.addAll(tempExpr);
+		} else {
+			exprList.addAll(formatBase(node, expr, varSwapper, ruleNumber));
 		}
-//		escape html entities
-		expr =  StringEscapeUtils.escapeHtml(expr);
-		expr =  String.format(ruleFormat, prefix, key+1, expr);
-		return expr;
+		
+		return exprList;
 	}
 	
+	/**
+	 * Recursive point for &&
+	 * @return
+	 */
+	private static List<String> formatAndKind(SimpleNode node, String expr, 
+			Map<String,String> varSwapper, int ruleNumber){
+		List<String> exprList = new ArrayList();
+//		loop through children 
+		for(int i=0;i<node.jjtGetNumChildren();i++) {
+			SimpleNode child = (SimpleNode) node.jjtGetChild(i);
+			if (child.jjtGetFirstToken().kind == ANDKIND) {
+				List temp = formatAndKind(child, expr, varSwapper, ruleNumber);
+				ruleNumber += temp.size();
+				exprList.addAll(temp);
+			} else {
+				List temp = createGuardLabel(child, expr, varSwapper, ruleNumber);
+				ruleNumber += temp.size();
+				exprList.addAll(temp);
+			}
+		}
+		return exprList;
+	}
+	
+	/**
+	 * Recursive point for ||
+	 * @return
+	 */
+	private static List<String> formatOrKind(SimpleNode node, String expr, Map<String,String> varSwapper, int ruleNumber){
+		List<String> exprList = new ArrayList();
+//		loop through children 
+		for(int i=0;i<node.jjtGetNumChildren();i++) {
+			SimpleNode child = (SimpleNode) node.jjtGetChild(i);
+			if (child.jjtGetFirstToken().kind == ORKIND) {
+				List temp = formatOrKind(child, expr, varSwapper, ruleNumber);
+				ruleNumber += temp.size();
+				exprList.addAll(temp);
+			} else {
+				List temp = createGuardLabel(child, expr, varSwapper, ruleNumber);
+				ruleNumber += temp.size();
+				exprList.addAll(temp);
+			}
+		}
+		return exprList;
+	}
+	
+	/**
+	 * Base case for recursion
+	 * @return
+	 */
+	private static List<String> formatBase(SimpleNode node, String expr, Map<String,String> varSwapper, int ruleNumber){
+		List<String> exprList = new ArrayList(); 
+		SimpleNode firstNode = (SimpleNode) node.jjtGetChild(0);
+		SimpleNode lastNode = (SimpleNode) node.jjtGetChild(node.jjtGetNumChildren()-1);
+		String portion = expr.substring(firstNode.jjtGetFirstToken().beginColumn-1, lastNode.jjtGetLastToken().endColumn);
+		exprList.add(formatExpression(portion, ruleNumber, varSwapper));
+		return exprList;
+	}
+	
+	/**
+	 * Creates a column span for and's and or's.
+	 * @param span
+	 * @param kind
+	 * @return
+	 */
+	private static String createRowSpan(int span, int kind) {
+		if (kind == ORKIND) {
+			return String.format(OREXPRBAR, span);
+		} else if (kind == ANDKIND) {
+			return String.format(ANDEXPRBAR, span);
+		} else {
+			throw new IllegalArgumentException("Unsupported kind :: "+kind);
+		}
+	}
+	
+	/**
+	 * Given a portion of a transition guard, converts portion into a table row 
+	 * for graphviz visualisation.
+	 * @param expr : content for label
+	 * @param key : rule number
+	 * @param swapper : mapping from html safe variables to display names.
+	 * @return
+	 */
 	private static String formatExpression(String expr, int key, Map<String,String> swapper) {
-		String ruleFormat = "<TR><TD BGCOLOR=\"WHITE\" ALIGN=\"LEFT\" STYLE=\"rounded\" CELLPADDING=\"5\" BORDER=\"1\"><FONT COLOR=\"RED\" POINT-SIZE=\"9\">[R%d]</FONT><FONT POINT-SIZE=\"8\" COLOR=\"BLACK\"> %s </FONT> </TD></TR>";
+		String ruleFormat = "<TR><TD BGCOLOR=\"#e0ddcc\" ALIGN=\"LEFT\" STYLE=\"rounded\" CELLPADDING=\"5\" BORDER=\"1\"><FONT COLOR=\"RED\" POINT-SIZE=\"9\">[R%d]</FONT><FONT POINT-SIZE=\"8\" COLOR=\"BLACK\"> %s </FONT> </TD></TR>";
 		for (Entry<String, String> val : swapper.entrySet()) {
 			expr = expr.replace(val.getValue(), val.getKey());
 		}
@@ -425,21 +444,6 @@ public class DotNodeStyles {
 		expr =  StringEscapeUtils.escapeHtml(expr);
 		expr =  String.format(ruleFormat, key+1, expr);
 		return expr;
-	}
-	
-	private static String createTableRow(List<String> exprs, int key, Map<String,String> swapper) {
-		List<String> rows = new ArrayList<String>();
-		String tableFormat = "<TR><TD style=\"rounded\"  CELLPADDING=\"1\" BORDER=\"1\"><TABLE BORDER=\"0\"><TR><TD CELLPADDING=\"5\" ALIGN=\"LEFT\" BORDER=\"0\"><FONT COLOR=\"RED\" POINT-SIZE=\"9\">[R%d]</FONT>"
-				+ "<FONT POINT-SIZE=\"9\" COLOR=\"BLACK\"> - Requires the following to be true: </FONT>"
-				+ "</TD></TR>";
-		tableFormat = String.format(tableFormat, key+1);
-		for(String expr: exprs) {
-			rows.add(formatExpression(expr,rows.size(), "R"+(key+1)+"-", swapper));
-		}
-		for(String expr: rows) {
-			tableFormat = tableFormat + expr;
-		}
-		return tableFormat + "</TABLE></TD></TR>";
 	}
 
 }
