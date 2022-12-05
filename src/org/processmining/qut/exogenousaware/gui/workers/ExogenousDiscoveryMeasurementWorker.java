@@ -10,8 +10,8 @@ import org.processmining.plugins.petrinet.replayresult.PNRepResult;
 import org.processmining.qut.exogenousaware.gui.panels.ExogenousDiscoveryProgresser;
 import org.processmining.qut.exogenousaware.gui.panels.ExogenousDiscoveryProgresser.ProgressState;
 import org.processmining.qut.exogenousaware.gui.panels.ExogenousDiscoveryProgresser.ProgressType;
-import org.processmining.qut.exogenousaware.measures.datapetrinets.ReasoningPrecision;
-import org.processmining.qut.exogenousaware.measures.datapetrinets.ReasoningRecall;
+import org.processmining.qut.exogenousaware.measures.datapetrinets.DecisionPrecision;
+import org.processmining.qut.exogenousaware.measures.datapetrinets.DecisionRecall;
 import org.processmining.qut.exogenousaware.stats.models.ModelStatistics;
 import org.processmining.qut.exogenousaware.stats.models.ProcessModelStatistics;
 
@@ -47,21 +47,21 @@ public class ExogenousDiscoveryMeasurementWorker extends SwingWorker<Map<String,
 		state.setTotal(total * 2);
 		state.setProgress(0);
 //		measure decision recall
-		double recall = ReasoningRecall.builder()
+		double recall = DecisionRecall.builder()
 				.progressInc(1)
 				.progresser(progresser)
 				.variableMapping(variableMap)
 				.build()
 				.measure(endogenousLog, model, statistics, alignment);
-		measures.put(ReasoningRecall.NAME, recall);
+		measures.put(DecisionRecall.NAME, recall);
 		
-		double precision = ReasoningPrecision.builder()
+		double precision = DecisionPrecision.builder()
 				.progressInc(1)
 				.progresser(progresser)
 				.variableMapping(variableMap)
 				.build()
 				.measure(endogenousLog, model, statistics, alignment);
-		measures.put(ReasoningPrecision.NAME, precision);
+		measures.put(DecisionPrecision.NAME, precision);
 		
 		return measures;
 	}
