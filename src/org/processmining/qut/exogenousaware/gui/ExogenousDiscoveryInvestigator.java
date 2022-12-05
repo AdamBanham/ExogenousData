@@ -113,7 +113,7 @@ public class ExogenousDiscoveryInvestigator extends JPanel{
 		this.c.weightx = 1;
 		this.c.weighty = 1;
 		this.c.gridy= 0;
-		this.c.insets = new Insets(10,15,0,15);
+		this.c.insets = new Insets(10,0,0,0);
 		this.createModelView();
 		this.createProgresser();
 		this.createSelectionPanel();
@@ -439,7 +439,7 @@ public class ExogenousDiscoveryInvestigator extends JPanel{
 		this.c.weighty = 0.0;
 		this.c.fill = c.BOTH;
 		this.c.ipady = 0;
-		this.c.insets = new Insets(3,15,0,15);
+		this.c.insets = new Insets(3,5,0,5);
 //		create progresser
 		this.progresser = ExogenousDiscoveryProgresser.builder()
 				.build()
@@ -453,7 +453,7 @@ public class ExogenousDiscoveryInvestigator extends JPanel{
 		this.c.gridy= 2;
 		this.c.ipady= 25;
 		this.c.weighty = .5;
-		this.c.insets = new Insets(10,15,10,15);
+		this.c.insets = new Insets(30,15,5,15);
 //		create panel
 		this.exoSelectionPanel = ExogenousInvestigatorSelectionPanel.builder()
 				.exoVariables(this.exoVariables)
