@@ -36,23 +36,22 @@ import lombok.Getter;
 import lombok.NonNull;
 
 @Builder
-public class ReasoningRecall implements PetriNetMeasure {
-	
+public class DecisionPrecision implements PetriNetMeasure {
+
 	@NonNull Integer progressInc;
 	@NonNull private ExogenousDiscoveryProgresser progresser;
 	@NonNull Map<String,String> variableMapping;
-
-
-	public static String NAME = "reasoning-recall";
+	
+	public static String NAME = "decision-precision";
 	
 	/**
-	 * Computes reasoning recall for the given log, model and alignment, <br>
-	 * whereby, a score of 0.0 means that we have not found any related transition guards, and <br>
-	 * a score of 1.0 means that for all decision points and outcomes in the representation, we have a related transition guard.
+	 * Computes reasoning-precision for the given log, model and alignment, whereby <br>
+	 * a score of 0.0 denotes that no transition guard is true, and <br>
+	 * a score of 1.0 denotes that only the transition guard for the true outcome is enabled,
+	 * for all observations of all decision points.
 	 */
 	public double measure(XLog log, Object model, ModelStatistics statistics, Object alignment) {
 		ProgressState state = progresser.getState(ProgressType.Measurements);
-		
 		
 		double measure = 0.0;
 //		check for the right type of alignment result
@@ -75,6 +74,8 @@ public class ReasoningRecall implements PetriNetMeasure {
 		PetriNetWithData modeller;
 		if (model instanceof PetriNetWithData) {
 			modeller = (PetriNetWithData) model;
+		} else {
+			throw new IllegalArgumentException("Unsupported type of model :: "+ model.getClass().getSimpleName());
 		}
 		
 		double totalrfsum = 0.0;
@@ -86,64 +87,103 @@ public class ReasoningRecall implements PetriNetMeasure {
 			List<Observation> obs = getObservations(log, alignmentResult, dplace, statisticResult);
 			for(Transition outcome : statisticResult.getDecisionOutcomes(dplace)) {
 				double outcomemeasure = 0.0;
+				double trueOutcomeTruths = 0.0;
+				double untrueOutcomeTruths = 0.0;
 				double outcomefreq = 0.0;
+				
 				if (statisticResult.getInformation(dplace).getMapToFrequency().containsKey(outcome)) {
 					outcomefreq = statisticResult.getInformation(dplace).getMapToFrequency().get(outcome);
 				}
-				final double freq = outcomefreq * decisionfreq;
+				
 				List<Observation> outcomeObs = obs.stream().filter(o -> o.getOutcome().equals(outcome)).collect(Collectors.toList());
+				final double freq = outcomefreq * decisionfreq;
 				if (outcome instanceof PNWDTransition) {
+//					work out how many times this outcome supported observed data
 					PNWDTransition trans = (PNWDTransition) outcome;
-					Optional<Double> totalOutcomeRF = null;
-					if (trans.hasGuardExpression()) {
-						GuardExpression  expr = trans.getGuardExpression();
-						totalOutcomeRF = outcomeObs.stream()
-								.filter(o -> !isExpressionSimpleTruth(expr))
-								.filter(o -> couldEvaluateExpression(o, expr))
-								.map( o -> o.likelihood * freq)
-								.reduce(Double::sum);
-						double measurerf = 0.0;
-						if (totalOutcomeRF.isPresent()) {
-							measurerf = totalOutcomeRF.get();
-						}
-						outcomemeasure += measurerf;
-						double guardwise = (measurerf/(freq * outcomeObs.size())) ;
-						statisticResult.getInformation(dplace).addMeasure(outcome.getId().toString()+"-recall", guardwise);
+					GuardExpression  expr = trans.getGuardExpression();
+//					compute support
+					Optional<Double> possibleEvals = outcomeObs.stream()
+							.filter(o -> !isSimpleTruth(expr))
+							.filter(o -> isExpressionTrue(o, expr))
+							.map( o -> o.likelihood * freq)
+							.reduce(Double::sum);
+					if (possibleEvals.isPresent()) {
+						trueOutcomeTruths = possibleEvals.get();
 					}
+					System.out.println("[DecisionPrecision] Number of times observed data was supported by "+
+							outcome.getLabel()+
+							" :: "+ 
+							outcomeObs.stream()
+								.filter(o -> !isSimpleTruth(expr))
+								.filter(o -> isExpressionTrue(o, expr))
+								.count()
+					);
 					localrfsum += freq * outcomeObs.size();
 				}
-//				add to decision point's measure
-				localmeasure += outcomemeasure;
+				
+//				work out how many times the observed data was supported by other
+//				outcomes
+				for(Transition otherOutcome : statisticResult.getDecisionOutcomes(dplace)) {
+					if (otherOutcome.equals(outcome)) {
+						continue;
+					}
+//					compute likelihood of other outcome
+					final double otherFreq = decisionfreq * statisticResult.getInformation(dplace).getMapToFrequency().get(otherOutcome);
+					
+					if (otherOutcome instanceof PNWDTransition) {
+//						work out how often observed data was supported by other
+						PNWDTransition trans = (PNWDTransition) otherOutcome;
+						GuardExpression  expr = trans.getGuardExpression();
+						Optional<Double> possibleEvals = outcomeObs.stream()
+								.filter(o -> isExpressionTrue(o, expr))
+								.map( o -> o.likelihood * otherFreq)
+								.reduce(Double::sum);
+						System.out.println("[DecisionPrecision] Number of times observed data was supported by "+
+								trans.getLabel()+ " for " + outcome.getLabel() +
+								" :: "+ 
+								outcomeObs.stream()
+									.filter(o -> !isSimpleTruth(expr))
+									.filter(o -> isExpressionTrue(o, expr))
+									.count()
+						);
+						if (possibleEvals.isPresent()) {
+							untrueOutcomeTruths += possibleEvals.get();
+						}
+					}
+				}
+				
+				
+				if (outcomeObs.size() > 0) {
+					outcomemeasure = (trueOutcomeTruths) * (1.0/(1.0+untrueOutcomeTruths));
+					localmeasure += outcomemeasure;
+				}
+				double limit = (freq * outcomeObs.size());
+				double guardwise = (1.0/limit) * (outcomemeasure);
+				statisticResult.getInformation(dplace).addMeasure(outcome.getId().toString()+"-precision", guardwise);
 				state.increment(progressInc);
-				System.out.println("[ReasoningRecall] outcome ("+outcome.getLabel()+") reasoning recall for "+ outcome.getLabel().toLowerCase() + " was :: "+ outcomemeasure+ "/"+ freq * outcomeObs.size());
+				System.out.println("[DecisionPrecision] outcome reasoning precision for "+ outcome.getLabel() + " was :: "+ outcomemeasure +"/"+limit);
 			}
-			statisticResult.addMeasureToDecisionMoment(dplace, NAME, (localmeasure/localrfsum));
-			totalrfsum += localrfsum;
-			System.out.println("[ReasoningRecall] local reasoning recall for "+ dplace.getLabel().toLowerCase() + " was :: "+localmeasure+"/"+localrfsum);
 			measure += localmeasure;
+			totalrfsum += localrfsum;
+			localmeasure = (1.0 / localrfsum) * localmeasure;
+			statisticResult.addMeasureToDecisionMoment(dplace, NAME , localmeasure);
+			System.out.println("[DecisionPrecision] local reasoning precision for "+ dplace.getLabel() + " was :: "+ localmeasure);
 		}
-		System.out.println("[ReasoningRecall] computed reasoning recall was :: "+ measure+"/"+totalrfsum);
-		return (measure/totalrfsum);
-		
-		
+		System.out.println("[DecisionPrecision] computed reasoning precision was :: "+ measure +"/"+totalrfsum);
+		measure = (1.0 / totalrfsum) * measure;
+		return measure;
 	}
 	
-	/**
-	 * Tests the given expression, to see its a (simple) truth or not.
-	 * @param obs
-	 * @param expr
-	 * @return the result of the test
-	 */
-	private Boolean isExpressionSimpleTruth(GuardExpression expr) {
+	private boolean isSimpleTruth(GuardExpression expr) {
 		boolean test = true;
 		
 		if (expr == null) {
-			test = true;
+			return true;
 		}
 		test = expr.isTrue();
 		return test;
 	}
-	
+
 	/**
 	 * Tests that for a observation we have a datastate with variables within expr, thus proving that they are related.
 	 * @param obs
@@ -151,7 +191,13 @@ public class ReasoningRecall implements PetriNetMeasure {
 	 * @return do we have all variables for expr
 	 */
 	private Boolean couldEvaluateExpression(Observation obs, GuardExpression expr) {
+		
 		boolean test = true;
+		
+		if (expr == null) {
+			return true;
+		}
+		
 		try {
 			for (String var : expr.getNormalVariables()) {
 				test = test & obs.getDatastate().containsKey(var);
@@ -162,13 +208,43 @@ public class ReasoningRecall implements PetriNetMeasure {
 			if (e.getCause() instanceof VariableNotFoundException) {
 				
 			} else {
-				System.out.println("[ReasoningRecall] checking :: "+ expr.toCanonicalString());
-				System.out.println("[ReasoningRecall] for :: "+obs.getDatastate().toString());
-				System.out.println("[ReasoningRecall] failed to compute expr :: " + e.getMessage());
+				System.out.println("[DecisionPrecision] checking :: "+ expr.toCanonicalString());
+				System.out.println("[DecisionPrecision] for :: "+obs.getDatastate().toString());
+				System.out.println("[DecisionPrecision] failed to compute expr :: " + e.getMessage());
 				e.printStackTrace();
 			}
 			return false;
 		}
+	}
+	
+	/**
+	 * Tests the given expression, to see if for the given observation it would evaluate to true.
+	 * @param obs
+	 * @param expr
+	 * @return the result of the test
+	 */
+	private Boolean isExpressionTrue(Observation obs, GuardExpression expr) {
+		boolean test = true;
+		
+		if (expr == null) {
+			return true;
+		}
+		
+		if (expr.isTrue()) {
+			return test;
+		} else if (expr.isFalse()) {
+			return false;
+		}
+		
+		if (couldEvaluateExpression(obs, expr)) {
+			
+			test = expr.isTrue(obs.getDatastate());
+			
+		} else {
+			return false;
+		}
+		
+		return test;
 	}
 	
 	private List<Observation> getObservations(XLog log, PNRepResult alignments, Place decisionPoint, ProcessModelStatistics stats){
@@ -204,7 +280,7 @@ public class ReasoningRecall implements PetriNetMeasure {
 							if (partialTracePoint > -1) {
 								partial = log.get(traceIndex).subList(0, partialTracePoint+1);
 							}
-//							System.out.println("[ReasoningRecall] Computed likelihood is :: "+(1.0f - (missteps/steps)));
+							
 							obs.add(Observation.builder()
 								.outcome((Transition) node)
 								.partial(partial)
@@ -231,7 +307,7 @@ public class ReasoningRecall implements PetriNetMeasure {
 		@NonNull @Getter Transition outcome;
 		@NonNull List<XEvent> partial;
 		@NonNull Map<String,String> variableMapping;
-		@NonNull @Default @Getter double likelihood = 0.0f;
+		@NonNull @Default @Getter double likelihood = 0.0;
 		
 		@Default @Getter Map<String, Object> datastate = new HashMap();
 		@Default @Getter Map<String, Object> postDatastate = new HashMap();
@@ -245,7 +321,7 @@ public class ReasoningRecall implements PetriNetMeasure {
 			}
 			XEvent postEvent = null;
 			if (partial.size() > 0) {
-				postEvent = partial.get(partial.size()-1);
+				postEvent = partial.get(partial.size() -1);
 			}
 			
 			for( XEvent ev: preEvents) {
@@ -261,8 +337,6 @@ public class ReasoningRecall implements PetriNetMeasure {
 					processValue(key, datastate, attr.getValue());
 				}
 			}
-			
-//			System.out.println("Final pre-transition state :: "+datastate.toString());
 			
 //			create post state
 			postDatastate.putAll(datastate);
@@ -293,14 +367,21 @@ public class ReasoningRecall implements PetriNetMeasure {
 			} else if (value instanceof XAttributeDiscrete) {
 				realValue = ((XAttributeDiscrete) value).getValue();
 			} else {
-				realValue = value.toString();
+				try {
+					realValue = Double.valueOf(value.toString());
+				} catch (Exception e) {
+					
+//					System.out.println("process failback occured on :: " + value.getClass().toGenericString());
+					realValue = value.toString();
+				}
+				
+				
+				
 			}
-//			System.out.println("Addding :: ("+key+","+realValue+")");
+			
 			mapper.put(key,realValue);
 		}
 		
 	}
-	
-	
 
 }
