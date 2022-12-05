@@ -44,8 +44,8 @@ import org.processmining.plugins.graphviz.visualisation.listeners.GraphChangedLi
 import org.processmining.plugins.graphviz.visualisation.listeners.MouseInElementsChangedListener;
 import org.processmining.plugins.graphviz.visualisation.listeners.SelectionChangedListener;
 import org.processmining.qut.exogenousaware.gui.colours.ColourScheme;
-import org.processmining.qut.exogenousaware.measures.datapetrinets.ReasoningPrecision;
-import org.processmining.qut.exogenousaware.measures.datapetrinets.ReasoningRecall;
+import org.processmining.qut.exogenousaware.measures.datapetrinets.DecisionPrecision;
+import org.processmining.qut.exogenousaware.measures.datapetrinets.DecisionRecall;
 import org.processmining.qut.exogenousaware.stats.models.ProcessModelStatistics;
 import org.processmining.qut.exogenousaware.stats.models.ProcessModelStatistics.DecisionPoint;
 
@@ -178,16 +178,28 @@ public class DotPanelG2 extends NavigableSVGPanelG2 {
 	}
 	
 	@Override
+	protected void printComponent(Graphics g) {
+//		overriding to avoid printing the overlay or minimap for exporting.
+        paintComponent(g, false);
+    }
+	
+	@Override
 	protected void paintComponent(Graphics g) {
+		paintComponent(g, true);
+	}
+	
+	protected void paintComponent(Graphics g, boolean overlay) {
 		// do normal painting but lets make our own at the same time
 		super.paintComponent(g);
 		
 		int topRunnerHeight = 20;
 		
-		g.setColor(Color.black);
-		g.fillRect( (int)getNavigationWidth(), 0, (int) (getWidth() - getNavigationWidth()), topRunnerHeight);
+		if (overlay) {
+			g.setColor(Color.black);
+			g.fillRect( (int)getNavigationWidth(), 0, (int) (getWidth() - getNavigationWidth()), topRunnerHeight);
+		}
 		
-		if (this.statistics != null) {
+		if (this.statistics != null && overlay) {
 			double gmeasure = 0.0;
 			int gaugeHeight = 150;
 			int gaugeWidth = 150;
@@ -204,12 +216,12 @@ public class DotPanelG2 extends NavigableSVGPanelG2 {
 			g2d.setRenderingHint(RenderingHints.KEY_ANTIALIASING, RenderingHints.VALUE_ANTIALIAS_ON);
 			
 //			create gauge for reasoning-recall
-			String label = ReasoningRecall.NAME;
+			String label = DecisionRecall.NAME;
 			g2d.setColor(Color.LIGHT_GRAY);
 			
 			
-			if (this.statistics.getSeenGraphMeasures().contains(ReasoningRecall.NAME)) {
-				gmeasure = this.statistics.getGraphMeasures().get(ReasoningRecall.NAME);
+			if (this.statistics.getSeenGraphMeasures().contains(DecisionRecall.NAME)) {
+				gmeasure = this.statistics.getGraphMeasures().get(DecisionRecall.NAME);
 				label = label + String.format(" (%.2f)", gmeasure);
 			}
 			
@@ -222,8 +234,8 @@ public class DotPanelG2 extends NavigableSVGPanelG2 {
 			localIndex = 0;
 			for( Place moment : this.statistics.getDecisionMoments()) {
 				DecisionPoint dp = this.statistics.getInformation(moment);
-				if (dp.getMapToMeasures().containsKey(ReasoningRecall.NAME)) {
-					double dpmeasure = dp.getMapToMeasures().get(ReasoningRecall.NAME);
+				if (dp.getMapToMeasures().containsKey(DecisionRecall.NAME)) {
+					double dpmeasure = dp.getMapToMeasures().get(DecisionRecall.NAME);
 					localmeasures[localIndex] = dpmeasure;
 				}
 				localIndex++;
@@ -236,12 +248,12 @@ public class DotPanelG2 extends NavigableSVGPanelG2 {
 			
 //			create gauge for reasoning-precision
 			startX += gaugeWidth + gaugeSpacing;
-			label = ReasoningPrecision.NAME;
+			label = DecisionPrecision.NAME;
 			g2d.setColor(Color.LIGHT_GRAY);
 			
 			
-			if (this.statistics.getSeenGraphMeasures().contains(ReasoningPrecision.NAME)) {
-				gmeasure = this.statistics.getGraphMeasures().get(ReasoningPrecision.NAME);
+			if (this.statistics.getSeenGraphMeasures().contains(DecisionPrecision.NAME)) {
+				gmeasure = this.statistics.getGraphMeasures().get(DecisionPrecision.NAME);
 				label = label + String.format(" (%.2f)", gmeasure);
 			}
 			
@@ -254,8 +266,8 @@ public class DotPanelG2 extends NavigableSVGPanelG2 {
 			localIndex = 0;
 			for( Place moment : this.statistics.getDecisionMoments()) {
 				DecisionPoint dp = this.statistics.getInformation(moment);
-				if (dp.getMapToMeasures().containsKey(ReasoningPrecision.NAME)) {
-					double dpmeasure = dp.getMapToMeasures().get(ReasoningPrecision.NAME);
+				if (dp.getMapToMeasures().containsKey(DecisionPrecision.NAME)) {
+					double dpmeasure = dp.getMapToMeasures().get(DecisionPrecision.NAME);
 					localmeasures[localIndex] = dpmeasure;
 				}
 				localIndex++;
