@@ -46,9 +46,11 @@ public class DecisionRecall implements PetriNetMeasure {
 	public static String NAME = "decision-recall";
 	
 	/**
-	 * Computes reasoning recall for the given log, model and alignment, <br>
-	 * whereby, a score of 0.0 means that we have not found any related transition guards, and <br>
-	 * a score of 1.0 means that for all decision points and outcomes in the representation, we have a related transition guard.
+	 * Computes decision-recall for the given log, model and alignment, <br>
+	 * whereby, the measure returns 1.0, when for each observation, we could have
+	 *  evaluated the described guard of a choice, and <br>
+	 * otherwise returns 0.0 when for each observation, we couldn't evaluate the
+	 *  described guard or the guard was a truth.
 	 */
 	public double measure(XLog log, Object model, ModelStatistics statistics, Object alignment) {
 		ProgressState state = progresser.getState(ProgressType.Measurements);

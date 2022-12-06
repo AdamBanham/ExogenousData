@@ -45,10 +45,11 @@ public class DecisionPrecision implements PetriNetMeasure {
 	public static String NAME = "decision-precision";
 	
 	/**
-	 * Computes reasoning-precision for the given log, model and alignment, whereby <br>
-	 * a score of 0.0 denotes that no transition guard is true, and <br>
-	 * a score of 1.0 denotes that only the transition guard for the true outcome is enabled,
-	 * for all observations of all decision points.
+	 * Computes decision-precision for the given log, model and alignment, whereby <br>
+	 * this measure returns 1.0, when for each observation, only the described guard
+	 *  was supported by the observed data, and <br>
+	 * otherwise the measure returns 0.0, when for each observation, the described
+	 *  guard does not support the observed data.
 	 */
 	public double measure(XLog log, Object model, ModelStatistics statistics, Object alignment) {
 		ProgressState state = progresser.getState(ProgressType.Measurements);
