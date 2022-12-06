@@ -14,10 +14,14 @@ public class PanelStyler {
 	}
 	
 	public static void StylePanel(JComponent comp, Boolean addLayout) {
+		StylePanel(comp, addLayout, BoxLayout.Y_AXIS);
+	}
+	
+	public static void StylePanel(JComponent comp, Boolean addLayout, int axis) {
 		comp.setBackground(Color.LIGHT_GRAY);
 		comp.setBorder(BorderFactory.createEmptyBorder());
 		if (addLayout) {
-			comp.setLayout(new BoxLayout(comp, BoxLayout.Y_AXIS));
+			comp.setLayout(new BoxLayout(comp, axis));
 		}
 		comp.setAlignmentX(JPanel.LEFT_ALIGNMENT);
 		comp.setAlignmentY(JPanel.CENTER_ALIGNMENT);
