@@ -356,9 +356,9 @@ public class ExogenousDiscoveryProgresser extends JPanel {
 	
 	public static enum ProgressType {
 		Alignment("Alignment Precompute"),
-		Stats("Statistics"),
+		Stats("Statistics Precompute"),
 		Investigation("Decision Mining"),
-		Measurements("Decision Point Measurement");
+		Measurements("Data-Aaware Process Conformance");
 		
 		@Getter private String name;
 		
