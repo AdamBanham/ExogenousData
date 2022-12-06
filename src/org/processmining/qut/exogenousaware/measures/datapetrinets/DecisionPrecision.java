@@ -162,15 +162,15 @@ public class DecisionPrecision implements PetriNetMeasure {
 				double guardwise = (1.0/limit) * (outcomemeasure);
 				statisticResult.getInformation(dplace).addMeasure(outcome.getId().toString()+"-precision", guardwise);
 				state.increment(progressInc);
-				System.out.println("[DecisionPrecision] outcome reasoning precision for "+ outcome.getLabel() + " was :: "+ outcomemeasure +"/"+limit);
+				System.out.println("[DecisionPrecision] outcome decision-precision for "+ outcome.getLabel() + " was :: "+ outcomemeasure +"/"+limit);
 			}
 			measure += localmeasure;
 			totalrfsum += localrfsum;
 			localmeasure = (1.0 / localrfsum) * localmeasure;
 			statisticResult.addMeasureToDecisionMoment(dplace, NAME , localmeasure);
-			System.out.println("[DecisionPrecision] local reasoning precision for "+ dplace.getLabel() + " was :: "+ localmeasure);
+			System.out.println("[DecisionPrecision] local decision-precision for "+ dplace.getLabel() + " was :: "+ localmeasure);
 		}
-		System.out.println("[DecisionPrecision] computed reasoning precision was :: "+ measure +"/"+totalrfsum);
+		System.out.println("[DecisionPrecision] computed decision-precision was :: "+ measure +"/"+totalrfsum);
 		measure = (1.0 / totalrfsum) * measure;
 		return measure;
 	}

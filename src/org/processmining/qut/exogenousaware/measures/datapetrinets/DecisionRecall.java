@@ -117,14 +117,14 @@ public class DecisionRecall implements PetriNetMeasure {
 //				add to decision point's measure
 				localmeasure += outcomemeasure;
 				state.increment(progressInc);
-				System.out.println("[DecisionRecall] outcome ("+outcome.getLabel()+") reasoning recall for "+ outcome.getLabel().toLowerCase() + " was :: "+ outcomemeasure+ "/"+ freq * outcomeObs.size());
+				System.out.println("[DecisionRecall] outcome ("+outcome.getLabel()+") decision-recall for "+ outcome.getLabel().toLowerCase() + " was :: "+ outcomemeasure+ "/"+ freq * outcomeObs.size());
 			}
 			statisticResult.addMeasureToDecisionMoment(dplace, NAME, (localmeasure/localrfsum));
 			totalrfsum += localrfsum;
-			System.out.println("[DecisionRecall] local reasoning recall for "+ dplace.getLabel().toLowerCase() + " was :: "+localmeasure+"/"+localrfsum);
+			System.out.println("[DecisionRecall] local decision-recall for "+ dplace.getLabel().toLowerCase() + " was :: "+localmeasure+"/"+localrfsum);
 			measure += localmeasure;
 		}
-		System.out.println("[DecisionRecall] computed reasoning recall was :: "+ measure+"/"+totalrfsum);
+		System.out.println("[DecisionRecall] computed decision-recall was :: "+ measure+"/"+totalrfsum);
 		return (measure/totalrfsum);
 		
 		
