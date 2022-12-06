@@ -478,6 +478,7 @@ public class ExogenousDiscoveryInvestigator extends JPanel{
 			.model(this.controlflow)
 			.exogenousVariables(this.exoSelectionPanel.getSelectedExoVariables().getSelectedValuesList())
 			.endogenousVariables(this.exoSelectionPanel.getSelectedEndoVariables().getSelectedValuesList())
+			.miner(this.exoSelectionPanel.getSelectedMiner().getSelectedValuesList().get(0))
 			.alignment(this.alignment)
 			.log(this.source.getEndogenousLog())
 			.source(this)

@@ -21,6 +21,8 @@ import org.processmining.datadiscovery.estimators.DecisionTreeBasedFunctionEstim
 import org.processmining.datadiscovery.estimators.FunctionEstimation;
 import org.processmining.datadiscovery.estimators.FunctionEstimator;
 import org.processmining.datadiscovery.estimators.Type;
+import org.processmining.datadiscovery.estimators.impl.DecisionTreeFunctionEstimator;
+import org.processmining.datadiscovery.estimators.impl.DiscriminatingFunctionEstimator;
 import org.processmining.datadiscovery.estimators.impl.OverlappingEstimatorLocalDecisionTree;
 import org.processmining.datadiscovery.model.DecisionPointResult;
 import org.processmining.datadiscovery.model.DiscoveredPetriNetWithData;
@@ -55,6 +57,7 @@ public class InvestigationTask extends SwingWorker<DiscoveredPetriNetWithData, I
 //	Builder parameters
 	@NonNull private ExogenousDiscoveryInvestigation source;
 	@NonNull private ExogenousDiscoveryProgresser progresser;
+	@NonNull private MinerType minerType;
 	
 //	Internal states
 	@Default @Getter private int maxConcurrentThreads = Runtime.getRuntime().availableProcessors() > 3 ? Runtime.getRuntime().availableProcessors() - 2 : 1;
@@ -66,6 +69,14 @@ public class InvestigationTask extends SwingWorker<DiscoveredPetriNetWithData, I
 	@Default private double instancesPerLeaf = .15;
 	@Default @Getter private Map<String,String> converetedNames = new HashMap<String,String>();
 	@Default @Getter private Map<Transition,Transition> transMap = null;
+	
+	
+	public static enum MinerType {
+		OVERLAPPING,
+		DISCRIMINATING,
+		DECISIONTREE;
+	}
+	
 	
 	public InvestigationTask setup() {
 //		setup pool for later use
@@ -124,8 +135,29 @@ public class InvestigationTask extends SwingWorker<DiscoveredPetriNetWithData, I
 			 * place
 			 */
 			FunctionEstimator f;
+			
+			if (this.minerType == MinerType.OVERLAPPING) {
+				System.out.println("Using Overlapping...");
+				f = new OverlappingEstimatorLocalDecisionTree(classTypes, 
+						literalValues, outputValues, this.source.getLog().size(),
+						place.getLabel()
+				);
+			} else if (this.minerType == MinerType.DISCRIMINATING) {
+				System.out.println("Using Discriminating...");
+				f = new DiscriminatingFunctionEstimator(classTypes, literalValues,
+						outputValues, this.source.getLog().size(), place.getLabel()
+				);
+			} else if (this.minerType == MinerType.DECISIONTREE) {
+				System.out.println("Using Decision tree...");
+				f = new DecisionTreeFunctionEstimator(classTypes, literalValues,
+						outputValues, place.getLabel(), this.source.getLog().size()
+					);
+			} else {
+				throw new IllegalArgumentException("[InvestigationTask] Decision"
+						+ " Miner unknown :: " + this.minerType);
+			}
 
-			f = new OverlappingEstimatorLocalDecisionTree(classTypes, literalValues, outputValues, this.source.getLog().size(), place.getLabel());
+			
 
 			/*
 			 * Associate the created FunctionEstimator 'f' with Place 'place' by

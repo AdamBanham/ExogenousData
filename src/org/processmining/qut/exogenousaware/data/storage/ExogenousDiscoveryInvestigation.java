@@ -32,6 +32,7 @@ import org.processmining.models.graphbased.directed.petrinetwithdata.newImpl.Pet
 import org.processmining.models.semantics.petrinet.Marking;
 import org.processmining.plugins.petrinet.replayresult.PNRepResult;
 import org.processmining.qut.exogenousaware.data.storage.workers.InvestigationTask;
+import org.processmining.qut.exogenousaware.data.storage.workers.InvestigationTask.MinerType;
 import org.processmining.qut.exogenousaware.gui.ExogenousDiscoveryInvestigator;
 
 import lombok.Builder;
@@ -45,6 +46,7 @@ import lombok.Singular;
 @Data
 public class ExogenousDiscoveryInvestigation {
 
+//	required parameters
 	@NonNull @Singular private List<String> endogenousVariables;
 	@NonNull @Singular private List<String> exogenousVariables;
 	@NonNull private PetriNetWithData model;
@@ -52,7 +54,10 @@ public class ExogenousDiscoveryInvestigation {
 	@NonNull private PNRepResult alignment;
 	@NonNull private ExogenousDiscoveryInvestigator source;
 	
+//	optional parameters
+	@Default private MinerType miner = MinerType.OVERLAPPING; 
 	
+//	internal states
 	@Getter @Default private DiscoveredPetriNetWithData outcome = null;
 	@Getter @Default private Map<String, GuardExpression> foundExpressions = new HashMap<String, GuardExpression>();
 	@Getter @Default private InvestigationTask task = null;
@@ -71,6 +76,7 @@ public class ExogenousDiscoveryInvestigation {
 		this.task = InvestigationTask.builder()
 				.source(this)
 				.progresser(this.source.getProgresser())
+				.minerType(miner)
 				.build()
 				.setup();
 		return this;
