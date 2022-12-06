@@ -187,31 +187,48 @@ public class DotNodeStyles {
 	
 	private static String createTransitionLabel(String label, boolean istau) {
 		String labelFortmat = ""
-				+ "<<TABLE WIDTH=\"110\" COLUMNS=\"10\" BGCOLOR=\"%s\" BORDER=\"1\"  style=\"rounded\"  CELLPADDING=\"5\" CELLSPACING=\"5\" PORT=\"HEAD\">"
+				+ "<<TABLE "
+				+ "SIDES=\"TLR\" WIDTH=\"110\" COLUMNS=\"*\" ROWS=\"4\" BGCOLOR=\"None\""
+				+ " BORDER=\"0\" style=\"rounded\" CELLPADDING=\"0\" CELLSPACING=\"0\""
+				+ " PORT=\"HEAD\""
+				+ ">"
 				+ "<TR>"
-				+ "<TD colspan=\"10\" BORDER=\"0\" CELLPADDING=\"2\" ALIGN=\"CENTER\">"
-				+ "<FONT COLOR=\"%s\">%s </FONT>"
+				+ "<TD "
+				+ "colspan=\"10\" WIDTH=\"110\" BORDER=\"1\" STYLE=\"ROUNDED\" "
+				+ "CELLPADDING=\"2\" CELLSPACING=\"2\" BGCOLOR=\"%s\" PORT=\"TITLE\""
+				+ ">"
+				+ "<TABLE "
+				+ "STYLE=\"ROUNDED\" BORDER=\"0\" "
+				+ "><TR>"
+				+ "<TD COLSPAN=\"10\" ALIGN=\"CENTER\" VALIGN=\"MIDDLE\">"
+				+ "<FONT POINT-SIZE=\"18\" COLOR=\"%s\"><B>%s</B></FONT>"
 				+ "</TD>"
 				+ "</TR>"
 				+ "<TR>"
-				+ "<TD colspan=\"10\" BORDER=\"0\" HEIGHT=\"18\" ALIGN=\"CENTER\" VALIGN=\"MIDDLE\"><FONT COLOR=\"red\">(Guard-wise) Decision-Recall:</FONT></TD>"
-				+ "</TR><TR>"
-				+ "<TD colspan=\"10\" HEIGHT=\"10\" WIDTH=\"110\" BGCOLOR=\"gray\" style=\"rounded\"  ALIGN=\"LEFT\" BORDER=\"0\" CELLPADDING=\"2\"   CELLSPACING=\"0\"></TD>"
-				+ "</TR><TR>"
-				+ "<TD colspan=\"10\" BORDER=\"0\" HEIGHT=\"18\" ALIGN=\"CENTER\"><FONT COLOR=\"red\">(Guard-wise) Decision-Precision:</FONT></TD>"
-				+ "</TR><TR>"
-				+ "<TD colspan=\"10\" HEIGHT=\"10\" WIDTH=\"110\" BGCOLOR=\"gray\" style=\"rounded\"  ALIGN=\"LEFT\" BORDER=\"0\" CELLPADDING=\"2\"   CELLSPACING=\"0\"></TD>"
-				+ "</TR>"
-				+ "<TR><TD colspan=\"10\" style=\"rounded\" BGCOLOR=\"WHITE\"><TABLE BORDER=\"0\"><TR><TD BORDER=\"0\"><FONT COLOR=\"red\">Guard:</FONT></TD></TR>";
+				+ "<TD "
+				+ "COLSPAN=\"10\" style=\"rounded\" BORDER=\"0\" ALIGN=\"CENTER\""
+				+ ">"
+				+ "<TABLE BORDER=\"0\">"
+				+ "<TR>"
+				+ "<TD BORDER=\"0\" ALIGN=\"CENTER\">"
+				+ "<FONT COLOR=\"red\">Guard:</FONT>"
+				+ "</TD></TR>";
 		
-		String end = ""
-				+ "</TABLE></TD></TR></TABLE>>";
+		String end = "</TABLE></TD></TR></TABLE></TD></TR></TABLE>>";
+		
 		String formattedlabel = String.format(labelFortmat, 
 				istau ? "BLACK" : "WHITE",
 				istau ? "WHITE" : "BLACK",
 				istau ? "&tau;"+label : label
 		);
-		String guard = "<TR><TD BGCOLOR=\"WHITE\" CELLPADDING=\"5\" ALIGN=\"CENTER\" BORDER=\"0\" style=\"rounded\"><FONT POINT-SIZE=\"8\" COLOR=\"BLACK\">TRUE</FONT></TD></TR>";
+		String guard = "<TR><TD "
+				+ "BGCOLOR=\"#e0ddcc\" CELLPADDING=\"5\" ALIGN=\"CENTER\" "
+				+ "BORDER=\"1\" style=\"rounded\""
+				+ ">"
+				+ "<FONT POINT-SIZE=\"12\" COLOR=\"BLACK\">"
+				+ "TRUE"
+				+ "</FONT>"
+				+ "</TD></TR>";
 		formattedlabel = formattedlabel + guard + end;
 		return formattedlabel;
 	}
@@ -229,25 +246,85 @@ public class DotNodeStyles {
 
 	private static String createTransitionLabel(String label, boolean istau, GuardExpression g, Map<String,String> swapper, double recall, double precision) {
 		String labelFortmat = ""
-				+ "<<TABLE WIDTH=\"110\" COLUMNS=\"*\" ROWS=\"4\" BGCOLOR=\"%s\" BORDER=\"1\" style=\"rounded\" CELLPADDING=\"5\" CELLSPACING=\"5\" PORT=\"HEAD\">"
+				+ "<<TABLE "
+				+ " WIDTH=\"110\" COLUMNS=\"*\" ROWS=\"4\" BGCOLOR=\"NONE\""
+				+ " BORDER=\"0\" style=\"rounded\" CELLPADDING=\"0\" CELLSPACING=\"0\""
+				+ " PORT=\"HEAD\""
+				+ ">"
 				+ "<TR>"
-				+ "<TD colspan=\"10\" WIDTH=\"110\" BORDER=\"0\" CELLPADDING=\"2\" ALIGN=\"CENTER\" VALIGN=\"MIDDLE\">"
-				+ "<FONT COLOR=\"%s\">%s</FONT>"
+				+ "<TD "
+				+ "colspan=\"10\" WIDTH=\"110\" BORDER=\"1\" STYLE=\"ROUNDED\" "
+				+ "CELLPADDING=\"2\" CELLSPACING=\"2\" BGCOLOR=\"%s\" PORT=\"TITLE\""
+				+ ">"
+				+ "<TABLE "
+				+ "STYLE=\"ROUNDED\" BORDER=\"0\" "
+				+ "><TR>"
+				+ "<TD ALIGN=\"CENTER\" VALIGN=\"MIDDLE\" >"
+				+ "<FONT POINT-SIZE=\"18\" COLOR=\"%s\"><B>%s</B></FONT>"
 				+ "</TD>"
 				+ "</TR>"
 				+ "<TR>"
-				+ "<TD colspan=\"10\" BORDER=\"0\" HEIGHT=\"18\" ALIGN=\"CENTER\" VALIGN=\"MIDDLE\"><FONT COLOR=\"red\">(Guard-wise) Decision-Recall: %s</FONT></TD>"
-				+ "</TR><TR>"
-				+ "<TD colspan=\"10\" HEIGHT=\"10\" WIDTH=\"110\" BGCOLOR=\"%s\" style=\"rounded\"  ALIGN=\"LEFT\" BORDER=\"0\" CELLPADDING=\"2\"   CELLSPACING=\"0\"></TD>"
-				+ "</TR><TR>"
-				+ "<TD colspan=\"10\" BORDER=\"0\" HEIGHT=\"18\" ALIGN=\"CENTER\"><FONT COLOR=\"red\">(Guard-wise) Decision-Precision: %s</FONT></TD>"
-				+ "</TR><TR>"
-				+ "<TD colspan=\"10\" HEIGHT=\"10\" WIDTH=\"110\" BGCOLOR=\"%s\" style=\"rounded\"  ALIGN=\"LEFT\" BORDER=\"0\" CELLPADDING=\"2\"   CELLSPACING=\"0\"></TD>"
-				+ "</TR>"
-				+ "<TR><TD COLSPAN=\"10\" style=\"rounded\" BGCOLOR=\"WHITE\"><TABLE BORDER=\"0\"><TR><TD BORDER=\"0\"><FONT COLOR=\"red\">Guard:</FONT></TD></TR>";
+				+ "<TD "
+				+ "STYLE=\"ROUNDED\" BORDER=\"0\" ALIGN=\"CENTER\" "
+				+ ">"
+				+ "<TABLE BORDER=\"0\">"
+				+ "<TR>"
+				+ "<TD BORDER=\"0\" ALIGN=\"CENTER\">"
+				+ "<FONT COLOR=\"red\">Guard:</FONT>"
+				+ "</TD></TR>";
 		
-		String end = ""
-				+ "</TABLE></TD></TR></TABLE>>";
+		String conformanceBars= "<TR>"
+				+ "<TD "
+				+ "BGCOLOR=\"NONE\" COLSPAN=\"2\" WIDTH=\"5\" BORDER=\"0\" "
+				+ "></TD>"
+				+ "<TD "
+				+ "CELLSPACING=\"0\" BGCOLOR=\"BLACK\" ALIGN=\"LEFT\" "
+				+ "BORDER=\"0\" COLSPAN=\"6\" WIDTH=\"90\" HEIGHT=\"40\" "
+				+ ">"
+				+ "<TABLE "
+				+ "CELLSPACING=\"2\" CELLPADDING=\"2\" "
+				+ "BORDER=\"0\" BGCOLOR=\"NONE\" "
+				+ ">"
+				+ "<TR>"
+				+ "<TD "
+				+ "BORDER=\"0\" ALIGN=\"CENTER\" "
+				+ "VALIGN=\"MIDDLE\""
+				+ ">"
+				+ "<FONT POINT-SIZE=\"6\" COLOR=\"red\">"
+				+ "(Guard-wise) Decision-Recall: %s"
+				+ "</FONT>"
+				+ "</TD>"
+				+ "</TR>"
+				+ "<TR>"
+				+ "<TD "
+				+ "BGCOLOR=\"%s\" "
+				+ "style=\"rounded\" BORDER=\"0\" "
+				+ "></TD>"
+				+ "</TR>"
+				+ "<TR>"
+				+ "<TD "
+				+ "BORDER=\"0\" ALIGN=\"CENTER\">"
+				+ "<FONT POINT-SIZE=\"6\" COLOR=\"red\">"
+				+ "(Guard-wise) Decision-Precision: %s"
+				+ "</FONT>"
+				+ "</TD>"
+				+ "</TR>"
+				+ "<TR>"
+				+ "<TD "
+				+ "BGCOLOR=\"%s\" "
+				+ "style=\"rounded\" BORDER=\"0\">"
+				+ "</TD>"
+				+ "</TR>"
+//				+ "<TR><TD HEIGHT=\"5\"></TD></TR>"
+				+ "</TABLE></TD>"
+				+ "<TD "
+				+ "BGCOLOR=\"NONE\" COLSPAN=\"2\" BORDER=\"0\" "
+				+ "WIDTH=\"15\" "
+				+ "></TD>"
+				+ "</TR>"
+				+ "</TABLE>>";
+		
+		String endLabel = "</TABLE></TD></TR></TABLE></TD></TR>";
 		
 		String precisionMeasure;
 		String precisionBarColoured = "green;%.2f:gray";
@@ -284,19 +361,32 @@ public class DotNodeStyles {
 		String formattedlabel = String.format(labelFortmat, 
 				istau ? "BLACK" : "WHITE",
 				istau ? "WHITE" : "BLACK",
-				istau ? "&tau;"+label : label,
+				istau ? "&tau;"+label : label
+		);
+		String formattedConformanceLabel = String.format(conformanceBars, 
 				recallMeasure,
 				recallBar,
 				precisionMeasure,
-				precisionBar
-		);
+				precisionBar);
 		List<String> exprList = new ArrayList<String>();
 		
 		if (g.isTrue()) {
-			String guard = "<TR><TD BGCOLOR=\"WHITE\" CELLPADDING=\"5\" ALIGN=\"CENTER\" BORDER=\"0\" style=\"rounded\"><FONT POINT-SIZE=\"8\" COLOR=\"BLACK\">TRUE</FONT></TD></TR>";
+			String guard = "<TR>"
+					+ "<TD "
+					+ "BGCOLOR=\"WHITE\" CELLPADDING=\"5\" ALIGN=\"CENTER\" "
+					+ "BORDER=\"0\" style=\"rounded\">"
+					+ "<FONT POINT-SIZE=\"8\" COLOR=\"BLACK\">"
+					+ "TRUE"
+					+ "</FONT></TD></TR>";
 			exprList.add(guard);
 		} else if (g.isFalse()) {
-			String guard = "<TR><TD BGCOLOR=\"WHITE\" CELLPADDING=\"5\" ALIGN=\"CENTER\" BORDER=\"0\" style=\"rounded\"><FONT POINT-SIZE=\"8\" COLOR=\"BLACK\">FALSE</FONT></TD></TR>";
+			String guard = "<TR>"
+					+ "<TD "
+					+ "BGCOLOR=\"WHITE\" CELLPADDING=\"5\" ALIGN=\"CENTER\" "
+					+ "BORDER=\"0\" style=\"rounded\">"
+					+ "<FONT POINT-SIZE=\"8\" COLOR=\"BLACK\">"
+					+ "FALSE"
+					+ "</FONT></TD></TR>";
 			exprList.add(guard);
 		} else {
 			try {
@@ -316,19 +406,29 @@ public class DotNodeStyles {
 			expression = expression + element;
 		}
 		formattedlabel = formattedlabel + expression;
-		formattedlabel = formattedlabel + end;
+		formattedlabel = formattedlabel + endLabel + formattedConformanceLabel;
 		return formattedlabel;
 	}
 	
 //	variables for guard label expansion 
 	private static int ORKIND = 16;
 	private static int ANDKIND = 15;
-	private static String OREXPRBAR = "<TR><TD WIDTH=\"15\" ROWSPAN=\"%d\" BORDER=\"1\" "+
-			"STYLE=\"ROUNDED\" ALIGN=\"CENTER\" BGCOLOR=\"#5eafcc\" VALIGN=\"MIDDLE\">A<BR ALIGN=\"LEFT\"/>"+
-			"N (||)<BR ALIGN=\"LEFT\"/>Y<BR ALIGN=\"LEFT\"/></TD></TR>";
-	private static String ANDEXPRBAR = "<TR><TD WIDTH=\"15\" ROWSPAN=\"%d\" BORDER=\"1\" "+
-			"STYLE=\"ROUNDED\" ALIGN=\"CENTER\" BGCOLOR=\"#cc5e5e\" VALIGN=\"MIDDLE\">A<BR ALIGN=\"LEFT\"/>"+
-			"L (&amp;&amp;)<BR ALIGN=\"LEFT\"/>L<BR ALIGN=\"LEFT\"/></TD></TR>";
+	private static String OREXPRBAR = "<TR>"
+			+ "<TD "
+			+ "WIDTH=\"15\" ROWSPAN=\"%d\" BORDER=\"1\" STYLE=\"ROUNDED\" "
+			+ "ALIGN=\"CENTER\" BGCOLOR=\"#5eafcc\" VALIGN=\"MIDDLE\">"
+			+ "A<BR ALIGN=\"LEFT\"/>"
+			+ "N (||)<BR ALIGN=\"LEFT\"/>"
+			+ "Y<BR ALIGN=\"LEFT\"/>"
+			+ "</TD></TR>";
+	private static String ANDEXPRBAR = "<TR>"
+			+ "<TD "
+			+ "WIDTH=\"15\" ROWSPAN=\"%d\" BORDER=\"1\" STYLE=\"ROUNDED\" "
+			+ "ALIGN=\"CENTER\" BGCOLOR=\"#cc5e5e\" VALIGN=\"MIDDLE\">"
+			+ "A<BR ALIGN=\"LEFT\"/>"
+			+ "L (&amp;&amp;)<BR ALIGN=\"LEFT\"/>"
+			+ "L<BR ALIGN=\"LEFT\"/>"
+			+ "</TD></TR>";
 	
 	/**
 	 * Entry Point for recursively building guard label.
@@ -436,7 +536,17 @@ public class DotNodeStyles {
 	 * @return
 	 */
 	private static String formatExpression(String expr, int key, Map<String,String> swapper) {
-		String ruleFormat = "<TR><TD BGCOLOR=\"#e0ddcc\" ALIGN=\"LEFT\" STYLE=\"rounded\" CELLPADDING=\"5\" BORDER=\"1\"><FONT COLOR=\"RED\" POINT-SIZE=\"9\">[R%d]</FONT><FONT POINT-SIZE=\"8\" COLOR=\"BLACK\"> %s </FONT> </TD></TR>";
+		String ruleFormat = "<TR>"
+				+ "<TD "
+				+ "BGCOLOR=\"#e0ddcc\" ALIGN=\"LEFT\" STYLE=\"rounded\" "
+				+ "CELLPADDING=\"5\" BORDER=\"1\">"
+				+ "<FONT COLOR=\"RED\" POINT-SIZE=\"9\">"
+				+ "[R%d]"
+				+ "</FONT>"
+				+ "<FONT POINT-SIZE=\"8\" COLOR=\"BLACK\">"
+				+ " %s "
+				+ "</FONT> "
+				+ "</TD></TR>";
 		for (Entry<String, String> val : swapper.entrySet()) {
 			expr = expr.replace(val.getValue(), val.getKey());
 		}
