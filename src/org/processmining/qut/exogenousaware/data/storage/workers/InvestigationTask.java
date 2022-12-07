@@ -59,14 +59,16 @@ public class InvestigationTask extends SwingWorker<DiscoveredPetriNetWithData, I
 	@NonNull private ExogenousDiscoveryProgresser progresser;
 	@NonNull private MinerType minerType;
 	
+//	optional parameters
+	@Default private MinerConfiguration config = MinerConfiguration.builder().build();
+	
 //	Internal states
-	@Default @Getter private int maxConcurrentThreads = Runtime.getRuntime().availableProcessors() > 3 ? Runtime.getRuntime().availableProcessors() - 2 : 1;
+	@Default @Getter private int maxConcurrentThreads = Runtime.getRuntime().availableProcessors() > 3 
+			? Runtime.getRuntime().availableProcessors() - 2 : 1;
 	@Default @Getter private ThreadPoolExecutor pool = null;
 	@Default private Map<Place, FunctionEstimator> estimators = new HashMap<>();
 	@Default private AtomicLongMap<Transition> numberOfExecutions = AtomicLongMap.create();
 	@Default private Map<Transition, AtomicLongMap<String>> numberOfWritesPerTransition = new HashMap<>();
-	@Default private double fitnessThreshold = 0.33;
-	@Default private double instancesPerLeaf = .15;
 	@Default @Getter private Map<String,String> converetedNames = new HashMap<String,String>();
 	@Default @Getter private Map<Transition,Transition> transMap = null;
 	
@@ -75,6 +77,17 @@ public class InvestigationTask extends SwingWorker<DiscoveredPetriNetWithData, I
 		OVERLAPPING,
 		DISCRIMINATING,
 		DECISIONTREE;
+	}
+	
+	@Builder
+	public static class MinerConfiguration {
+		@Default @Getter private boolean relativeInstanceThreshold = true;
+		@Default @Getter private double fitnessThreshold = 0.33;
+		@Default @Getter private double instanceThreshold = 0.15;
+		@Default @Getter private double mergeRatio = 0.15;
+		@Default @Getter private boolean prune = true;
+		@Default @Getter private boolean binarySplit = true;
+		@Default @Getter private boolean crossValidate = true;
 	}
 	
 	
@@ -137,18 +150,15 @@ public class InvestigationTask extends SwingWorker<DiscoveredPetriNetWithData, I
 			FunctionEstimator f;
 			
 			if (this.minerType == MinerType.OVERLAPPING) {
-				System.out.println("Using Overlapping...");
 				f = new OverlappingEstimatorLocalDecisionTree(classTypes, 
 						literalValues, outputValues, this.source.getLog().size(),
 						place.getLabel()
 				);
 			} else if (this.minerType == MinerType.DISCRIMINATING) {
-				System.out.println("Using Discriminating...");
 				f = new DiscriminatingFunctionEstimator(classTypes, literalValues,
 						outputValues, this.source.getLog().size(), place.getLabel()
 				);
 			} else if (this.minerType == MinerType.DECISIONTREE) {
-				System.out.println("Using Decision tree...");
 				f = new DecisionTreeFunctionEstimator(classTypes, literalValues,
 						outputValues, place.getLabel(), this.source.getLog().size()
 					);
@@ -182,8 +192,11 @@ public class InvestigationTask extends SwingWorker<DiscoveredPetriNetWithData, I
 		for (SyncReplayResult alignment : this.source.getAlignment()) {
 			// Count the number of traces encountered in total
 			totalNumTraces += alignment.getTraceIndex().size();
-			// If the alignment's fitness complies with the specified minimum fitness in fitnessThresholdSlider
-			if (alignment.getInfo().get(PNRepResult.TRACEFITNESS).floatValue() >= this.fitnessThreshold) {
+			// If the alignment's fitness complies with the specified minimum 
+//			   fitness in fitnessThresholdSlider
+			if (alignment.getInfo().get(PNRepResult.TRACEFITNESS).floatValue() 
+					>= this.config.getFitnessThreshold()
+				) {
 				// Then for each trace in the alignment
 				for (Integer index : alignment.getTraceIndex()) {
 					/*
@@ -226,25 +239,36 @@ public class InvestigationTask extends SwingWorker<DiscoveredPetriNetWithData, I
 			FunctionEstimator f = estimators.get(place);
 			if (f != null) {
 				if (f instanceof DecisionTreeBasedFunctionEstimator) {
-					int numInstances = ((DecisionTreeBasedFunctionEstimator) f).getNumInstances();
-					// Set the minimal number of instances per leaf, in per mille (relative to numInstances)
-					((DecisionTreeBasedFunctionEstimator) f)
-							.setMinNumObj((int) (numInstances * this.instancesPerLeaf ));
-					// Prune the tree?
-					((DecisionTreeBasedFunctionEstimator) f).setUnpruned(false);
-//					// Binary split?
-					((DecisionTreeBasedFunctionEstimator) f).setBinarySplit(false);
-					((DecisionTreeBasedFunctionEstimator) f).setCrossValidate(true);
-					System.out.println("[ExogenousInvestigationTask] Setting estimator ("+place.getLabel()+") : "+ f.getNumInstances() +" :min: " +(int) (numInstances * this.instancesPerLeaf ) );
+					DecisionTreeBasedFunctionEstimator ff = (DecisionTreeBasedFunctionEstimator) f;
+					int numInstances = ff.getNumInstances();
+					// Set the minimal number of instances that each leaf should support
+					if (this.config.isRelativeInstanceThreshold()) {
+						ff.setMinNumObj( 
+							(int) (numInstances * this.config.getInstanceThreshold())	
+						);
+						System.out.println("[ExogenousInvestigationTask] Setting estimator ("
+								+place.getLabel()+") : "+ ff.getNumInstances() 
+								+" :min: " 
+								+(int) (numInstances * this.config.getInstanceThreshold())
+						);
+					} else {
+						ff.setMinNumObj( 
+								(int) ( this.config.getInstanceThreshold())	
+							);
+						System.out.println("[ExogenousInvestigationTask] Setting estimator ("
+								+place.getLabel()+") : "+ ff.getNumInstances() 
+								+" :min: " 
+								+(int) (this.config.getInstanceThreshold())
+						);
+					}
+//					other parameters of note
+					ff.setUnpruned(this.config.isPrune());
+					ff.setBinarySplit(this.config.isBinarySplit());
+					ff.setCrossValidate(this.config.isCrossValidate());
 				}
 			}
 		}
-		
 		System.out.println("[ExogenousInvestigationTask] Configured estimators...");
-		
-		
-		
-		
 		/*
 		 * Collect result for each decision point
 		 */
@@ -257,7 +281,8 @@ public class InvestigationTask extends SwingWorker<DiscoveredPetriNetWithData, I
 
 				public DecisionPointResult call() throws Exception {
 
-					// Calculate the conditions with likelihoods for each target transition of place entry2.getKey()
+//					   Calculate the conditions with likelihoods for each target
+//					   transition of place entry2.getKey()
 					final Map<Object, FunctionEstimation> estimationTransitionExpression = f
 							.getFunctionEstimation(null);
 					
@@ -288,8 +313,11 @@ public class InvestigationTask extends SwingWorker<DiscoveredPetriNetWithData, I
 
 					};
 
-					System.out.println(String.format("[ExogenousInvestigationTask] Generated the conditions for decision point %s with f-score %s",
-								place.getLabel(), result.getQualityMeasure()));
+					System.out.println(String.format("[ExogenousInvestigationTask]"
+							+ " Generated the conditions for decision point %s "
+							+ "with f-score %s",
+							place.getLabel(), result.getQualityMeasure())
+					);
 					progress.inc();
 					return result;
 				}
@@ -298,13 +326,11 @@ public class InvestigationTask extends SwingWorker<DiscoveredPetriNetWithData, I
 			results.put(place, result);
 		}
 		System.out.println("[ExogenousInvestigationTask] Completed training estimators...");
-		
-		/*
-		 * Prepare the mining algorithm's resulting PetriNetWithData.
-		 */
-		String dpnName = String.format("%s (%s, min instances per leaf: %.3f, pruning: %s, binary: %s)", this.source.getModel().getLabel(),
-				"Overlapping Decision Tree", this.instancesPerLeaf, false,
-				false);
+//		Prepare the mining algorithm's resulting PetriNetWithData.
+		String dpnName = String.format("%s (%s, min instances per leaf: %.3f, "
+				+ "pruning: %s, binary: %s)", this.source.getModel().getLabel(),
+				"Overlapping Decision Tree", this.config.getInstanceThreshold(),
+				false, false);
 		final PetriNetWithDataFactory factory = new PetriNetWithDataFactory(this.source.getModel(),
 				new DiscoveredPetriNetWithData(dpnName), false);
 		discoveredDPN = (DiscoveredPetriNetWithData) factory.getRetValue(); // cast if safe

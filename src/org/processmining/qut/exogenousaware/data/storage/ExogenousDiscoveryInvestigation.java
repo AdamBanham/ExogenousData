@@ -32,6 +32,8 @@ import org.processmining.models.graphbased.directed.petrinetwithdata.newImpl.Pet
 import org.processmining.models.semantics.petrinet.Marking;
 import org.processmining.plugins.petrinet.replayresult.PNRepResult;
 import org.processmining.qut.exogenousaware.data.storage.workers.InvestigationTask;
+import org.processmining.qut.exogenousaware.data.storage.workers.InvestigationTask.InvestigationTaskBuilder;
+import org.processmining.qut.exogenousaware.data.storage.workers.InvestigationTask.MinerConfiguration;
 import org.processmining.qut.exogenousaware.data.storage.workers.InvestigationTask.MinerType;
 import org.processmining.qut.exogenousaware.gui.ExogenousDiscoveryInvestigator;
 
@@ -56,6 +58,7 @@ public class ExogenousDiscoveryInvestigation {
 	
 //	optional parameters
 	@Default private MinerType miner = MinerType.OVERLAPPING; 
+	@Default private MinerConfiguration config = null;
 	
 //	internal states
 	@Getter @Default private DiscoveredPetriNetWithData outcome = null;
@@ -73,10 +76,14 @@ public class ExogenousDiscoveryInvestigation {
 		this.progress.setMaximum(100);
 		this.progress.setValue(0);
 		this.main.add(progress);
-		this.task = InvestigationTask.builder()
+		InvestigationTaskBuilder builder = InvestigationTask.builder()
 				.source(this)
 				.progresser(this.source.getProgresser())
-				.minerType(miner)
+				.minerType(miner);
+		if (config != null) {
+			builder.config(config);
+		}
+		this.task = builder
 				.build()
 				.setup();
 		return this;
