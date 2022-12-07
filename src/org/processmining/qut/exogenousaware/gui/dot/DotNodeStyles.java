@@ -149,7 +149,6 @@ public class DotNodeStyles {
 	
 	public static DotNode buildRuleTransition(Transition t, GuardExpression g, Map<String,String> swapper) {
 		boolean istau = t.getLabel().startsWith("tau ");
-		System.out.println("Not Deciding if we need recall...");
 		String label = createTransitionLabel(istau ? "" : t.getLabel(), istau, g, swapper);
 		return new ExoDotTransition(label,t.getId().toString(), t.getLabel(), new GuardExpressionHandler(g, swapper));
 	}
@@ -168,7 +167,6 @@ public class DotNodeStyles {
 			}
 			if (dp.getMapToMeasures().containsKey(precisionKey)) {
 				precisionMeasure = dp.getMapToMeasures().get(precisionKey);
-				System.out.println("recorded measure was :: "+precisionMeasure);
 			}
 		}
 //		call the big function if recall is set
@@ -371,22 +369,24 @@ public class DotNodeStyles {
 		List<String> exprList = new ArrayList<String>();
 		
 		if (g.isTrue()) {
-			String guard = "<TR>"
-					+ "<TD "
-					+ "BGCOLOR=\"WHITE\" CELLPADDING=\"5\" ALIGN=\"CENTER\" "
-					+ "BORDER=\"0\" style=\"rounded\">"
-					+ "<FONT POINT-SIZE=\"8\" COLOR=\"BLACK\">"
+			String guard = "<TR><TD "
+					+ "BGCOLOR=\"#e0ddcc\" CELLPADDING=\"5\" ALIGN=\"CENTER\" "
+					+ "BORDER=\"1\" style=\"rounded\""
+					+ ">"
+					+ "<FONT POINT-SIZE=\"12\" COLOR=\"BLACK\">"
 					+ "TRUE"
-					+ "</FONT></TD></TR>";
+					+ "</FONT>"
+					+ "</TD></TR>";
 			exprList.add(guard);
 		} else if (g.isFalse()) {
-			String guard = "<TR>"
-					+ "<TD "
-					+ "BGCOLOR=\"WHITE\" CELLPADDING=\"5\" ALIGN=\"CENTER\" "
-					+ "BORDER=\"0\" style=\"rounded\">"
-					+ "<FONT POINT-SIZE=\"8\" COLOR=\"BLACK\">"
+			String guard = "<TR><TD "
+					+ "BGCOLOR=\"#e0ddcc\" CELLPADDING=\"5\" ALIGN=\"CENTER\" "
+					+ "BORDER=\"1\" style=\"rounded\""
+					+ ">"
+					+ "<FONT POINT-SIZE=\"12\" COLOR=\"BLACK\">"
 					+ "FALSE"
-					+ "</FONT></TD></TR>";
+					+ "</FONT>"
+					+ "</TD></TR>";
 			exprList.add(guard);
 		} else {
 			try {
@@ -397,7 +397,8 @@ public class DotNodeStyles {
 					exprList.addAll(createGuardLabel(node,expr,swapper,0));	
 				}
 			} catch (Exception e) {
-				System.out.println("[ExogenousData-DotStyling] error occured while building transition guard :: " + e.getCause());
+				System.out.println("[ExogenousData-DotStyling] error occured "
+						+ "while building transition guard :: " + e.getCause());
 				e.printStackTrace();
 			}
 		}
@@ -480,7 +481,8 @@ public class DotNodeStyles {
 	 * Recursive point for ||
 	 * @return
 	 */
-	private static List<String> formatOrKind(SimpleNode node, String expr, Map<String,String> varSwapper, int ruleNumber){
+	private static List<String> formatOrKind(SimpleNode node, String expr,
+			Map<String,String> varSwapper, int ruleNumber){
 		List<String> exprList = new ArrayList();
 //		loop through children 
 		for(int i=0;i<node.jjtGetNumChildren();i++) {
@@ -502,11 +504,15 @@ public class DotNodeStyles {
 	 * Base case for recursion
 	 * @return
 	 */
-	private static List<String> formatBase(SimpleNode node, String expr, Map<String,String> varSwapper, int ruleNumber){
+	private static List<String> formatBase(SimpleNode node, String expr, 
+			Map<String,String> varSwapper, int ruleNumber){
 		List<String> exprList = new ArrayList(); 
 		SimpleNode firstNode = (SimpleNode) node.jjtGetChild(0);
 		SimpleNode lastNode = (SimpleNode) node.jjtGetChild(node.jjtGetNumChildren()-1);
-		String portion = expr.substring(firstNode.jjtGetFirstToken().beginColumn-1, lastNode.jjtGetLastToken().endColumn);
+		String portion = expr.substring(
+				firstNode.jjtGetFirstToken().beginColumn-1,
+				lastNode.jjtGetLastToken().endColumn
+		);
 		exprList.add(formatExpression(portion, ruleNumber, varSwapper));
 		return exprList;
 	}
@@ -535,7 +541,8 @@ public class DotNodeStyles {
 	 * @param swapper : mapping from html safe variables to display names.
 	 * @return
 	 */
-	private static String formatExpression(String expr, int key, Map<String,String> swapper) {
+	private static String formatExpression(String expr, int key, 
+			Map<String,String> swapper) {
 		String ruleFormat = "<TR>"
 				+ "<TD "
 				+ "BGCOLOR=\"#e0ddcc\" ALIGN=\"LEFT\" STYLE=\"rounded\" "
