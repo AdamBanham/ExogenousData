@@ -9,10 +9,10 @@ public class ExoDotEdge extends DotEdge {
 	public ExoDotEdge(DotNode source, DotNode target) {
 		super(source, target);
 		if (source.getClass().equals(ExoDotTransition.class)) {
-			setOption("tailport", "HEAD");
+			setOption("tailport", "TITLE");
 		}
 		if (target.getClass().equals(ExoDotTransition.class)) {
-			setOption("headport", "HEAD");
+			setOption("headport", "TITLE");
 		}
 		setOption("penwidth", "3.0");
 		setOption("xlabel", "");
