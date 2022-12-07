@@ -45,7 +45,8 @@ public class ExogenousInvestigatorSelectionPanel {
 //	miner selection
 	@Getter @Default private ProMList<MinerType> selectedMiner = null;
 //	miner parameters
-	
+	@Default @Getter private ExogenousInvestigatorDecisionMinerSelector decisionMinerConfig = 
+			ExogenousInvestigatorDecisionMinerSelector.builder().build().setup();
 //	variable selection
 	@Getter @Default private ProMList<String> selectedEndoVariables = null;
 	@Getter @Default private ProMList<String> selectedExoVariables = null;
@@ -75,7 +76,7 @@ public class ExogenousInvestigatorSelectionPanel {
 		JLabel info = new JLabel("To investigate the influence between exogenous "
 				+ "or endogenous variables and decision points, select a decision "
 				+ "miner "
-				+ ", apporicate variables, miner parameters, and then click the button "
+				+ ", approciate variables, miner parameters, and then click the button "
 				+ "labelled 'start decision mining'.");
 		info.setForeground(Color.white);
 		sub_c.gridwidth = 10;
@@ -121,7 +122,7 @@ public class ExogenousInvestigatorSelectionPanel {
 		select.add(endoPanel, sub_c);
 		select.validate();
 //		#4 add parameter selection
-		select = new JPanel();
+		select = decisionMinerConfig;
 		PanelStyler.StylePanel(select);
 		tabs.addTab("Miner Parameters", select);
 //		add a investigate button
