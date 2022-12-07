@@ -479,6 +479,7 @@ public class ExogenousDiscoveryInvestigator extends JPanel{
 			.exogenousVariables(this.exoSelectionPanel.getSelectedExoVariables().getSelectedValuesList())
 			.endogenousVariables(this.exoSelectionPanel.getSelectedEndoVariables().getSelectedValuesList())
 			.miner(this.exoSelectionPanel.getSelectedMiner().getSelectedValuesList().get(0))
+			.config(this.exoSelectionPanel.getDecisionMinerConfig().makeConfig())
 			.alignment(this.alignment)
 			.log(this.source.getEndogenousLog())
 			.source(this)
