@@ -79,15 +79,37 @@ public class InvestigationTask extends SwingWorker<DiscoveredPetriNetWithData, I
 		DECISIONTREE;
 	}
 	
+	public static enum MinerInstanceMode {
+		REL,
+		ABS,
+		THRESHOLD;
+		
+		public boolean isREL() {
+			return this == REL;
+		}
+		
+		public boolean isABS() {
+			return this == ABS;
+		}
+		
+		public boolean isTHRESHOLD() {
+			return this == THRESHOLD;
+		}
+	}
+	
 	@Builder
 	public static class MinerConfiguration {
-		@Default @Getter private boolean relativeInstanceThreshold = true;
+		@Default @Getter private double relativeInstanceLevel = 0.15;
+		@Default @Getter private double absoluteInstanceLevel = 25;
+		@Default @Getter private double instanceThreshold = 200;
+		@Default @Getter private MinerInstanceMode instanceHandling = MinerInstanceMode.REL;
 		@Default @Getter private double fitnessThreshold = 0.33;
-		@Default @Getter private double instanceThreshold = 0.15;
 		@Default @Getter private double mergeRatio = 0.15;
 		@Default @Getter private boolean prune = true;
-		@Default @Getter private boolean binarySplit = true;
-		@Default @Getter private boolean crossValidate = true;
+		@Default @Getter private boolean binarySplit = false;
+		@Default @Getter private boolean crossValidate = false;
+		@Default @Getter private int crossValidateFolds = 10;
+		@Default @Getter private float confidenceLevel = 0.005f;
 	}
 	
 	
@@ -242,29 +264,50 @@ public class InvestigationTask extends SwingWorker<DiscoveredPetriNetWithData, I
 					DecisionTreeBasedFunctionEstimator ff = (DecisionTreeBasedFunctionEstimator) f;
 					int numInstances = ff.getNumInstances();
 					// Set the minimal number of instances that each leaf should support
-					if (this.config.isRelativeInstanceThreshold()) {
+					if (this.config.getInstanceHandling().isREL()) {
 						ff.setMinNumObj( 
-							(int) (numInstances * this.config.getInstanceThreshold())	
+							(int) (numInstances * this.config.getRelativeInstanceLevel())	
 						);
 						System.out.println("[ExogenousInvestigationTask] Setting estimator ("
 								+place.getLabel()+") : "+ ff.getNumInstances() 
 								+" :min: " 
-								+(int) (numInstances * this.config.getInstanceThreshold())
+								+(int) (numInstances * this.config.getRelativeInstanceLevel())
 						);
-					} else {
+					} else if (this.config.getInstanceHandling().isABS()){
 						ff.setMinNumObj( 
-								(int) ( this.config.getInstanceThreshold())	
+								(int) ( this.config.getAbsoluteInstanceLevel())	
 							);
 						System.out.println("[ExogenousInvestigationTask] Setting estimator ("
 								+place.getLabel()+") : "+ ff.getNumInstances() 
 								+" :min: " 
-								+(int) (this.config.getInstanceThreshold())
+								+(int) (this.config.getAbsoluteInstanceLevel())
+						);
+					} else if (this.config.getInstanceHandling().isTHRESHOLD()) {
+						int min = 2;
+						if (numInstances > this.config.getInstanceThreshold()) {
+							min = (int) (this.config.getRelativeInstanceLevel() 
+									* numInstances); 
+						} else {
+							min = (int)this.config.getAbsoluteInstanceLevel();
+						}
+						ff.setMinNumObj(min);
+						System.out.println("[ExogenousInvestigationTask] Setting estimator ("
+								+place.getLabel()+") : "+ ff.getNumInstances() 
+								+" :min: " 
+								+ min
+						);
+					} else {
+//						default to relative
+						ff.setMinNumObj( 
+								(int) (numInstances * this.config.getRelativeInstanceLevel())	
 						);
 					}
 //					other parameters of note
 					ff.setUnpruned(this.config.isPrune());
 					ff.setBinarySplit(this.config.isBinarySplit());
 					ff.setCrossValidate(this.config.isCrossValidate());
+					ff.setNumFolds(this.config.getCrossValidateFolds());
+					ff.setConfidenceFactor(this.config.getConfidenceLevel());
 				}
 			}
 		}
