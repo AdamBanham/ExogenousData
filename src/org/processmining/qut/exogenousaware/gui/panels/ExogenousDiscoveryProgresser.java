@@ -173,10 +173,11 @@ public class ExogenousDiscoveryProgresser extends JPanel {
 		
 		public boolean update() {
 			boolean changed = step();
-			if (progress > 0) {
-				progressbar.setBackground(Color.blue.darker());
+			float[] weights = computeWeights();
+			if (weights[0] < 0.99) {
+				progressbar.setBackground(Color.red.darker());
 			} else {
-				progressbar.setBackground(null);
+				progressbar.setBackground(Color.blue.darker());
 			}
 			
 			this.caption.setText(this.type.name + String.format("(%.1f %%)", (current/total) * 100.0f) );
@@ -233,7 +234,12 @@ public class ExogenousDiscoveryProgresser extends JPanel {
 			
 			
 			progressbar = new JPanel();
-			progressbar.setBackground(Color.blue);
+			if (weights[0] < 0.99) {
+				progressbar.setBackground(Color.red);
+			} else {
+				progressbar.setBackground(Color.blue);
+			}
+			
 			if (weights[0] < 0.01) {
 				c.fill = c.NONE;
 			} else {
