@@ -17,6 +17,7 @@ import java.util.concurrent.TimeUnit;
 
 import javax.swing.SwingWorker;
 
+import org.processmining.datadiscovery.estimators.AbstractDecisionTreeFunctionEstimator;
 import org.processmining.datadiscovery.estimators.DecisionTreeBasedFunctionEstimator;
 import org.processmining.datadiscovery.estimators.FunctionEstimation;
 import org.processmining.datadiscovery.estimators.FunctionEstimator;
@@ -105,11 +106,11 @@ public class InvestigationTask extends SwingWorker<DiscoveredPetriNetWithData, I
 		@Default @Getter private MinerInstanceMode instanceHandling = MinerInstanceMode.REL;
 		@Default @Getter private double fitnessThreshold = 0.33;
 		@Default @Getter private double mergeRatio = 0.15;
-		@Default @Getter private boolean prune = true;
+		@Default @Getter private boolean unpruned = false;
 		@Default @Getter private boolean binarySplit = false;
-		@Default @Getter private boolean crossValidate = false;
+		@Default @Getter private boolean crossValidate = true;
 		@Default @Getter private int crossValidateFolds = 10;
-		@Default @Getter private float confidenceLevel = 0.005f;
+		@Default @Getter private float confidenceLevel = 0.25f;
 	}
 	
 	
@@ -303,10 +304,14 @@ public class InvestigationTask extends SwingWorker<DiscoveredPetriNetWithData, I
 						);
 					}
 //					other parameters of note
-					ff.setUnpruned(this.config.isPrune());
+					ff.setUnpruned(this.config.isUnpruned());
 					ff.setBinarySplit(this.config.isBinarySplit());
 					ff.setCrossValidate(this.config.isCrossValidate());
-					ff.setNumFolds(this.config.getCrossValidateFolds());
+					if (ff instanceof AbstractDecisionTreeFunctionEstimator) {
+						((AbstractDecisionTreeFunctionEstimator) ff).setNumFoldCrossValidation(
+								this.config.getCrossValidateFolds()
+						);
+					}
 					ff.setConfidenceFactor(this.config.getConfidenceLevel());
 				}
 			}
