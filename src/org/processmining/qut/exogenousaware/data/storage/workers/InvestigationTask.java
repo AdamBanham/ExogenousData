@@ -234,8 +234,18 @@ public class InvestigationTask extends SwingWorker<DiscoveredPetriNetWithData, I
 					 * attribute values' pre-values and a transition to be
 					 * executed
 					 */
-					traceFutures.add(this.pool.submit(new TraceProcessor(this.source.getModel(), this.source.getLog().get(index), this.estimators, alignment,
-							this.numberOfExecutions, this.numberOfWritesPerTransition, progress), index));
+					traceFutures.add(this.pool.submit(
+						new TraceProcessor(
+							this.source.getModel(), 
+							this.source.getLog().get(index),
+							this.estimators,
+							alignment,
+							this.numberOfExecutions,
+							this.numberOfWritesPerTransition,
+							progress
+							)
+						, index)
+					);
 				}
 			} else {
 				// The alignment's fitness is lower than the fitness threshold; skip the trace and count the skipped traces
