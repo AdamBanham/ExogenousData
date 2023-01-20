@@ -15,7 +15,11 @@ import javax.swing.ButtonGroup;
 import javax.swing.JLabel;
 import javax.swing.JPanel;
 import javax.swing.JRadioButton;
+import javax.swing.JSpinner;
 import javax.swing.JTextPane;
+import javax.swing.SpinnerNumberModel;
+import javax.swing.event.ChangeEvent;
+import javax.swing.event.ChangeListener;
 import javax.swing.event.DocumentEvent;
 import javax.swing.event.DocumentListener;
 import javax.swing.text.AbstractDocument;
@@ -40,6 +44,9 @@ public class ExogenousInvestigatorDecisionMinerSelector extends JPanel {
 	
 //	gui elements
 	private InstanceThresholdParameter instanceThreshold;
+	private PruneParameter prune;
+	private CrossValidateParameter crossValidate;
+	private ConfidenceLevelParameter confidence;
 	private ProMScrollPane content;
 	private JPanel contentView;
 	
@@ -47,6 +54,9 @@ public class ExogenousInvestigatorDecisionMinerSelector extends JPanel {
 	public ExogenousInvestigatorDecisionMinerSelector setup() {
 //		make parameters
 		instanceThreshold = new InstanceThresholdParameter();
+		prune = new PruneParameter();
+		crossValidate = new CrossValidateParameter();
+		confidence = new ConfidenceLevelParameter();
 //		setup content
 		PanelStyler.StylePanel(this, true, BoxLayout.Y_AXIS);
 		contentView = new ProMScrollablePanel();
@@ -56,6 +66,9 @@ public class ExogenousInvestigatorDecisionMinerSelector extends JPanel {
 		add(content);
 //		add parameters
 		contentView.add(instanceThreshold);
+		contentView.add(prune);
+		contentView.add(crossValidate);
+		contentView.add(confidence);
 		return this;
 	}
 	
@@ -63,6 +76,9 @@ public class ExogenousInvestigatorDecisionMinerSelector extends JPanel {
 		
 		MinerConfigurationBuilder builder = MinerConfiguration.builder();
 		instanceThreshold.addConfiguration(builder);
+		prune.addConfiguration(builder);
+		crossValidate.addConfiguration(builder);
+		confidence.addConfiguration(builder);
 		
 		return builder.build();
 	}
@@ -80,19 +96,63 @@ public class ExogenousInvestigatorDecisionMinerSelector extends JPanel {
 	private abstract class BaseParameter extends JPanel implements DecisionMinerParameter {
 		
 		protected Font titleFont = new Font("Serif", Font.BOLD, 18);
+		protected int titleLeft = 10;
 		protected Font plainFont = new Font("Serif", Font.PLAIN, 14);
+		protected int contentLeft = 25;
+		protected GridBagConstraints c = new GridBagConstraints();
+		
+		protected void setup() {
+//			set layout
+			PanelStyler.StylePanel(this, false);
+			setLayout(new GridBagLayout());
+		}
+		
+		protected void makeTitle(String title, String parameterInfo) {
+//			add title
+			JLabel text = new JLabel(title);
+			text.setBackground(Color.DARK_GRAY);
+			text.setFont(titleFont);
+			c.weightx = 1.0;
+			c.weighty = 0.05;
+			c.insets = new Insets(20,titleLeft,5,0);
+			c.gridx = 0;
+			c.fill = GridBagConstraints.HORIZONTAL;
+			c.gridwidth = 10;
+			c.anchor = GridBagConstraints.WEST;
+			add(text, c);
+//			add what the parameter does
+			text = new JLabel(parameterInfo);
+			text.setBackground(Color.DARK_GRAY);
+			text.setFont(plainFont);
+			c.gridy = 1;
+			c.insets = new Insets(0,contentLeft,5,5);
+			c.weightx = 1.0;
+			c.fill = GridBagConstraints.HORIZONTAL;
+			c.gridwidth = 10;
+			add(text, c);
+			c.fill = GridBagConstraints.NONE;
+		}
 	}
 	
-	private enum InstanceMode {
+	public enum InstanceMode {
 		REL,
 		ABS,
 		BOTH;
 	}
 	
+	public enum PruneMode {
+		PRUNE,
+		UNPRUNE
+	}
+	
+	public enum CrossValidateMode {
+		ENABLE,
+		DISBALE
+	}
+	
 	private class InstanceThresholdParameter extends BaseParameter {
 		
 //		gui elements
-		private GridBagConstraints c = new GridBagConstraints();
 		private JRadioButton relativeMode = new JRadioButton("Fractional");
 		private JRadioButton absoluteMode = new JRadioButton("Absolute");
 		private JRadioButton thresholdMode = new JRadioButton("Both");
@@ -107,47 +167,32 @@ public class ExogenousInvestigatorDecisionMinerSelector extends JPanel {
 		private double absoluteInstanceLevel = 25;
 		private double thresholdInstanceLevel = 200;
 		
+//		labels
+		String title = "Minimun Number of Instances per Leaf:";
+		String info = "<html><body><p>"
+				+ "This parameter limits how leafs are constructed "
+				+ "in the decision tree. Leafs will not be added unless they "
+				+ "are supported at least the selected amount of observations."
+				+ "</p><p>"
+				+ "When set too low, overfitting will occur, however when set"
+				+ " too high, a decision tree may not be constructed at all. "
+				+ "Futhermore, depending on the (un)balance of observations across "
+				+ "choices in the model, both underfitting and overfitting can occur."
+				+ "</p><p>"
+				+ "Three options are available, a user can select a fractional "
+				+ "percentage of observations per leaf, "
+				+ "an absolute number, or both; where fractional is used above "
+				+ "a threshold of instances and the absolute value is used "
+				+ "when a choice has less observations than the thershold."
+				+ "</p></body></html>";
+		
 		public InstanceThresholdParameter() {
-//			set layout
-			PanelStyler.StylePanel(this, false);
-			setLayout(new GridBagLayout());
-//			add title
-			JLabel text = new JLabel("Minimun Number of Instance per Leaf:");
-			text.setBackground(Color.DARK_GRAY);
-			text.setFont(titleFont);
-			c.weightx = 1.0;
-			c.weighty = 0.05;
-			c.insets = new Insets(20,10,5,0);
-			c.gridx = 0;
-			c.gridwidth = 10;
-			c.anchor = GridBagConstraints.WEST;
-			add(text, c);
-//			add what the parameter does
-			text = new JLabel("<html><body><p>"
-					+ "This parameter limits how leafs are constructed "
-					+ "in the decision tree. Leafs will not be added unless they "
-					+ "are supported at least the selected amount of observations."
-					+ "</p><p>"
-					+ "When set too low, overfitting will occur, however when set"
-					+ " too high, a decision tree may not be constructed at all. "
-					+ "Futhermore, depending on the (un)balance of observations across "
-					+ "choices in the model, both underfitting and overfitting can occur."
-					+ "</p><p>"
-					+ "Three options are available, a user can select a fractional "
-					+ "percentage of observations per tree, "
-					+ "an absolute number, or both; where fractional is used above "
-					+ "a selected minimum number of instances and the absolute value "
-					+ "when under the minimum amount."
-					+ "</p></body></html>");
-			text.setBackground(Color.DARK_GRAY);
-			text.setFont(plainFont);
-			c.gridy = 1;
-			c.insets = new Insets(0,25,5,5);
-			c.weightx = 1.0;
-			c.gridwidth = 10;
-			add(text, c);
+//			setup parameter layout
+			setup();
+//			add title and parameter info
+			makeTitle(title, info);
 //			add radio button for selecting mode controls
-			text = new JLabel("Instance Mode:");
+			JLabel text = new JLabel("Instance Mode:");
 			text.setFont(plainFont);
 			c.gridy = 2;
 			c.gridx = 0;
@@ -464,5 +509,256 @@ public class ExogenousInvestigatorDecisionMinerSelector extends JPanel {
 		}
 		
 	}
+
+	private class PruneParameter extends BaseParameter {
+
+//		gui elements
+		private JRadioButton unprunedRadio = new JRadioButton("Unpruned");
+		private JRadioButton prunedRadio = new JRadioButton("Pruned");
+		private ButtonGroup radios = new ButtonGroup();
+		
+//		internal states
+		boolean unpruned = false;
+		
+//		labels
+		String title = "Pruning:";
+		String info = "<html><body><p>"
+				+ "The result of decision tree construction process can be a "
+				+ "decision tree which is often very complex and overfits the data "
+				+ "by inferring more structure than is justified by the observations."
+				+ "Moreover, this complexity in the structure of the decision tree "
+				+ "can have a higher error than a simpler tree. Thus, pruning occurs "
+				+ "on the decision tree before the algorithm completes, which is a "
+				+ "process which removes sub-trees of the structure with leafs without "
+				+ "affecting the classification accuracy on unseen cases."
+				+ "</p>"
+				+ "<p>"
+				+ "While a simplied tree can be more understandable, the pruning process "
+				+ "will return a tree which covers less training observations. Thus, "
+				+ "turning off this process can be useful for some classification problems, "
+				+ "where unbalanced outcomes occur as pruning will be favour of the majority class."
+				+ "</p>"
+				+ "</body></html>";
+		
+		public PruneParameter() {
+//			setup parameter
+			setup();
+//			add title and info
+			makeTitle(title, info);
+//			add radio buttons
+			JLabel text = new JLabel("Pruning Mode:");
+			c.gridy = 2;
+			c.gridx = 0;
+			c.weightx = 0;
+			c.gridwidth = 1;
+			c.insets = new Insets(10,contentLeft,5,5);
+			add(text, c);
+//			add radio buttons
+			c.gridx += 1;
+			c.insets = new Insets(10,5,5,5);
+			prunedRadio.setSelected(true);
+			prunedRadio.setBackground(Color.LIGHT_GRAY);
+			prunedRadio.setActionCommand(PruneMode.PRUNE.name());
+			prunedRadio.addActionListener(new ActionListener() {
+				public void actionPerformed(ActionEvent e) {
+					if (e.getActionCommand() == PruneMode.PRUNE.name()) {
+						moveMode(PruneMode.PRUNE);
+					}
+			}
+			});
+			add(prunedRadio, c);
+			radios.add(prunedRadio);
+			c.gridx += 1;
+			unprunedRadio.setSelected(false);
+			unprunedRadio.setBackground(Color.LIGHT_GRAY);
+			unprunedRadio.setActionCommand(PruneMode.UNPRUNE.name());
+			unprunedRadio.addActionListener(new ActionListener() {
+				public void actionPerformed(ActionEvent e) {
+					if (e.getActionCommand() == PruneMode.UNPRUNE.name()) {
+						moveMode(PruneMode.UNPRUNE);
+					}
+			}
+			});
+			add(unprunedRadio, c);
+			radios.add(unprunedRadio);
+		}
+		
+		public void moveMode(PruneMode mode) {
+			if (mode == PruneMode.PRUNE) {
+				unpruned = false;
+			} else {
+				unpruned = true;
+			}
+		}
+
+		public void addConfiguration(MinerConfigurationBuilder builder) {
+			// TODO Auto-generated method stub
+			builder.unpruned(unpruned);
+		}
+		
+	}
 	
+	private class CrossValidateParameter extends BaseParameter {
+		
+			// gui elements
+			JRadioButton enableButton = new JRadioButton("Enable");
+			JRadioButton disableButton = new JRadioButton("Disable");
+			ButtonGroup radios = new ButtonGroup();
+			
+			// states
+			boolean enabled = false;
+			int folds = 5;
+		
+			// labels
+			String title = "Cross Validation:";
+			String info = "<html><body><p>"
+					+ "To ensure that the decision tree is robustly constructed "
+					+ "and possibly not locked to a local mimimun, cross validation "
+					+ "can be used. Where X random subsets of the training observations "
+					+ "are used to construct X decision trees, returning the best decision "
+					+ "tree found, where one decision tree is constructed from "
+					+ "X - 1 subsets and validating on the remanining subset. Note that "
+					+ "enabling cross validation will require X-1 times more computation "
+					+ "as X decision trees are construction instead of 1."
+					+ "</p></body></html>";
+			
+		public CrossValidateParameter() {
+//			setup parameter
+			setup();
+//			make title and info
+			makeTitle(title, info);
+//			add in mode
+			JLabel text = new JLabel("Enable Cross Validation:");
+			text.setFont(plainFont);
+			c.gridy = 2;
+			c.gridx = 0;
+			c.weightx = 0;
+			c.gridwidth = 1;
+			c.insets = new Insets(10,contentLeft,5,5);
+			add(text, c);
+//			add radio buttons
+			c.gridx += 1;
+			c.insets = new Insets(10,5,5,5);
+			enableButton.setSelected(enabled);
+			enableButton.setBackground(Color.LIGHT_GRAY);
+			enableButton.setActionCommand(CrossValidateMode.ENABLE.name());
+			enableButton.addActionListener(new ActionListener() {
+				public void actionPerformed(ActionEvent e) {
+					if (e.getActionCommand() == CrossValidateMode.ENABLE.name()) {
+						moveMode(CrossValidateMode.ENABLE);
+					}
+			}
+			});
+			radios.add(enableButton);
+			add(enableButton, c);
+			c.gridx += 1;
+			disableButton.setSelected(!enabled);
+			disableButton.setBackground(Color.LIGHT_GRAY);
+			disableButton.setActionCommand(CrossValidateMode.DISBALE.name());
+			disableButton.addActionListener(new ActionListener() {
+				public void actionPerformed(ActionEvent e) {
+					if (e.getActionCommand() == CrossValidateMode.DISBALE.name()) {
+						moveMode(CrossValidateMode.DISBALE);
+					}
+			}
+			});
+			radios.add(disableButton);
+			add(disableButton, c);
+			c.gridx += 1;
+//			add counter for folds
+			text = new JLabel("# of Subsets:");
+			text.setFont(plainFont);
+			c.anchor = GridBagConstraints.EAST;
+			add(text, c);
+			c.anchor = GridBagConstraints.WEST;
+			c.gridx += 1;
+			JSpinner spinner = new JSpinner(new SpinnerNumberModel(5, 2, 25, 1));
+			spinner.addChangeListener(new ChangeListener() {
+				
+				public void stateChanged(ChangeEvent e) {
+					int change = (int) spinner.getValue();
+					System.out.println("Fold changed to :: "+change);
+					folds = change;
+					
+				}
+			});
+			add(spinner, c);
+		}
+		
+		private void moveMode(CrossValidateMode mode) {
+			if (mode == CrossValidateMode.ENABLE) {
+				enabled = true;
+			} else {
+				enabled = false;
+			}
+		}
+
+		public void addConfiguration(MinerConfigurationBuilder builder) {
+			// TODO Auto-generated method stub
+			builder.crossValidate(enabled);
+			builder.crossValidateFolds(folds);
+		}
+		
+	}
+	
+	private class ConfidenceLevelParameter extends BaseParameter {
+		// gui elements
+		private JSpinner confidenceFactor;
+		
+		// states
+		float factor = 0.25f;
+		float min = 0.01f;
+		float max = 0.99f;
+					
+		// labels
+		String title = "Confidence Factor";
+		String info = "<html><body><p>"
+				+ "The confidence factor for C4.5 constructed decision trees affects "
+				+ "how the initial decision tree is pruned to the resulting tree. "
+				+ "Smaller values cause more pruning to occur than larger values, "
+				+ "where this affect is more pronounced on smaller datasets. If the "
+				+ "returned decision tree has a high error rate on unseen cases, "
+				+ "increasing this factor can improve the tree (indicative of "
+				+ "underprunning)."
+				+ "</p></body></html>";
+		
+		public ConfidenceLevelParameter() {
+			//	setup panel
+			setup();
+			// add title and info
+			makeTitle(title, info);
+			// add spinner
+			JLabel text = new JLabel("Factor (0.01-0.99):");
+			text.setFont(plainFont);
+			c.insets = new Insets(5, contentLeft, 5, 5);
+			c.gridy = 2;
+			c.gridx = 0;
+			c.weightx = 0;
+			c.gridwidth = 1;
+			c.fill = GridBagConstraints.NONE;
+			c.anchor = GridBagConstraints.EAST;
+			add(text, c);
+			c.gridx += 1;
+			c.anchor = GridBagConstraints.WEST;
+			c.insets = new Insets(5,5,5,5);
+			confidenceFactor = new JSpinner(new SpinnerNumberModel(
+					factor, min, max, 0.01)
+			);
+			confidenceFactor.addChangeListener(new ChangeListener() {
+				
+				public void stateChanged(ChangeEvent e) {
+					double val = (double) confidenceFactor.getValue();
+					factor = (float) val;
+				}
+			});
+			add(confidenceFactor, c);
+		}
+
+
+		public void addConfiguration(MinerConfigurationBuilder builder) {
+			
+			builder.confidenceLevel(factor);
+		}
+		
+	}
 }
