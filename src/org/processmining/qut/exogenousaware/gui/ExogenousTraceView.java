@@ -1,4 +1,4 @@
-package org.processmining.qut.exogenousaware.gui;
+	package org.processmining.qut.exogenousaware.gui;
 
 
 import java.awt.BasicStroke;
@@ -158,9 +158,31 @@ public class ExogenousTraceView extends JPanel {
 		TraceVisOverviewChart.builder().source(this).target(topPanel).endo(endo).progress(progress).build().execute();
 		
 //		style panels
-		this.stylePanel(topPanel);
+		this.stylePanel(topPanel, false);
 		topPanel.setOpaque(false);
-		topPanel.setLayout(new GridLayout(0,1));
+//		topPanel.setLayout(new GridLayout(0,1));
+		topPanel.validate();
+		topPanel.setMinimumSize(new Dimension(800,200));
+		return topPanel;
+	}
+	
+	public JComponent buildTraceVis(XTrace endo, boolean standardise) {
+//		panels to show
+		JPanel topPanel = new JPanel();
+		JLabel progress = new JLabel();
+		progress.setVisible(true);
+//		setup graph builder in background
+		TraceVisOverviewChart.builder().source(this)
+			.target(topPanel)
+			.endo(endo)
+			.progress(progress)
+			.standardize(standardise)
+			.build().execute();
+		
+//		style panels
+		this.stylePanel(topPanel, false);
+		topPanel.setOpaque(false);
+//		topPanel.setLayout(new GridLayout(0,1));
 		topPanel.validate();
 		topPanel.setMinimumSize(new Dimension(800,200));
 		return topPanel;
@@ -174,6 +196,12 @@ public class ExogenousTraceView extends JPanel {
 	
 	public void updateTraceVis(XTrace endo) {
 		this.rightTopBottom.setTopComponent(this.buildTraceVis(endo));
+		this.rightTopBottom.validate();
+		this.validate();
+	}
+	
+	public void updateTraceVis(XTrace endo, boolean standardise ) {
+		this.rightTopBottom.setTopComponent(this.buildTraceVis(endo, standardise));
 		this.rightTopBottom.validate();
 		this.validate();
 	}

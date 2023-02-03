@@ -1,6 +1,11 @@
 package org.processmining.qut.exogenousaware.gui.workers;
 
 import java.awt.Color;
+import java.awt.Dimension;
+import java.awt.GridBagConstraints;
+import java.awt.GridBagLayout;
+import java.awt.event.MouseAdapter;
+import java.awt.event.MouseEvent;
 import java.awt.geom.Ellipse2D;
 import java.util.ArrayList;
 import java.util.HashMap;
@@ -12,6 +17,7 @@ import java.util.Set;
 import java.util.concurrent.ExecutionException;
 import java.util.stream.Collectors;
 
+import javax.swing.JButton;
 import javax.swing.JLabel;
 import javax.swing.JPanel;
 import javax.swing.SwingWorker;
@@ -44,9 +50,14 @@ public class TraceVisOverviewChart extends SwingWorker<JPanel, String> {
 	@NonNull JPanel target;
 	@NonNull JLabel progress;
 	@NonNull XTrace endo;
-
+	
+	@Default boolean standardize = true;
 	@Default ChartPanel chart = null;
 	@Default double innerSpacing = 25;
+	
+//	gui elements
+	private static String FlipToStandardise = "Standardise exo-series?";
+	private static String FlipToRaw = "Show raw exo-series?";
 	
 	@Override
 	protected JPanel doInBackground() throws Exception {
@@ -141,6 +152,13 @@ public class TraceVisOverviewChart extends SwingWorker<JPanel, String> {
 //			check if we have set up bounds before
 			double min = y.stream().reduce((c,n) -> c > n ? n : c).get();
 			double high = y.stream().reduce((c,n) -> c < n ? n : c).get();
+			double mean = y.stream().reduce((c,n) -> c + n).get() / y.size();
+			double std = Math.sqrt(y.stream().reduce((c,n) -> c + Math.pow(n - mean,2)).get()) / y.size();
+			if (standardize) {
+				y = y.stream().map(ny -> (ny - mean)/std).collect(Collectors.toList());
+				min = (min - mean) /std;
+				high = (high - mean) /std;
+			}
 			if (!boundSet) {
 				bounds.put("low", min);
 				bounds.put("high", high);
@@ -157,7 +175,14 @@ public class TraceVisOverviewChart extends SwingWorker<JPanel, String> {
 //			build series and render
 			String title = "%s (Exo-Panel#%d)";
 			String name = getExogenousName(exo);
-			XYSeries series = new XYSeries(String.format(title, name, exoCount+1));
+			XYSeries series;
+			if (standardize) {
+				title = title + " (%.2f/%.2f)";
+				series = new XYSeries(String.format(title, name, exoCount+1, mean, std));
+			} else {
+				series = new XYSeries(String.format(title, name, exoCount+1));
+			}
+			 
 			for(int idx = 0; idx < x.size(); idx++) {
 				series.add(x.get(idx) - starting, y.get(idx));
 			}
@@ -274,7 +299,32 @@ public class TraceVisOverviewChart extends SwingWorker<JPanel, String> {
             this.source.setTraceOverviewChart(chart);
             this.progress.setVisible(false);
             graph.repaint();
-            this.target.add(graph);
+            this.target.setLayout(new GridBagLayout());
+            GridBagConstraints c = new GridBagConstraints();
+            c.gridx = 1;
+            c.gridy = 1;
+            c.gridwidth = 10;
+            c.weightx = 1.0;
+            c.weighty = 0.95;
+            c.fill = GridBagConstraints.BOTH;
+            this.target.add(graph, c);
+//            add flip standardisation button
+            String buttonText;
+            if (standardize) {
+            	buttonText = FlipToRaw;
+            } else {
+            	buttonText = FlipToStandardise;
+            }
+            JButton flipper = new JButton(buttonText);
+            flipper.addMouseListener(new FlipperListener(this));
+            flipper.setMaximumSize(new Dimension(100, 25));
+            c.fill = GridBagConstraints.NONE;
+            c.anchor = GridBagConstraints.WEST;
+            c.gridy +=1;
+            c.gridwidth =1;
+            c.weightx = 0.1;
+            c.weighty = 0.05;
+            this.target.add(flipper, c);
             this.target.repaint();
             this.target.validate();
         } 
@@ -301,4 +351,21 @@ public class TraceVisOverviewChart extends SwingWorker<JPanel, String> {
 		return trace.getAttributes().get("exogenous:name").toString();
 	}
 	
+	
+	private static class FlipperListener extends MouseAdapter {
+		
+		private TraceVisOverviewChart owner;
+		
+		public FlipperListener(TraceVisOverviewChart owner) {
+			this.owner = owner;
+		}
+
+		public void mouseClicked(MouseEvent e) {
+			// TODO Auto-generated method stub
+			owner.source.updateTraceVis(owner.endo, !owner.standardize);
+		}
+		
+		
+		
+	}
 }
