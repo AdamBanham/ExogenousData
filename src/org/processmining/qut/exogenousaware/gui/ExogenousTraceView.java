@@ -166,7 +166,7 @@ public class ExogenousTraceView extends JPanel {
 		return topPanel;
 	}
 	
-	public JComponent buildTraceVis(XTrace endo, boolean standardise) {
+	public JComponent buildTraceVis(XTrace endo, boolean normalize, boolean ppa, boolean sax) {
 //		panels to show
 		JPanel topPanel = new JPanel();
 		JLabel progress = new JLabel();
@@ -176,7 +176,9 @@ public class ExogenousTraceView extends JPanel {
 			.target(topPanel)
 			.endo(endo)
 			.progress(progress)
-			.standardize(standardise)
+			.normalize(normalize)
+			.ppa(ppa)
+			.sax(sax)
 			.build().execute();
 		
 //		style panels
@@ -200,8 +202,8 @@ public class ExogenousTraceView extends JPanel {
 		this.validate();
 	}
 	
-	public void updateTraceVis(XTrace endo, boolean standardise ) {
-		this.rightTopBottom.setTopComponent(this.buildTraceVis(endo, standardise));
+	public void updateTraceVis(XTrace endo, boolean standardise, boolean ppa, boolean sax) {
+		this.rightTopBottom.setTopComponent(this.buildTraceVis(endo, standardise, ppa, sax));
 		this.rightTopBottom.validate();
 		this.validate();
 	}
