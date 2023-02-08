@@ -2,6 +2,7 @@ package org.processmining.qut.exogenousaware.gui.workers;
 
 import java.awt.Color;
 import java.awt.Dimension;
+import java.awt.Font;
 import java.awt.GridBagConstraints;
 import java.awt.GridBagLayout;
 import java.awt.Insets;
@@ -30,6 +31,8 @@ import org.deckfour.xes.model.XTrace;
 import org.jfree.chart.ChartFactory;
 import org.jfree.chart.ChartPanel;
 import org.jfree.chart.JFreeChart;
+import org.jfree.chart.annotations.XYAnnotation;
+import org.jfree.chart.annotations.XYTextAnnotation;
 import org.jfree.chart.axis.ValueAxis;
 import org.jfree.chart.plot.XYPlot;
 import org.jfree.chart.renderer.xy.XYLineAndShapeRenderer;
@@ -190,7 +193,6 @@ public class TraceVisOverviewChart extends SwingWorker<JPanel, String> {
 			if (normalize) {
 				Normalisation norm = normalise(y, x);
 				if (norm != null) {
-					System.out.println("Normalisation completed");
 					y = norm.getValues();
 					mean = norm.getMean();
 					std = norm.getStd();
@@ -345,10 +347,16 @@ public class TraceVisOverviewChart extends SwingWorker<JPanel, String> {
 		List<Object> seriesAndRender = new ArrayList<Object>();
 		XYSeriesCollection saxMoments = new XYSeriesCollection();
 		XYLineAndShapeRenderer saxRender = new XYLineAndShapeRenderer();
+		List<XYAnnotation> saxAlphas = new ArrayList<XYAnnotation>();
 		seriesAndRender.add(saxMoments);
 		seriesAndRender.add(saxRender);
+		seriesAndRender.add(saxAlphas);
+//		compute constants
+		double adjust = (right-left) * 0.05;
+		double mid = left + (right - left)/2.0;
 //		build horizontal lines for boundaries
 		for(int i=0; i < SAX_BOUNDARIES.size(); i++) {
+//			handle horz slices
 			XYSeries saxMoment = new XYSeries(
 					"SAX_"+ i
 			);
@@ -364,9 +372,65 @@ public class TraceVisOverviewChart extends SwingWorker<JPanel, String> {
 			saxRender.setSeriesShapesVisible(i , false);
 			saxRender.setSeriesVisibleInLegend(i, false, false);
 			saxMoments.addSeries(saxMoment);
+//			handle lettering 
+			double y = SAX_BOUNDARIES.get(i);
+			if (i > 0) {
+				double ly = SAX_BOUNDARIES.get(i - 1);
+				y = y - (y -ly) *0.5;
+			} else {
+				y = -1.5;
+			}
+			saxAlphas.add(
+					createSAXAnnotation(
+							SAX_LETTERS.get(i), left + adjust, y
+					)
+			);
+			saxAlphas.add(
+					createSAXAnnotation(
+							SAX_LETTERS.get(i), mid, y
+					)
+			);
+			saxAlphas.add(
+					createSAXAnnotation(
+							SAX_LETTERS.get(i), right - adjust, y
+					)
+			);
 		}
+//		add upper bound
+//		handle lettering 
+		double y = 1.5;
+		saxAlphas.add(
+				createSAXAnnotation(
+						SAX_LETTERS.get(SAX_LETTERS.size()-1), left + adjust, y
+				)
+		);
+		saxAlphas.add(
+				createSAXAnnotation(
+						SAX_LETTERS.get(SAX_LETTERS.size()-1), mid, y
+				)
+		);
+		saxAlphas.add(
+				createSAXAnnotation(
+						SAX_LETTERS.get(SAX_LETTERS.size()-1), right - adjust, y
+				)
+		);
+		
 		
 		return seriesAndRender;
+	}
+	
+	private XYAnnotation createSAXAnnotation(String letter, double x, double y) {
+		XYTextAnnotation ret = new XYTextAnnotation(
+				letter, x, y
+		);
+		ret.setFont(new Font("Times New Roman", Font.BOLD, 10));
+		Color fontColor = new Color(
+				Color.black.getRed(), Color.black.getGreen(),
+				Color.black.getBlue(), (int)(255.0 * 0.45));
+		ret.setOutlinePaint(fontColor);
+		ret.setPaint(fontColor);
+		
+		return ret;
 	}
 	
 	@SuppressWarnings("unchecked")
@@ -421,6 +485,10 @@ public class TraceVisOverviewChart extends SwingWorker<JPanel, String> {
 			saxRender = (XYLineAndShapeRenderer) out.get(1);
 			plot.setDataset(2, saxSlices);
 			plot.setRenderer(2, saxRender);
+			List<XYAnnotation> annotations = (List<XYAnnotation>) out.get(2);
+			for (XYAnnotation annot : annotations) {
+				plot.addAnnotation(annot);
+			}
 		}
 		
 //		add text annotations for event lines
