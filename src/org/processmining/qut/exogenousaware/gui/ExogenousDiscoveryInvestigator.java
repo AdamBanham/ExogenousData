@@ -84,6 +84,7 @@ public class ExogenousDiscoveryInvestigator extends JPanel{
 	@Default public String enhancementSearchViewKey = "E-Search";
 	@Default private int maxConcurrentThreads = Runtime.getRuntime().availableProcessors() > 3 ? Runtime.getRuntime().availableProcessors() - 2 : 1;
 	@Default @Getter private ProcessModelStatistics statistics = null;
+	@Default @Getter private Map<String, GuardExpression> rules = new HashMap();
 	
 //  gui widgets
 	@Default private JButton enhancementButton = new JButton("Open Enhancement");
@@ -369,12 +370,13 @@ public class ExogenousDiscoveryInvestigator extends JPanel{
 			}
 		}
 		System.out.println("guards found in existing model :: "+ rules.toString());
+		this.rules = rules;
 //		create panel
 		this.exoDotController = ExogenousInvestigatorDotPanel
 				.builder()
 				.graph(this.controlflow)
 				.swapMap(new HashMap())
-				.rules(rules)
+				.rules(this.rules)
 				.build()
 				.setup();
 //		add panel
@@ -419,7 +421,7 @@ public class ExogenousDiscoveryInvestigator extends JPanel{
 			}
 		}
 		
-		
+		this.rules = rules;
 		
 		this.exoDotController.setRules(rules);
 		this.exoDotController.setSwapMap(swapMap);

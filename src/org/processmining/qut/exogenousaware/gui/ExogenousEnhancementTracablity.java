@@ -67,6 +67,7 @@ public class ExogenousEnhancementTracablity {
 						.graph(this.controlflow)
 						.rules(this.focus.getFoundExpressions())
 						.swapMap(this.focus.getTask().getConveretedNames())
+						.modelLogInfo(this.getSource().getStatistics())
 						.updatedGraph(this.controlflow)
 						.build()
 						.setup();
@@ -113,9 +114,10 @@ public class ExogenousEnhancementTracablity {
 	
 	public void update(ExogenousDiscoveryInvestigation newFocus) {
 		this.setFocus(newFocus);
-		this.vis.setRules(this.focus.getFoundExpressions());
+		this.vis.setRules(this.source.getRules());
 		this.vis.setSwapMap(this.focus.getTask().getConveretedNames());
-		this.vis.setUpdatedGraph(this.focus.getOutcome());
+		this.vis.setUpdatedGraph(this.source.getControlflow());
+		this.vis.setModelLogInfo(this.source.getStatistics());
 		this.vis.update(this);
 		this.analysis.reset();
 		this.main.validate();

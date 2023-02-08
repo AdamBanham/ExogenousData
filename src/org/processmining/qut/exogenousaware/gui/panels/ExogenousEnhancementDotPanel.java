@@ -72,10 +72,10 @@ public class ExogenousEnhancementDotPanel {
 		DotGraphVisualisation handler = 
 				DotGraphVisualisation.builder()
 				.graph(this.graph)
-				.updatedGraph(this.updatedGraph)
 				.swapMap(this.swapMap)
 				.transMapping(transMapping)
 				.modelLogInfo(modelLogInfo)
+				.updatedGraph(updatedGraph)
 				.rules(this.rules)
 				.build()
 				.make();
