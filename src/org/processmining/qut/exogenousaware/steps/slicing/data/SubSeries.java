@@ -8,6 +8,8 @@ import org.deckfour.xes.model.XEvent;
 import org.deckfour.xes.model.XTrace;
 import org.processmining.qut.exogenousaware.data.ExogenousDataset;
 import org.processmining.qut.exogenousaware.data.ExogenousDatasetType;
+import org.processmining.qut.exogenousaware.ds.timeseries.data.RealTimePoint;
+import org.processmining.qut.exogenousaware.ds.timeseries.data.RealTimeSeries;
 
 import lombok.Builder;
 import lombok.Data;
@@ -40,6 +42,25 @@ public class SubSeries {
 	@NonNull XEvent endogenous;
 	@Singular List<XEvent> subEvents;
 	XTrace endoSource;
+	
+//	public enums
+	
+	public enum Scaling {
+		ms(1.0),
+		sec(1000.0),
+		min(1000.0 * 60.0),
+		hour(1000.0 * 60.0 * 60.0);
+		
+		private Double scale;
+		
+		private Scaling(double scale) {
+			this.scale = scale;
+		}
+		
+		public Double scale(double value) {
+			return value / scale;
+		}
+	}
 	
 	
 	/**
@@ -92,6 +113,17 @@ public class SubSeries {
 		return x;
 	}
 	
+	public List<Long> getXSeries(Boolean relative, Scaling scale){
+		List<Long> x = new ArrayList<Long>();
+		long start = relative ? ( (XAttributeTimestamp) this.endogenous.getAttributes().get("time:timestamp")).getValueMillis() : 0;
+		for(XEvent ev : this.subEvents) {
+			XAttributeTimestamp ts = (XAttributeTimestamp) ev.getAttributes().get("time:timestamp");
+			x.add(ts.getValueMillis()- start);
+		}
+		return x;
+	}
+	
+	
 	public List<Double> getYSeries(){
 		List<Double> y = new ArrayList<Double>();
 		for(XEvent ev : this.subEvents) {
@@ -100,4 +132,67 @@ public class SubSeries {
 		}
 		return y;
 	}
+	
+	public RealTimeSeries getTimeSeries() {
+		return getTimeSeries(Scaling.ms);
+	}
+	
+	/**
+	 * Collect a time series representation for this slice. Uses relative time 
+	 * for the time axis (using the associated event).
+	 * @param timeScale : How to scale the time axis
+	 * @return A time series representation of slice.
+	 */
+	public RealTimeSeries getTimeSeries(Scaling timeScale) {
+		List<Long> times = getXSeries(true);
+		List<Double> values = getYSeries();
+		List<RealTimePoint> points = new ArrayList();
+		for(int i=0; i<times.size(); i++) {
+			points.add(new RealTimePoint(
+					timeScale.scale(times.get(i)),
+					values.get(i)
+					)
+			);
+		}
+		return new RealTimeSeries(
+				buildPrefix(true),
+				getComesFrom().getColourBase(),
+				points
+		);
+	}
+	
+	public RealTimeSeries getSourceTimeSeries() {
+		return getSourceTimeSeries(Scaling.ms);
+	}
+	
+	/**
+	 * Collects a time series representation of the source of this slice.
+	 * @param timeScale : scaling to use on time axis
+	 * @return 
+	 */
+	public RealTimeSeries getSourceTimeSeries(Scaling timeScale) {
+		List<RealTimePoint> points = new ArrayList();
+		long startingTraceTime = 
+				( (XAttributeTimestamp) 
+						this.endoSource.get(0).getAttributes().get("time:timestamp")
+				).getValueMillis();
+		for( XEvent measure : source) {
+			long time = ((XAttributeTimestamp) 
+					measure.getAttributes().get("time:timestamp")
+				).getValueMillis();
+			double val = Double.parseDouble(
+					measure.getAttributes().get("exogenous:value").toString()
+				);
+			points.add(new RealTimePoint(
+					timeScale.scale(time - startingTraceTime),
+					val)
+				);
+		}
+		return new RealTimeSeries( 
+				getDataset(),
+				getComesFrom().getColourBase(),
+				points
+		);
+	}
+	
 }
