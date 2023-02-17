@@ -3,6 +3,7 @@ package org.processmining.qut.exogenousaware.data.storage.workers;
 import java.util.ArrayList;
 import java.util.Date;
 import java.util.HashMap;
+import java.util.HashSet;
 import java.util.List;
 import java.util.Locale;
 import java.util.Map;
@@ -17,6 +18,14 @@ import java.util.concurrent.TimeUnit;
 
 import javax.swing.SwingWorker;
 
+import org.deckfour.xes.model.XAttribute;
+import org.deckfour.xes.model.XAttributeBoolean;
+import org.deckfour.xes.model.XAttributeContinuous;
+import org.deckfour.xes.model.XAttributeDiscrete;
+import org.deckfour.xes.model.XAttributeLiteral;
+import org.deckfour.xes.model.XAttributeMap;
+import org.deckfour.xes.model.XAttributeTimestamp;
+import org.deckfour.xes.model.XTrace;
 import org.processmining.datadiscovery.estimators.AbstractDecisionTreeFunctionEstimator;
 import org.processmining.datadiscovery.estimators.DecisionTreeBasedFunctionEstimator;
 import org.processmining.datadiscovery.estimators.FunctionEstimation;
@@ -25,6 +34,7 @@ import org.processmining.datadiscovery.estimators.Type;
 import org.processmining.datadiscovery.estimators.impl.DecisionTreeFunctionEstimator;
 import org.processmining.datadiscovery.estimators.impl.DiscriminatingFunctionEstimator;
 import org.processmining.datadiscovery.estimators.impl.OverlappingEstimatorLocalDecisionTree;
+import org.processmining.datadiscovery.estimators.weka.WekaUtil;
 import org.processmining.datadiscovery.model.DecisionPointResult;
 import org.processmining.datadiscovery.model.DiscoveredPetriNetWithData;
 import org.processmining.datadiscovery.plugins.DecisionMining;
@@ -40,10 +50,18 @@ import org.processmining.models.graphbased.directed.petrinetwithdata.newImpl.PNW
 import org.processmining.models.graphbased.directed.petrinetwithdata.newImpl.PetriNetWithDataFactory;
 import org.processmining.plugins.petrinet.replayresult.PNRepResult;
 import org.processmining.plugins.replayer.replayresult.SyncReplayResult;
+import org.processmining.qut.exogenousaware.data.ExogenousDataset;
+import org.processmining.qut.exogenousaware.data.ExogenousDatasetType;
+import org.processmining.qut.exogenousaware.data.graphs.followrelations.FollowGraph;
 import org.processmining.qut.exogenousaware.data.storage.ExogenousDiscoveryInvestigation;
+import org.processmining.qut.exogenousaware.ds.timeseries.approx.TimeSeriesSaxApproximator;
+import org.processmining.qut.exogenousaware.ds.timeseries.data.DiscreteTimeSeries;
 import org.processmining.qut.exogenousaware.gui.panels.ExogenousDiscoveryProgresser;
 import org.processmining.qut.exogenousaware.gui.panels.ExogenousDiscoveryProgresser.ProgressState;
 import org.processmining.qut.exogenousaware.gui.panels.ExogenousDiscoveryProgresser.ProgressType;
+import org.processmining.qut.exogenousaware.steps.slicing.data.SubSeries;
+import org.processmining.qut.exogenousaware.steps.slicing.data.SubSeries.Scaling;
+import org.processmining.qut.exogenousaware.steps.transform.data.TransformedAttribute;
 
 import com.google.common.util.concurrent.AtomicLongMap;
 
@@ -111,6 +129,129 @@ public class InvestigationTask extends SwingWorker<DiscoveredPetriNetWithData, I
 		@Default @Getter private boolean crossValidate = true;
 		@Default @Getter private int crossValidateFolds = 10;
 		@Default @Getter private float confidenceLevel = 0.25f;
+		@Default @Getter private boolean experimentalFeatures = true;
+	}
+	
+//	experimental targets
+	private static List<String> SAX_FROM = new ArrayList() {{
+		add("f");
+		add("e");
+		add("a");
+		add("j");
+	}};
+	private static List<String> SAX_TO = new ArrayList() {{ 
+		add("j");
+		add("a");
+		add("j");
+		add("a");
+	}};
+	
+	
+//	custom trace processor for classification examples
+	public static class ExperimentalFeatureProcessor extends TraceProcessor {
+		
+//		feature names 
+		public static String TOP_K_DFT_FEATURE_NAME = "%s:DFT:%d";
+		public static String SAX_MEAN_TO_OUTLIER_FEATURE_NAME = "%s:SAX:M->%s";
+		public static String SAX_OUTLIER_TO_OUTLIER_FEATURE_NAME = "%s:SAX:%s->%s";
+		
+//		sax targets
+		protected static String SAX_MEAN_POS = TimeSeriesSaxApproximator.SAX_LETTERS.get(5);
+		protected static String SAX_MEAN_NEG = TimeSeriesSaxApproximator.SAX_LETTERS.get(4);
+		protected static String SAX_OUTLIER_POS = TimeSeriesSaxApproximator.SAX_LETTERS.get(9);
+		protected static String SAX_OUTLIER_NEG = TimeSeriesSaxApproximator.SAX_LETTERS.get(0);
+		
+
+		public ExperimentalFeatureProcessor(
+				PetrinetGraph net,
+				XTrace xTrace,
+				Map<Place, FunctionEstimator> estimators,
+				SyncReplayResult alignment,
+				AtomicLongMap<Transition> numberOfExecutions,
+				Map<Transition,
+				AtomicLongMap<String>> numberOfWritesPerTransition,
+				Progress progress) {
+			super(net, xTrace, estimators, alignment, numberOfExecutions, numberOfWritesPerTransition, progress);
+		}
+		
+		@Override
+		protected void updateAttributes(XAttributeMap xAttributeMap) {
+			
+			Set<SubSeries> slices = new HashSet<>();
+			
+			for (XAttribute xAttrib : xAttributeMap.values())
+			{
+				String attributeKey = xAttrib.getKey();
+				String varName=WekaUtil.fixVarName(attributeKey);
+//				collect slices from exogenous attributes
+				if (xAttrib instanceof TransformedAttribute) {
+					SubSeries slice = ((TransformedAttribute)xAttrib).getSource();
+					if (slice.getDatatype() == ExogenousDatasetType.NUMERICAL) {
+						slices.add( slice );
+					}
+				}
+//				handle endogenous/exogenous attributes
+				if (xAttrib instanceof XAttributeBoolean) {
+					variableValues.put(varName, ((XAttributeBoolean)xAttrib).getValue());
+				} else if (xAttrib instanceof XAttributeContinuous) {
+					variableValues.put(varName, ((XAttributeContinuous)xAttrib).getValue());
+				} else if (xAttrib instanceof XAttributeDiscrete) {
+					variableValues.put(varName, ((XAttributeDiscrete)xAttrib).getValue());
+				} else if (xAttrib instanceof XAttributeTimestamp) {
+					variableValues.put(varName, ((XAttributeTimestamp)xAttrib).getValue());
+				} else if (xAttrib instanceof XAttributeLiteral) {
+					variableValues.put(varName,((XAttributeLiteral)xAttrib).getValue());
+				}
+			}
+//			create experimental features on the fly 
+//			System.out.println("[InvestigationTask] slices found :: "+slices.size());
+			for(SubSeries slice : slices) {
+//				generate DFT features for each slice
+//				TODO
+				generateDFTFeatures(slice);
+//				generate SAX features for each slice
+//				TODO
+				generateSAXFeatures(slice);
+			}
+//			System.out.println(variableValues.toString());
+		}
+
+		protected void generateSAXFeatures(SubSeries slice) {
+			// TODO Auto-generated method stub
+			try {
+				DiscreteTimeSeries saxSeries = slice
+						.getTimeSeries(Scaling.hour)
+						.createSAXRepresentation();
+				FollowGraph saxGraph = new FollowGraph(saxSeries);
+				createSAXFeature(SAX_MEAN_POS, SAX_OUTLIER_POS, saxGraph, slice);
+				createSAXFeature(SAX_MEAN_NEG, SAX_OUTLIER_NEG, saxGraph, slice);
+				createSAXFeature(SAX_OUTLIER_NEG, SAX_OUTLIER_POS, saxGraph, slice);
+				createSAXFeature(SAX_OUTLIER_POS, SAX_OUTLIER_NEG, saxGraph, slice);
+			} catch (Exception e) {
+				e.printStackTrace();
+			}
+		}
+
+		private void createSAXFeature(String startNode, String endNode, 
+				FollowGraph saxGraph, SubSeries slice) {
+			boolean found = saxGraph.checkForEventualFollowsBetween(startNode, endNode);
+//			System.out.println("saxFeature ::"+ saxGraph +" :: "
+//					+ startNode + " -> " + endNode + " :: " + found);
+			String featureName = String.format(SAX_OUTLIER_TO_OUTLIER_FEATURE_NAME,
+					slice.getDataset(),
+					startNode,
+					endNode
+			);
+			variableValues.put(WekaUtil.fixVarName(featureName), found);
+			
+		}
+
+		protected void generateDFTFeatures(SubSeries slice) {
+			// TODO Auto-generated method stub
+			
+		}
+		
+		
 	}
 	
 	
@@ -130,12 +271,33 @@ public class InvestigationTask extends SwingWorker<DiscoveredPetriNetWithData, I
 		}
 //		Need to create class types and literalvalues for selected variables
 		Map<String, Type> classTypes = new HashMap<String,Type>();
+		Map<String, Set<String>> literalValues = new HashMap<String,Set<String>>();
+//		handle experimental features inclusion for J48
+		if (config.isExperimentalFeatures()) {
+			for( ExogenousDataset dataset : this.source.getSource().getSource().getExogenousDatasets()) {
+				
+				String datasetName = dataset.getName();
+//				add sax feature names
+				for(int i=0;i < this.SAX_FROM.size(); i++) {
+					String expAttr = String.format(ExperimentalFeatureProcessor.SAX_OUTLIER_TO_OUTLIER_FEATURE_NAME,
+							datasetName,
+							this.SAX_FROM.get(i),
+							this.SAX_TO.get(i)
+					);
+					String likelyHandledname = GuardExpression.Factory.transformToVariableIdentifier(
+							DecisionMining.wekaUnescape(
+									WekaUtil.fixVarName(expAttr)));
+					this.converetedNames.put(expAttr, likelyHandledname);
+					classTypes.put(DecisionMining.fixVarName(expAttr), Type.BOOLEAN);
+				}
+			}
+		}
+//		handle class types for attributes
 		for (Entry<String, Type> val : this.source.makeClassTypes().entrySet()) {
 			classTypes.put(DecisionMining.fixVarName(val.getKey()), val.getValue());
 			this.converetedNames.put(val.getKey(), DecisionMining.fixVarName(val.getKey()));
 		}
-		Map<String, Set<String>> literalValues = new HashMap<String,Set<String>>();
-				
+//		handle literal values for discrete attributes		
 		for( Entry<String, Set<String>> val : this.source.makeLiteralValues().entrySet() ) {
 			literalValues.put(DecisionMining.fixVarName(val.getKey()), val.getValue());
 		}
@@ -234,18 +396,33 @@ public class InvestigationTask extends SwingWorker<DiscoveredPetriNetWithData, I
 					 * attribute values' pre-values and a transition to be
 					 * executed
 					 */
-					traceFutures.add(this.pool.submit(
-						new TraceProcessor(
-							this.source.getModel(), 
-							this.source.getLog().get(index),
-							this.estimators,
-							alignment,
-							this.numberOfExecutions,
-							this.numberOfWritesPerTransition,
-							progress
-							)
-						, index)
-					);
+					if (config.isExperimentalFeatures()) {
+						traceFutures.add(this.pool.submit(
+								new ExperimentalFeatureProcessor(
+									this.source.getModel(), 
+									this.source.getLog().get(index),
+									this.estimators,
+									alignment,
+									this.numberOfExecutions,
+									this.numberOfWritesPerTransition,
+									progress
+									)
+								, index)
+							);
+					} else {
+						traceFutures.add(this.pool.submit(
+							new TraceProcessor(
+								this.source.getModel(), 
+								this.source.getLog().get(index),
+								this.estimators,
+								alignment,
+								this.numberOfExecutions,
+								this.numberOfWritesPerTransition,
+								progress
+								)
+							, index)
+						);
+					}
 				}
 			} else {
 				// The alignment's fitness is lower than the fitness threshold; skip the trace and count the skipped traces
@@ -424,6 +601,24 @@ public class InvestigationTask extends SwingWorker<DiscoveredPetriNetWithData, I
 			String wekaUnescaped = DecisionMining.wekaUnescape(entry.getKey());
 			String saneVariableName = GuardExpression.Factory.transformToVariableIdentifier(wekaUnescaped);
 			discoveredDPN.addVariable(saneVariableName, classType, null, null);
+		}
+		if (config.isExperimentalFeatures()) {
+			for( ExogenousDataset dataset : this.source.getSource().getSource().getExogenousDatasets()) {
+				
+				String datasetName = dataset.getName();
+				for(int i=0;i < this.SAX_FROM.size(); i++) {
+					String expAttr = String.format(ExperimentalFeatureProcessor.SAX_OUTLIER_TO_OUTLIER_FEATURE_NAME,
+							datasetName,
+							this.SAX_FROM.get(i),
+							this.SAX_TO.get(i)
+					);
+					expAttr = WekaUtil.fixVarName(expAttr);
+					String wekaUnescaped = DecisionMining.wekaUnescape(expAttr);
+					String saneVariableName = GuardExpression.Factory.transformToVariableIdentifier(wekaUnescaped);
+//					System.out.println("Adding var to DPN :: " + saneVariableName);
+					discoveredDPN.addVariable(saneVariableName, long.class, null, null);
+				}
+			}
 		}
 		
 		//TODO FM, we should not change the default Locale!! What about concurrent operations that rely on the correct Locale? Why is it done anyway?
