@@ -11,7 +11,7 @@ import org.processmining.qut.exogenousaware.ds.timeseries.data.RealTimeSeries;
 public class TimeSeriesSaxApproximator implements TimeSeriesApproximator<RealTimeSeries, DiscreteTimeSeries> {
 
 //	SAX Gaussian equiprobable regions (10)
-	protected static List<Double> SAX_BOUNDARIES = new ArrayList<Double>() {{
+	public static List<Double> SAX_BOUNDARIES = new ArrayList<Double>() {{
 		add(-1.28);
 		add(-0.84);
 		add(-0.52);
@@ -22,7 +22,7 @@ public class TimeSeriesSaxApproximator implements TimeSeriesApproximator<RealTim
 		add(0.84);
 		add(1.28);
 	}};
-	protected static List<String> SAX_LETTERS = new ArrayList<String>() {{
+	public static List<String> SAX_LETTERS = new ArrayList<String>() {{
 		add("a");
 		add("b");
 		add("c");
