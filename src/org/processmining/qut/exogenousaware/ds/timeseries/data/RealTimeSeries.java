@@ -4,6 +4,10 @@ import java.awt.Color;
 import java.util.ArrayList;
 import java.util.List;
 
+import org.processmining.qut.exogenousaware.ds.timeseries.approx.TimeSeriesSaxApproximator;
+import org.processmining.qut.exogenousaware.ds.timeseries.norm.TimeSeriesGuassianNormaliser;
+import org.processmining.qut.exogenousaware.ds.timeseries.reduce.PiecewiseAggregateReduction;
+
 public class RealTimeSeries implements TimeSeries<Double, Double, RealTimePoint> {
 	
 	private List<RealTimePoint> sequence;
@@ -144,6 +148,13 @@ public class RealTimeSeries implements TimeSeries<Double, Double, RealTimePoint>
 		return std / getSize();
 	}
 	
+	public RealTimeSeries resampleWithEvenSpacing() {
+		double start = sequence.get(0).getTime();
+		double end = sequence.get(size-1).getTime();
+		double spacing = (end -start) * 0.01;
+		return resampleWithEvenSpacing(spacing);
+	}
+	
 	public RealTimeSeries resampleWithEvenSpacing(double spacing) {
 		return new RealTimeSeries();
 	}
@@ -165,6 +176,17 @@ public class RealTimeSeries implements TimeSeries<Double, Double, RealTimePoint>
 				getColor(),
 				splitPoints 
 		);
+	}
+	
+	/**
+	 * Creates a symbolic aggregate approximation of the time series.
+	 * @return a discrete representation of the time series.
+	 */
+	public DiscreteTimeSeries createSAXRepresentation() {
+		TimeSeriesGuassianNormaliser normliser  = new TimeSeriesGuassianNormaliser();
+		PiecewiseAggregateReduction reducer = new PiecewiseAggregateReduction(100);
+		TimeSeriesSaxApproximator approximator = new TimeSeriesSaxApproximator();
+		return approximator.approximate(normliser.normalise(this));
 	}
 	
 
