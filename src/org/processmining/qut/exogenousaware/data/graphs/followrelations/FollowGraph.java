@@ -12,7 +12,7 @@ import org.processmining.qut.exogenousaware.ds.timeseries.data.DiscreteTimeSerie
 /**
  * A simple interface to create directly or eventually follow relations from a 
  * graph structure.
- * @author adam
+ * @author Adam Banham
  *
  */
 public class FollowGraph {
