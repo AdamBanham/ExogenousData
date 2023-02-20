@@ -18,6 +18,10 @@ import java.util.concurrent.TimeUnit;
 
 import javax.swing.SwingWorker;
 
+import org.apache.commons.math3.complex.Complex;
+import org.apache.commons.math3.transform.DftNormalization;
+import org.apache.commons.math3.transform.FastFourierTransformer;
+import org.apache.commons.math3.transform.TransformType;
 import org.deckfour.xes.model.XAttribute;
 import org.deckfour.xes.model.XAttributeBoolean;
 import org.deckfour.xes.model.XAttributeContinuous;
@@ -50,15 +54,16 @@ import org.processmining.models.graphbased.directed.petrinetwithdata.newImpl.PNW
 import org.processmining.models.graphbased.directed.petrinetwithdata.newImpl.PetriNetWithDataFactory;
 import org.processmining.plugins.petrinet.replayresult.PNRepResult;
 import org.processmining.plugins.replayer.replayresult.SyncReplayResult;
-import org.processmining.qut.exogenousaware.data.ExogenousDataset;
 import org.processmining.qut.exogenousaware.data.ExogenousDatasetType;
 import org.processmining.qut.exogenousaware.data.graphs.followrelations.FollowGraph;
 import org.processmining.qut.exogenousaware.data.storage.ExogenousDiscoveryInvestigation;
 import org.processmining.qut.exogenousaware.ds.timeseries.approx.TimeSeriesSaxApproximator;
 import org.processmining.qut.exogenousaware.ds.timeseries.data.DiscreteTimeSeries;
+import org.processmining.qut.exogenousaware.ds.timeseries.data.RealTimeSeries;
 import org.processmining.qut.exogenousaware.gui.panels.ExogenousDiscoveryProgresser;
 import org.processmining.qut.exogenousaware.gui.panels.ExogenousDiscoveryProgresser.ProgressState;
 import org.processmining.qut.exogenousaware.gui.panels.ExogenousDiscoveryProgresser.ProgressType;
+import org.processmining.qut.exogenousaware.steps.determination.Determination;
 import org.processmining.qut.exogenousaware.steps.slicing.data.SubSeries;
 import org.processmining.qut.exogenousaware.steps.slicing.data.SubSeries.Scaling;
 import org.processmining.qut.exogenousaware.steps.transform.data.TransformedAttribute;
@@ -145,6 +150,88 @@ public class InvestigationTask extends SwingWorker<DiscoveredPetriNetWithData, I
 		add("j");
 		add("a");
 	}};
+	private static int K_TOP_DFT_COEFICIENTS = 3;
+	
+	public static class KMostElement {
+		
+		public boolean lessThan(KMostElement element) {
+			return false;
+		}
+	}
+	
+	public static class DFTKMostElement extends KMostElement {
+		
+		private int frequency;
+		private double power;
+		
+		public DFTKMostElement(int frequency, double power) {
+			this.frequency = frequency;
+			this.power = power;
+		}
+		
+		public int getFrequency() {
+			return this.frequency;
+		}
+		
+		public double getPower() {
+			return this.power;
+		}
+		
+		@Override
+		public boolean lessThan(KMostElement element) {
+			if (element instanceof DFTKMostElement) {
+				return this.power < ((DFTKMostElement) element).getPower();
+			}
+			return false;
+		}
+		
+		@Override
+		public String toString() {
+			return String.format("(%.1f@%d)", this.power, this.frequency);
+		}
+	}
+	
+//	custom k-most container
+	public static class KMostContainer<T extends KMostElement> {
+		
+		private int k;
+		private List<T> sequence;
+		
+		public KMostContainer(int k) {
+			this.k = k;
+			this.sequence = new ArrayList(k);
+		}
+		
+		public boolean add(T element) {
+			boolean added = false;
+			for(int i=0; i < Math.min(k, this.sequence.size()); i++) {
+				T value = sequence.get(i);
+				if (value.lessThan(element)) {
+					sequence.remove(i);
+					sequence.add(i, element);
+					added = true;
+					return added;
+				}
+			}
+			if (this.sequence.size() < k) {
+				sequence.add(element);
+				added=true;
+			}
+			return added;
+		}
+		
+		public List<T> getOrdering(){
+			List<T> ret = new ArrayList(k);
+			ret.addAll(this.sequence);
+			return ret;
+		}
+		
+		@Override
+		public String toString() {
+			return this.sequence.toString();
+		}
+		
+	}
 	
 	
 //	custom trace processor for classification examples
@@ -238,16 +325,63 @@ public class InvestigationTask extends SwingWorker<DiscoveredPetriNetWithData, I
 //			System.out.println("saxFeature ::"+ saxGraph +" :: "
 //					+ startNode + " -> " + endNode + " :: " + found);
 			String featureName = String.format(SAX_OUTLIER_TO_OUTLIER_FEATURE_NAME,
-					slice.getDataset(),
+					slice.getComesFrom().getName()+":"+slice.getAbvSlicingName(),
 					startNode,
 					endNode
 			);
 			variableValues.put(WekaUtil.fixVarName(featureName), found);
-			
 		}
 
 		protected void generateDFTFeatures(SubSeries slice) {
 			// TODO Auto-generated method stub
+			try {
+				RealTimeSeries sample = slice.getTimeSeries(Scaling.hour)
+						.resampleWithEvenSpacing(64);
+				if (sample.getSize() < 64) {
+					return;
+				}
+	//			perform FFT on series
+//				System.out.println("{InvestigationTask} resampled.");
+				FastFourierTransformer transformer = new FastFourierTransformer(DftNormalization.STANDARD);
+				double[] transformArray = new double[64];
+				List<Double> transformValues = sample.getValues();
+	//			fill transform array with values
+				for(int i=0; i< 64;i++) {
+					if (i < transformValues.size()) {
+						transformArray[i] = transformValues.get(i);
+					} else {
+						transformArray[i] = 0;
+					}
+				}
+//				System.out.println("{InvestigationTask} prepped DFT.");
+				Complex[] coeficcients = transformer.transform(transformArray, TransformType.FORWARD);
+				String coefString = "Sample :: "+sample.toString()+" || DFT coeficcients :: ";
+				boolean nanFound = false;
+				KMostContainer<DFTKMostElement> kcoefs = new KMostContainer(K_TOP_DFT_COEFICIENTS);
+				int freq = 1;
+				for(int i=1;i < 64; i+=2) {
+//					TODO double check that the power of the frequency is |x[k]|^2
+					double cpow = (2.0/64) * Math.pow(coeficcients[i].abs(), 2);
+					nanFound = nanFound || Double.isNaN(cpow);
+					coefString = coefString+"C"+i+"="+cpow+" | ";
+					if (!Double.isNaN(cpow)) {
+						DFTKMostElement el = new DFTKMostElement(freq, cpow);
+						kcoefs.add(el);
+					}
+					freq += 1;
+				}
+				if (nanFound) {
+					System.out.println("{InvestigationTask} completed DFT :: "+coefString);
+				} else {
+					System.out.println("K-most features :: "+ kcoefs.toString());
+				}
+			} catch (Exception e) {
+				System.out.println("DFT features failed :: "+ e.getMessage());
+			}
+//			find the top-k powers
+//			TODO
+//			find the top-k frequencies
+//			TODO
 			
 		}
 		
@@ -274,13 +408,13 @@ public class InvestigationTask extends SwingWorker<DiscoveredPetriNetWithData, I
 		Map<String, Set<String>> literalValues = new HashMap<String,Set<String>>();
 //		handle experimental features inclusion for J48
 		if (config.isExperimentalFeatures()) {
-			for( ExogenousDataset dataset : this.source.getSource().getSource().getExogenousDatasets()) {
-				
-				String datasetName = dataset.getName();
+			for(  Determination deter : this.source.getSource().getSource().getDeterminations()) {
+				String featureName = deter.getPanel().getName()
+						+":"+deter.getSlicer().getShortenName();
 //				add sax feature names
 				for(int i=0;i < this.SAX_FROM.size(); i++) {
 					String expAttr = String.format(ExperimentalFeatureProcessor.SAX_OUTLIER_TO_OUTLIER_FEATURE_NAME,
-							datasetName,
+							featureName,
 							this.SAX_FROM.get(i),
 							this.SAX_TO.get(i)
 					);
@@ -290,6 +424,8 @@ public class InvestigationTask extends SwingWorker<DiscoveredPetriNetWithData, I
 					this.converetedNames.put(expAttr, likelyHandledname);
 					classTypes.put(DecisionMining.fixVarName(expAttr), Type.BOOLEAN);
 				}
+//				add dft feature names
+//				TODO
 			}
 		}
 //		handle class types for attributes
@@ -603,12 +739,13 @@ public class InvestigationTask extends SwingWorker<DiscoveredPetriNetWithData, I
 			discoveredDPN.addVariable(saneVariableName, classType, null, null);
 		}
 		if (config.isExperimentalFeatures()) {
-			for( ExogenousDataset dataset : this.source.getSource().getSource().getExogenousDatasets()) {
-				
-				String datasetName = dataset.getName();
+			for(  Determination deter : this.source.getSource().getSource().getDeterminations()) {
+				String featureName = deter.getPanel().getName()
+						+":"+deter.getSlicer().getShortenName();
+//				add sax feature names
 				for(int i=0;i < this.SAX_FROM.size(); i++) {
 					String expAttr = String.format(ExperimentalFeatureProcessor.SAX_OUTLIER_TO_OUTLIER_FEATURE_NAME,
-							datasetName,
+							featureName,
 							this.SAX_FROM.get(i),
 							this.SAX_TO.get(i)
 					);
