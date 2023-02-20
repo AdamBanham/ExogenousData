@@ -7,6 +7,7 @@ import java.util.List;
 import org.processmining.qut.exogenousaware.ds.timeseries.approx.TimeSeriesSaxApproximator;
 import org.processmining.qut.exogenousaware.ds.timeseries.norm.TimeSeriesGuassianNormaliser;
 import org.processmining.qut.exogenousaware.ds.timeseries.reduce.PiecewiseAggregateReduction;
+import org.processmining.qut.exogenousaware.ds.timeseries.sample.EqualDistanceSampler;
 
 public class RealTimeSeries implements TimeSeries<Double, Double, RealTimePoint> {
 	
@@ -115,6 +116,11 @@ public class RealTimeSeries implements TimeSeries<Double, Double, RealTimePoint>
 		return color;
 	}
 	
+	@Override
+	public String toString() {
+		return this.sequence.toString();
+	}
+	
 //	utility functions
 	public double min() {
 		return this.min;
@@ -149,14 +155,13 @@ public class RealTimeSeries implements TimeSeries<Double, Double, RealTimePoint>
 	}
 	
 	public RealTimeSeries resampleWithEvenSpacing() {
-		double start = sequence.get(0).getTime();
-		double end = sequence.get(size-1).getTime();
-		double spacing = (end -start) * 0.01;
-		return resampleWithEvenSpacing(spacing);
+		return resampleWithEvenSpacing(64);
 	}
 	
-	public RealTimeSeries resampleWithEvenSpacing(double spacing) {
-		return new RealTimeSeries();
+	public RealTimeSeries resampleWithEvenSpacing(int numberOfSamples) {
+		return new EqualDistanceSampler(numberOfSamples)
+				.sample(this);
+		
 	}
 	
 	/**
