@@ -36,6 +36,7 @@ import org.processmining.qut.exogenousaware.data.storage.workers.InvestigationTa
 import org.processmining.qut.exogenousaware.data.storage.workers.InvestigationTask.MinerConfiguration;
 import org.processmining.qut.exogenousaware.data.storage.workers.InvestigationTask.MinerType;
 import org.processmining.qut.exogenousaware.gui.ExogenousDiscoveryInvestigator;
+import org.processmining.qut.exogenousaware.gui.panels.ExogenousDiscoveryProgresser.ProgressType;
 
 import lombok.Builder;
 import lombok.Builder.Default;
@@ -133,7 +134,8 @@ public class ExogenousDiscoveryInvestigation {
 			}
 		}
 		this.transMap = this.task.getTransMap();
-		
+		float fin = this.source.getProgresser().getState(ProgressType.Investigation).getTotal();
+		this.source.getProgresser().getState(ProgressType.Investigation).setCurrent(fin);
 		this.source.createModelView(this.task.getConveretedNames(), this.outcome, this.transMap);
 	
 	}
