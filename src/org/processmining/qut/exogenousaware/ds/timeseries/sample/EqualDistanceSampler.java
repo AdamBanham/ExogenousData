@@ -53,7 +53,7 @@ public class EqualDistanceSampler implements TimeSeriesSampler<RealTimeSeries> {
 		}
 //		add rightmost
 		points.add(new RealTimePoint(rightPoint.getTime(), rightPoint.getValue()));
-		System.out.println("completed sampling");
+//		System.out.println("completed sampling");
 		return new RealTimeSeries(series.getName(), series.getColor(), points);
 	}
 	
@@ -71,13 +71,13 @@ public class EqualDistanceSampler implements TimeSeriesSampler<RealTimeSeries> {
 //		step one: find leftmost and rightmost across series
 		double right = times.stream().reduce((c,n) -> c < n ? n : c).get();
 		double left = times.stream().reduce((c,n) -> c < n ? c : n).get();
-		System.out.println("Checking between :: "+ left + " to "+ right);
+//		System.out.println("Checking between :: "+ left + " to "+ right);
 //		step two: create timeline such that each point at most (1/n)% away from its neighbours
 		List<Double> timeline = new ArrayList<Double>();
 		double timespan = Math.abs(Math.abs(right) - Math.abs(left));
 		double interval = timespan / sampleLength;
 		double current = left + interval;
-		System.out.println("building starting at :: "+current+" :: "+ interval);
+//		System.out.println("building starting at :: "+current+" :: "+ interval);
 //		build timeline
 		timeline.add(left);
 		while(current < right) {
@@ -85,7 +85,7 @@ public class EqualDistanceSampler implements TimeSeriesSampler<RealTimeSeries> {
 			current += interval;
 		}
 		timeline.add(right);
-		System.out.println("Timeline built");
+//		System.out.println("Timeline built");
 		if (timeline.size() < sampleLength) {
 			throw new UnsupportedOperationException("[EqualDistanceSampler] Unable to compute a timeline :: Reason :: timeline was shorter than 100 intervals :: "+timeline.size());
 		}
