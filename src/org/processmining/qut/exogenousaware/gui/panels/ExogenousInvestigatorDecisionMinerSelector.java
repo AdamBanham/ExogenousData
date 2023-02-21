@@ -47,6 +47,7 @@ public class ExogenousInvestigatorDecisionMinerSelector extends JPanel {
 	private PruneParameter prune;
 	private CrossValidateParameter crossValidate;
 	private ConfidenceLevelParameter confidence;
+	private ExperimentalFeaturesParameter experimental;
 	private ProMScrollPane content;
 	private JPanel contentView;
 	
@@ -57,6 +58,7 @@ public class ExogenousInvestigatorDecisionMinerSelector extends JPanel {
 		prune = new PruneParameter();
 		crossValidate = new CrossValidateParameter();
 		confidence = new ConfidenceLevelParameter();
+		experimental = new ExperimentalFeaturesParameter();
 //		setup content
 		PanelStyler.StylePanel(this, true, BoxLayout.Y_AXIS);
 		contentView = new ProMScrollablePanel();
@@ -65,6 +67,7 @@ public class ExogenousInvestigatorDecisionMinerSelector extends JPanel {
 		PanelStyler.StylePanel(content, false);
 		add(content);
 //		add parameters
+		contentView.add(experimental);
 		contentView.add(instanceThreshold);
 		contentView.add(prune);
 		contentView.add(crossValidate);
@@ -79,6 +82,7 @@ public class ExogenousInvestigatorDecisionMinerSelector extends JPanel {
 		prune.addConfiguration(builder);
 		crossValidate.addConfiguration(builder);
 		confidence.addConfiguration(builder);
+		experimental.addConfiguration(builder);
 		
 		return builder.build();
 	}
@@ -148,6 +152,105 @@ public class ExogenousInvestigatorDecisionMinerSelector extends JPanel {
 	public enum CrossValidateMode {
 		ENABLE,
 		DISBALE
+	}
+	
+	public enum ExperimentalFeatureMode {
+		ENABLE,
+		DISABLE
+	}
+	
+	private class ExperimentalFeaturesParameter extends BaseParameter {
+		
+//		states
+		private boolean enabled = false;
+		
+//		gui elements
+		private JRadioButton enabledMode = new JRadioButton("Enable");
+		private JRadioButton disableMode = new JRadioButton("Disable");
+		private ButtonGroup modeGroup = new ButtonGroup();
+		
+//		defaults/labels
+		String title = "Experiemental Time Series Features";
+		String info = "<html><body><p>"
+				+ "Enabling this mode will create experiemental time series features "
+				+ "within each observation for classification problems. This assumes "
+				+ "that each observation has some slices attached to the associated "
+				+ "event and these have a numerical time series representation. </p> "
+				+ "<p> Introduced features are the following:"
+				+ "<ul> "
+				+ "<li> SAX features: </li>"
+				+ "<ul>"
+				+ "<li> A Rise or eventually follows from f to j </li>"
+				+ "<li> A Trough or eventually follows from e to a </li>"
+				+ "<li> A Jump or eventually follows from a to j </li>"
+				+ "<li> A Drop or eventually follows from j to a </li>"
+				+ "</ul>"
+				+ "<li> DFT features for the top k-coefficients: </li>"
+				+ "<ul>"
+				+ "<li> The frequency of the kth coefficient </li>"
+				+ "<li> The power of the kth coefficient </li>"
+				+ "</ul>"
+				+ "</ul>"
+				+ "</p></body></html>";
+		
+		public ExperimentalFeaturesParameter() {
+//			setup parameter layout
+			setup();
+//			add title and parameter info
+			makeTitle(title, info);
+//			add label for mode selection
+			JLabel text = new JLabel("Mode:");
+			text.setFont(plainFont);
+			c.gridy = 2;
+			c.gridx = 0;
+			c.weightx = 0;
+			c.gridwidth = 1;
+			c.insets = new Insets(0,this.contentLeft,5,5);
+			add(text, c);
+//			add enable mode
+			c.gridx += 1;
+			c.insets = new Insets(0,5,5,5);
+			c.weightx = 0;
+			c.gridwidth = 2;
+			enabledMode.setSelected(true);
+			enabledMode.setBackground(Color.LIGHT_GRAY);
+			enabledMode.setActionCommand(ExperimentalFeatureMode.ENABLE.name());
+			enabledMode.addActionListener(new ActionListener() {
+				public void actionPerformed(ActionEvent e) {
+					if (e.getActionCommand() == ExperimentalFeatureMode.ENABLE.name()) {
+						moveMode(ExperimentalFeatureMode.ENABLE);
+					}
+			}
+			});
+			modeGroup.add(enabledMode);
+			add(enabledMode, c);
+//			add disable mode
+			c.gridx += 2;
+			disableMode.setBackground(Color.LIGHT_GRAY);
+			disableMode.setActionCommand(ExperimentalFeatureMode.DISABLE.name());
+			disableMode.addActionListener(new ActionListener() {
+				public void actionPerformed(ActionEvent e) {
+					if (e.getActionCommand() == ExperimentalFeatureMode.DISABLE.name()) {
+						moveMode(ExperimentalFeatureMode.DISABLE);
+					}
+				}
+			});
+			modeGroup.add(disableMode);
+			add(disableMode, c);
+		}
+
+		public void addConfiguration(MinerConfigurationBuilder builder) {
+			builder.experimentalFeatures(enabled);
+		}
+		
+		public void moveMode(ExperimentalFeatureMode mode) {
+			if (mode == ExperimentalFeatureMode.ENABLE) {
+				enabled = true;
+			} else {
+				enabled = false;
+			}
+		}
+		
 	}
 	
 	private class InstanceThresholdParameter extends BaseParameter {
