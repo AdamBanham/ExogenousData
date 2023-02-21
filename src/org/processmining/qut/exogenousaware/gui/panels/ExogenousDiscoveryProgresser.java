@@ -138,7 +138,7 @@ public class ExogenousDiscoveryProgresser extends JPanel {
 		@Setter @Getter private int progress;
 		private float step;
 		@Setter private float current;
-		@Setter private float total;
+		@Setter @Getter private float total;
 		@Getter private ProgressType type;
 		
 //		gui widgets
@@ -204,13 +204,17 @@ public class ExogenousDiscoveryProgresser extends JPanel {
 		}
 		
 		public boolean step() {
-			if (Math.abs(current - progress) > 0.001f) {
-				if (current < progress) {
-					current = Math.min(this.current + this.step, progress);
-				} else {
-					current = Math.max(this.current + this.step, progress);
+			if (current < total) {
+				if (Math.abs(current - progress) > 0.001f) {
+					if (current < progress) {
+						current = Math.min(this.current + this.step, progress);
+					} else {
+						current = Math.max(this.current + this.step, progress);
+					}
+					return true;
 				}
-				return true;
+			} else {
+				current = total;
 			}
 			return false;
 		}
