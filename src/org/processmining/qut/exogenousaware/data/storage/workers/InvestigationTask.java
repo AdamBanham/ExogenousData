@@ -238,7 +238,8 @@ public class InvestigationTask extends SwingWorker<DiscoveredPetriNetWithData, I
 	public static class ExperimentalFeatureProcessor extends TraceProcessor {
 		
 //		feature names 
-		public static String TOP_K_DFT_FEATURE_NAME = "%s:DFT:%d";
+		public static String TOP_K_DFT_FREQ_FEATURE_NAME = "%s:DFT:%d-FREQ";
+		public static String TOP_K_DFT_POWER_FEATURE_NAME = "%s:DFT:%d-POWER";
 		public static String SAX_MEAN_TO_OUTLIER_FEATURE_NAME = "%s:SAX:M->%s";
 		public static String SAX_OUTLIER_TO_OUTLIER_FEATURE_NAME = "%s:SAX:%s->%s";
 		
@@ -371,18 +372,36 @@ public class InvestigationTask extends SwingWorker<DiscoveredPetriNetWithData, I
 					freq += 1;
 				}
 				if (nanFound) {
-					System.out.println("{InvestigationTask} completed DFT :: "+coefString);
+					System.out.println("{InvestigationTask} completed DFT but "
+							+ "coeficcients are NaN :: "+coefString);
 				} else {
-					System.out.println("K-most features :: "+ kcoefs.toString());
+//					System.out.println("K-most features :: "+ kcoefs.toString());
 				}
+//			create features for top-k powers and top-k frequencies
+			List<DFTKMostElement> ordering = kcoefs.getOrdering();
+			for(int i=0; i < ordering.size(); i++) {
+				createDFTFeature(ordering.get(i), i+1, slice);
+			}
+			
 			} catch (Exception e) {
 				System.out.println("DFT features failed :: "+ e.getMessage());
 			}
-//			find the top-k powers
-//			TODO
-//			find the top-k frequencies
-//			TODO
 			
+		}
+		
+		private void createDFTFeature(DFTKMostElement element, int k, SubSeries slice) {
+//			create feature to k-freq
+			String featureName = String.format(TOP_K_DFT_FREQ_FEATURE_NAME,
+					slice.getComesFrom().getName()+":"+slice.getAbvSlicingName(),
+					k
+			);
+			variableValues.put(WekaUtil.fixVarName(featureName), element.getFrequency());
+//			create feature for k-power
+			featureName = String.format(TOP_K_DFT_POWER_FEATURE_NAME,
+					slice.getComesFrom().getName()+":"+slice.getAbvSlicingName(),
+					k
+			);
+			variableValues.put(WekaUtil.fixVarName(featureName), element.getPower());
 		}
 		
 		
@@ -425,7 +444,29 @@ public class InvestigationTask extends SwingWorker<DiscoveredPetriNetWithData, I
 					classTypes.put(DecisionMining.fixVarName(expAttr), Type.BOOLEAN);
 				}
 //				add dft feature names
-//				TODO
+
+				for(int k=0; k < K_TOP_DFT_COEFICIENTS; k++) {
+//					add discrete feature for k-freq
+					String expAttr = String.format(ExperimentalFeatureProcessor.TOP_K_DFT_FREQ_FEATURE_NAME,
+							featureName,
+							k+1
+					);
+					String likelyHandledname = GuardExpression.Factory.transformToVariableIdentifier(
+							DecisionMining.wekaUnescape(
+									WekaUtil.fixVarName(expAttr)));
+					this.converetedNames.put(expAttr, likelyHandledname);
+					classTypes.put(DecisionMining.fixVarName(expAttr), Type.DISCRETE);
+//					add continuous feature for k-power
+					expAttr = String.format(ExperimentalFeatureProcessor.TOP_K_DFT_POWER_FEATURE_NAME,
+							featureName,
+							k+1
+					);
+					likelyHandledname = GuardExpression.Factory.transformToVariableIdentifier(
+							DecisionMining.wekaUnescape(
+									WekaUtil.fixVarName(expAttr)));
+					this.converetedNames.put(expAttr, likelyHandledname);
+					classTypes.put(DecisionMining.fixVarName(expAttr), Type.CONTINUOS);
+				}
 			}
 		}
 //		handle class types for attributes
@@ -437,7 +478,10 @@ public class InvestigationTask extends SwingWorker<DiscoveredPetriNetWithData, I
 		for( Entry<String, Set<String>> val : this.source.makeLiteralValues().entrySet() ) {
 			literalValues.put(DecisionMining.fixVarName(val.getKey()), val.getValue());
 		}
-		
+		System.out.println("[InvestigationTask] Using the following attributes "
+				+ "for the classification problem :: " + converetedNames.keySet().toString());
+		System.out.println("[InvestigationTask] Using the following mappings "
+				+ "between attribute and types :: "+ classTypes.toString());
 		
 //		### Pirate Code from DecisionMining:393 ###
 		/*
@@ -753,7 +797,28 @@ public class InvestigationTask extends SwingWorker<DiscoveredPetriNetWithData, I
 					String wekaUnescaped = DecisionMining.wekaUnescape(expAttr);
 					String saneVariableName = GuardExpression.Factory.transformToVariableIdentifier(wekaUnescaped);
 //					System.out.println("Adding var to DPN :: " + saneVariableName);
+					discoveredDPN.addVariable(saneVariableName, Boolean.class, null, null);
+				}
+//				add dft feature names
+				for(int k=0; k < K_TOP_DFT_COEFICIENTS; k++) {
+//					add discrete feature for k-freq
+					String expAttr = String.format(ExperimentalFeatureProcessor.TOP_K_DFT_FREQ_FEATURE_NAME,
+							featureName,
+							k+1
+					);
+					expAttr = WekaUtil.fixVarName(expAttr);
+					String wekaUnescaped = DecisionMining.wekaUnescape(expAttr);
+					String saneVariableName = GuardExpression.Factory.transformToVariableIdentifier(wekaUnescaped);
 					discoveredDPN.addVariable(saneVariableName, long.class, null, null);
+//					add continuous feature for k-power
+					expAttr = String.format(ExperimentalFeatureProcessor.TOP_K_DFT_POWER_FEATURE_NAME,
+							featureName,
+							k+1
+					);
+					expAttr = WekaUtil.fixVarName(expAttr);
+					wekaUnescaped = DecisionMining.wekaUnescape(expAttr);
+					saneVariableName = GuardExpression.Factory.transformToVariableIdentifier(wekaUnescaped);
+					discoveredDPN.addVariable(saneVariableName, Double.class, null, null);
 				}
 			}
 		}
