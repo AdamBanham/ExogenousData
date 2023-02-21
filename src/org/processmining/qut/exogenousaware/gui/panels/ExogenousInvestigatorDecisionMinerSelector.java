@@ -170,15 +170,15 @@ public class ExogenousInvestigatorDecisionMinerSelector extends JPanel {
 		private ButtonGroup modeGroup = new ButtonGroup();
 		
 //		defaults/labels
-		String title = "Experiemental Time Series Features";
+		String title = "Experimental Time Series Features";
 		String info = "<html><body><p>"
-				+ "Enabling this mode will create experiemental time series features "
+				+ "Enabling this mode will create experimental time series features "
 				+ "within each observation for classification problems. This assumes "
 				+ "that each observation has some slices attached to the associated "
-				+ "event and these have a numerical time series representation. </p> "
+				+ "event, and these have a numerical time series representation. </p> "
 				+ "<p> Introduced features are the following:"
 				+ "<ul> "
-				+ "<li> SAX features: </li>"
+				+ "<li> SAX features (Boolean): </li>"
 				+ "<ul>"
 				+ "<li> A Rise or eventually follows from f to j </li>"
 				+ "<li> A Trough or eventually follows from e to a </li>"
@@ -187,8 +187,8 @@ public class ExogenousInvestigatorDecisionMinerSelector extends JPanel {
 				+ "</ul>"
 				+ "<li> DFT features for the top k-coefficients: </li>"
 				+ "<ul>"
-				+ "<li> The frequency of the kth coefficient </li>"
-				+ "<li> The power of the kth coefficient </li>"
+				+ "<li> (Discrete) The frequency of the kth coefficient </li>"
+				+ "<li> (Continous) The power of the kth coefficient </li>"
 				+ "</ul>"
 				+ "</ul>"
 				+ "</p></body></html>";
@@ -212,7 +212,7 @@ public class ExogenousInvestigatorDecisionMinerSelector extends JPanel {
 			c.insets = new Insets(0,5,5,5);
 			c.weightx = 0;
 			c.gridwidth = 2;
-			enabledMode.setSelected(true);
+			enabledMode.setSelected(false);
 			enabledMode.setBackground(Color.LIGHT_GRAY);
 			enabledMode.setActionCommand(ExperimentalFeatureMode.ENABLE.name());
 			enabledMode.addActionListener(new ActionListener() {
@@ -227,6 +227,7 @@ public class ExogenousInvestigatorDecisionMinerSelector extends JPanel {
 //			add disable mode
 			c.gridx += 2;
 			disableMode.setBackground(Color.LIGHT_GRAY);
+			disableMode.setSelected(true);
 			disableMode.setActionCommand(ExperimentalFeatureMode.DISABLE.name());
 			disableMode.addActionListener(new ActionListener() {
 				public void actionPerformed(ActionEvent e) {
