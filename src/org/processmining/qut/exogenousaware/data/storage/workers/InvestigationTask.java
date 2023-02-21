@@ -30,6 +30,9 @@ import org.deckfour.xes.model.XAttributeLiteral;
 import org.deckfour.xes.model.XAttributeMap;
 import org.deckfour.xes.model.XAttributeTimestamp;
 import org.deckfour.xes.model.XTrace;
+import org.deckfour.xes.model.impl.XAttributeBooleanImpl;
+import org.deckfour.xes.model.impl.XAttributeContinuousImpl;
+import org.deckfour.xes.model.impl.XAttributeDiscreteImpl;
 import org.processmining.datadiscovery.estimators.AbstractDecisionTreeFunctionEstimator;
 import org.processmining.datadiscovery.estimators.DecisionTreeBasedFunctionEstimator;
 import org.processmining.datadiscovery.estimators.FunctionEstimation;
@@ -296,32 +299,47 @@ public class InvestigationTask extends SwingWorker<DiscoveredPetriNetWithData, I
 			for(SubSeries slice : slices) {
 //				generate DFT features for each slice
 //				TODO
-				generateDFTFeatures(slice);
+//				generateDFTFeatures(slice, xAttributeMap);
 //				generate SAX features for each slice
 //				TODO
-				generateSAXFeatures(slice);
+				generateSAXFeatures(slice, xAttributeMap);
 			}
 //			System.out.println(variableValues.toString());
 		}
+		
+		protected void addAttributes(XAttributeMap map, List<XAttribute> attrs) {
+			for(XAttribute attr: attrs) {
+				map.put(attr.getKey(), attr);
+			}
+		}
 
-		protected void generateSAXFeatures(SubSeries slice) {
+		protected void generateSAXFeatures(SubSeries slice, XAttributeMap map) {
 			// TODO Auto-generated method stub
 			try {
 				DiscreteTimeSeries saxSeries = slice
 						.getTimeSeries(Scaling.hour)
 						.createSAXRepresentation();
 				FollowGraph saxGraph = new FollowGraph(saxSeries);
-				createSAXFeature(SAX_MEAN_POS, SAX_OUTLIER_POS, saxGraph, slice);
-				createSAXFeature(SAX_MEAN_NEG, SAX_OUTLIER_NEG, saxGraph, slice);
-				createSAXFeature(SAX_OUTLIER_NEG, SAX_OUTLIER_POS, saxGraph, slice);
-				createSAXFeature(SAX_OUTLIER_POS, SAX_OUTLIER_NEG, saxGraph, slice);
+				addAttributes(map, 
+						createSAXFeature(SAX_MEAN_POS, SAX_OUTLIER_POS, saxGraph, slice)
+				);
+				addAttributes(map, 
+						createSAXFeature(SAX_MEAN_NEG, SAX_OUTLIER_NEG, saxGraph, slice)
+				);
+				addAttributes(map, 
+						createSAXFeature(SAX_OUTLIER_NEG, SAX_OUTLIER_POS, saxGraph, slice)
+				);
+				addAttributes(map, 
+						createSAXFeature(SAX_OUTLIER_POS, SAX_OUTLIER_NEG, saxGraph, slice)
+				);
 			} catch (Exception e) {
 				e.printStackTrace();
 			}
 		}
 
-		private void createSAXFeature(String startNode, String endNode, 
+		private List<XAttribute> createSAXFeature(String startNode, String endNode, 
 				FollowGraph saxGraph, SubSeries slice) {
+			List<XAttribute> attrs = new ArrayList();
 			boolean found = saxGraph.checkForEventualFollowsBetween(startNode, endNode);
 //			System.out.println("saxFeature ::"+ saxGraph +" :: "
 //					+ startNode + " -> " + endNode + " :: " + found);
@@ -329,11 +347,15 @@ public class InvestigationTask extends SwingWorker<DiscoveredPetriNetWithData, I
 					slice.getComesFrom().getName()+":"+slice.getAbvSlicingName(),
 					startNode,
 					endNode
-			);
-			variableValues.put(WekaUtil.fixVarName(featureName), found);
+			);	
+			XAttribute attr = new XAttributeBooleanImpl(featureName, found);
+			featureName = WekaUtil.fixVarName(featureName);
+			variableValues.put(featureName, found);
+			attrs.add(attr);
+			return attrs;
 		}
 
-		protected void generateDFTFeatures(SubSeries slice) {
+		protected void generateDFTFeatures(SubSeries slice, XAttributeMap map) {
 			// TODO Auto-generated method stub
 			try {
 				RealTimeSeries sample = slice.getTimeSeries(Scaling.hour)
@@ -380,7 +402,9 @@ public class InvestigationTask extends SwingWorker<DiscoveredPetriNetWithData, I
 //			create features for top-k powers and top-k frequencies
 			List<DFTKMostElement> ordering = kcoefs.getOrdering();
 			for(int i=0; i < ordering.size(); i++) {
-				createDFTFeature(ordering.get(i), i+1, slice);
+				addAttributes(map, 
+						createDFTFeature(ordering.get(i), i+1, slice)
+				);
 			}
 			
 			} catch (Exception e) {
@@ -389,19 +413,23 @@ public class InvestigationTask extends SwingWorker<DiscoveredPetriNetWithData, I
 			
 		}
 		
-		private void createDFTFeature(DFTKMostElement element, int k, SubSeries slice) {
+		private List<XAttribute> createDFTFeature(DFTKMostElement element, int k, SubSeries slice) {
+			List<XAttribute> attrs = new ArrayList();
 //			create feature to k-freq
 			String featureName = String.format(TOP_K_DFT_FREQ_FEATURE_NAME,
 					slice.getComesFrom().getName()+":"+slice.getAbvSlicingName(),
 					k
 			);
 			variableValues.put(WekaUtil.fixVarName(featureName), element.getFrequency());
+			attrs.add( new XAttributeDiscreteImpl(featureName, element.getFrequency()));
 //			create feature for k-power
 			featureName = String.format(TOP_K_DFT_POWER_FEATURE_NAME,
 					slice.getComesFrom().getName()+":"+slice.getAbvSlicingName(),
 					k
 			);
 			variableValues.put(WekaUtil.fixVarName(featureName), element.getPower());
+			attrs.add( new XAttributeContinuousImpl(featureName, element.getPower()));
+			return attrs;
 		}
 		
 		
