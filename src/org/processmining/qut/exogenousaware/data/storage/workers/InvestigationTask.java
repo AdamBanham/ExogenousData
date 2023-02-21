@@ -241,10 +241,10 @@ public class InvestigationTask extends SwingWorker<DiscoveredPetriNetWithData, I
 	public static class ExperimentalFeatureProcessor extends TraceProcessor {
 		
 //		feature names 
-		public static String TOP_K_DFT_FREQ_FEATURE_NAME = "%s:DFT:%d-FREQ";
-		public static String TOP_K_DFT_POWER_FEATURE_NAME = "%s:DFT:%d-POWER";
-		public static String SAX_MEAN_TO_OUTLIER_FEATURE_NAME = "%s:SAX:M->%s";
-		public static String SAX_OUTLIER_TO_OUTLIER_FEATURE_NAME = "%s:SAX:%s->%s";
+		public static String TOP_K_DFT_FREQ_FEATURE_NAME = "%s_DFT_%d_FREQ";
+		public static String TOP_K_DFT_POWER_FEATURE_NAME = "%s_DFT_%d_POWER";
+		public static String SAX_MEAN_TO_OUTLIER_FEATURE_NAME = "%s_SAX_M_to_%s";
+		public static String SAX_OUTLIER_TO_OUTLIER_FEATURE_NAME = "%s_SAX_%s_to_%s";
 		
 //		sax targets
 		protected static String SAX_MEAN_POS = TimeSeriesSaxApproximator.SAX_LETTERS.get(5);
@@ -299,7 +299,7 @@ public class InvestigationTask extends SwingWorker<DiscoveredPetriNetWithData, I
 			for(SubSeries slice : slices) {
 //				generate DFT features for each slice
 //				TODO
-//				generateDFTFeatures(slice, xAttributeMap);
+				generateDFTFeatures(slice, xAttributeMap);
 //				generate SAX features for each slice
 //				TODO
 				generateSAXFeatures(slice, xAttributeMap);
@@ -344,10 +344,11 @@ public class InvestigationTask extends SwingWorker<DiscoveredPetriNetWithData, I
 //			System.out.println("saxFeature ::"+ saxGraph +" :: "
 //					+ startNode + " -> " + endNode + " :: " + found);
 			String featureName = String.format(SAX_OUTLIER_TO_OUTLIER_FEATURE_NAME,
-					slice.getComesFrom().getName()+":"+slice.getAbvSlicingName(),
+					slice.getComesFrom().getName()+"_"+slice.getAbvSlicingName(),
 					startNode,
 					endNode
 			);	
+			featureName = featureName.replace(":", "_");
 			XAttribute attr = new XAttributeBooleanImpl(featureName, found);
 			featureName = WekaUtil.fixVarName(featureName);
 			variableValues.put(featureName, found);
@@ -420,6 +421,7 @@ public class InvestigationTask extends SwingWorker<DiscoveredPetriNetWithData, I
 					slice.getComesFrom().getName()+":"+slice.getAbvSlicingName(),
 					k
 			);
+			featureName = featureName.replace(":", "_");
 			variableValues.put(WekaUtil.fixVarName(featureName), element.getFrequency());
 			attrs.add( new XAttributeDiscreteImpl(featureName, element.getFrequency()));
 //			create feature for k-power
@@ -427,6 +429,7 @@ public class InvestigationTask extends SwingWorker<DiscoveredPetriNetWithData, I
 					slice.getComesFrom().getName()+":"+slice.getAbvSlicingName(),
 					k
 			);
+			featureName = featureName.replace(":", "_");
 			variableValues.put(WekaUtil.fixVarName(featureName), element.getPower());
 			attrs.add( new XAttributeContinuousImpl(featureName, element.getPower()));
 			return attrs;
@@ -457,7 +460,8 @@ public class InvestigationTask extends SwingWorker<DiscoveredPetriNetWithData, I
 		if (config.isExperimentalFeatures()) {
 			for(  Determination deter : this.source.getSource().getSource().getDeterminations()) {
 				String featureName = deter.getPanel().getName()
-						+":"+deter.getSlicer().getShortenName();
+						+"_"+deter.getSlicer().getShortenName();
+				featureName = featureName.replace(":", "_");
 //				add sax feature names
 				for(int i=0;i < this.SAX_FROM.size(); i++) {
 					String expAttr = String.format(ExperimentalFeatureProcessor.SAX_OUTLIER_TO_OUTLIER_FEATURE_NAME,
@@ -813,7 +817,8 @@ public class InvestigationTask extends SwingWorker<DiscoveredPetriNetWithData, I
 		if (config.isExperimentalFeatures()) {
 			for(  Determination deter : this.source.getSource().getSource().getDeterminations()) {
 				String featureName = deter.getPanel().getName()
-						+":"+deter.getSlicer().getShortenName();
+						+"_"+deter.getSlicer().getShortenName();
+				featureName = featureName.replace(":", "_");
 //				add sax feature names
 				for(int i=0;i < this.SAX_FROM.size(); i++) {
 					String expAttr = String.format(ExperimentalFeatureProcessor.SAX_OUTLIER_TO_OUTLIER_FEATURE_NAME,
