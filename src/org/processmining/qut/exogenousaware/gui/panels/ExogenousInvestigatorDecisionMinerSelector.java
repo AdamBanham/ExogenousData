@@ -163,11 +163,17 @@ public class ExogenousInvestigatorDecisionMinerSelector extends JPanel {
 		
 //		states
 		private boolean enabled = false;
+		private boolean dftFeatures = true;
+		private boolean saxFeatures = true;
+		private boolean edttsFeatures = false;
 		
 //		gui elements
 		private JRadioButton enabledMode = new JRadioButton("Enable");
 		private JRadioButton disableMode = new JRadioButton("Disable");
 		private ButtonGroup modeGroup = new ButtonGroup();
+		private JRadioButton addSAXFeatures = new JRadioButton("SAX Features");
+		private JRadioButton addDFTFeatures = new JRadioButton("DFT Features");
+		private JRadioButton addEDTTSFeatures = new JRadioButton("EDT-TS Features");
 		
 //		defaults/labels
 		String title = "Experimental Time Series Features";
@@ -189,6 +195,28 @@ public class ExogenousInvestigatorDecisionMinerSelector extends JPanel {
 				+ "<ul>"
 				+ "<li> (Discrete) The frequency of the kth coefficient </li>"
 				+ "<li> (Continous) The power of the kth coefficient </li>"
+				+ "</ul>"
+				+ "<li> EDT-TS proposed in 'Decision Mining with Time Series Data "
+				+ "Based on Automatic Feature Generation'. Scheibel, B. and Rinderele-Ma,"
+				+ " S. CAiSE 2022. However, only interval-based "
+				+ "features are considered. Moreover, global features can be "
+				+ "introduced via "
+				+ "slicing configuration using xPM setup.</li>"
+				+ "<ul>"
+				+ "<li> Aggregation functions used: </li>"
+				+ "<ul>"
+				+ "<li> (Continous) Mean </li>"
+				+ "<li> (Continous) Standard Deviation </li>"
+				+ "<li> (Continous) Percentage Change </li>"
+				+ "<li> (Continous) Slope </li>"
+				+ "</ul>"
+				+ "<li> Interval-based features </li>"
+				+ "<ul>"
+				+ "<li> Equally split into 2 groups then use agg functions on groups</li>"
+				+ "<li> Equally split into 4 groups then use agg functions on groups</li>"
+				+ "<li> Equally split into 10 groups then use agg functions on groups</li>"
+				+ "</ul>"
+//				+ "<li> and so called ''Pattern-based features'' </li>"
 				+ "</ul>"
 				+ "</ul>"
 				+ "</p></body></html>";
@@ -238,10 +266,69 @@ public class ExogenousInvestigatorDecisionMinerSelector extends JPanel {
 			});
 			modeGroup.add(disableMode);
 			add(disableMode, c);
+//			add label for feature selection
+			text = new JLabel("Features to Introduce:");
+			text.setFont(plainFont);
+			c.gridy = 3;
+			c.gridx = 0;
+			c.weightx = 0;
+			c.gridwidth = 1;
+			c.insets = new Insets(0,this.contentLeft,5,5);
+			add(text, c);
+//			add sax features
+			c.gridx += 1;
+			c.insets = new Insets(0,5,5,5);
+			c.weightx = 0;
+			c.gridwidth = 1;
+			addSAXFeatures.setSelected(true);
+			addSAXFeatures.setBackground(Color.LIGHT_GRAY);
+			addSAXFeatures.setActionCommand("SWITCH");
+			addSAXFeatures.addActionListener(new ActionListener() {
+				public void actionPerformed(ActionEvent e) {
+					if (e.getActionCommand().equals("SWITCH")) {
+						saxFeatures = addSAXFeatures.isSelected();
+					}
+			}
+			});
+			add(addSAXFeatures, c);
+//			add dft features
+			c.gridx += 1;
+			addDFTFeatures.setSelected(true);
+			addDFTFeatures.setBackground(Color.LIGHT_GRAY);
+			addDFTFeatures.setActionCommand("SWITCH");
+			addDFTFeatures.addActionListener(new ActionListener() {
+				public void actionPerformed(ActionEvent e) {
+					if (e.getActionCommand().equals("SWITCH")) {
+						dftFeatures = addDFTFeatures.isSelected();
+					}
+			}
+			});
+			add(addDFTFeatures, c);
+//			add edtts features
+			c.gridx += 1;
+			c.insets = new Insets(0,5,5,5);
+			c.weightx = 0;
+			c.gridwidth = 2;
+			addEDTTSFeatures.setSelected(false);
+			addEDTTSFeatures.setEnabled(false);
+			addEDTTSFeatures.setBackground(Color.LIGHT_GRAY);
+			addEDTTSFeatures.setActionCommand("SWITCH");
+			addEDTTSFeatures.addActionListener(new ActionListener() {
+				public void actionPerformed(ActionEvent e) {
+					if (e.getActionCommand().equals("SWITCH")) {
+						edttsFeatures = addEDTTSFeatures.isSelected();
+					}
+			}
+			});
+			add(addEDTTSFeatures, c);
+			
 		}
 
 		public void addConfiguration(MinerConfigurationBuilder builder) {
 			builder.experimentalFeatures(enabled);
+			builder.experimentalDFTFeatures(dftFeatures);
+			builder.experimentalSAXFeatures(saxFeatures);
+			builder.experimentalEDTTSFeatures(edttsFeatures);
 		}
 		
 		public void moveMode(ExperimentalFeatureMode mode) {
