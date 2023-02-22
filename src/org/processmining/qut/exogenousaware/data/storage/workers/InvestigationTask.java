@@ -137,7 +137,10 @@ public class InvestigationTask extends SwingWorker<DiscoveredPetriNetWithData, I
 		@Default @Getter private boolean crossValidate = true;
 		@Default @Getter private int crossValidateFolds = 10;
 		@Default @Getter private float confidenceLevel = 0.25f;
-		@Default @Getter private boolean experimentalFeatures = true;
+		@Default @Getter private boolean experimentalFeatures = false;
+		@Default @Getter private boolean experimentalSAXFeatures = false;
+		@Default @Getter private boolean experimentalDFTFeatures = false;
+		@Default @Getter private boolean experimentalEDTTSFeatures = false;
 	}
 	
 //	experimental targets
@@ -240,6 +243,10 @@ public class InvestigationTask extends SwingWorker<DiscoveredPetriNetWithData, I
 //	custom trace processor for classification examples
 	public static class ExperimentalFeatureProcessor extends TraceProcessor {
 		
+		private boolean createDFT = false;
+		private boolean createSAX = false;
+		private boolean createEDTTS = false;
+		
 //		feature names 
 		public static String TOP_K_DFT_FREQ_FEATURE_NAME = "%s_DFT_%d_FREQ";
 		public static String TOP_K_DFT_POWER_FEATURE_NAME = "%s_DFT_%d_POWER";
@@ -263,6 +270,24 @@ public class InvestigationTask extends SwingWorker<DiscoveredPetriNetWithData, I
 				AtomicLongMap<String>> numberOfWritesPerTransition,
 				Progress progress) {
 			super(net, xTrace, estimators, alignment, numberOfExecutions, numberOfWritesPerTransition, progress);
+		}
+		
+		public ExperimentalFeatureProcessor(
+				PetrinetGraph net,
+				XTrace xTrace,
+				Map<Place, FunctionEstimator> estimators,
+				SyncReplayResult alignment,
+				AtomicLongMap<Transition> numberOfExecutions,
+				Map<Transition,
+				AtomicLongMap<String>> numberOfWritesPerTransition,
+				Progress progress,
+				boolean dft,
+				boolean sax,
+				boolean edtts) {
+			super(net, xTrace, estimators, alignment, numberOfExecutions, numberOfWritesPerTransition, progress);
+			this.createDFT = dft;
+			this.createSAX = sax;
+			this.createEDTTS = edtts;
 		}
 		
 		@Override
@@ -298,11 +323,17 @@ public class InvestigationTask extends SwingWorker<DiscoveredPetriNetWithData, I
 //			System.out.println("[InvestigationTask] slices found :: "+slices.size());
 			for(SubSeries slice : slices) {
 //				generate DFT features for each slice
-//				TODO
-				generateDFTFeatures(slice, xAttributeMap);
+				if (createDFT) {
+					generateDFTFeatures(slice, xAttributeMap);
+				}
 //				generate SAX features for each slice
-//				TODO
-				generateSAXFeatures(slice, xAttributeMap);
+				if (createSAX) {
+					generateSAXFeatures(slice, xAttributeMap);
+				}
+//				generate EDTTS features
+				if (createEDTTS) {
+					generateEDTTSFeatures(slice, xAttributeMap);
+				}
 			}
 //			System.out.println(variableValues.toString());
 		}
@@ -435,7 +466,10 @@ public class InvestigationTask extends SwingWorker<DiscoveredPetriNetWithData, I
 			return attrs;
 		}
 		
-		
+		private void generateEDTTSFeatures(SubSeries slice, XAttributeMap map) {
+			// TODO Auto-generated method stub
+			
+		}
 	}
 	
 	
@@ -463,41 +497,44 @@ public class InvestigationTask extends SwingWorker<DiscoveredPetriNetWithData, I
 						+"_"+deter.getSlicer().getShortenName();
 				featureName = featureName.replace(":", "_");
 //				add sax feature names
-				for(int i=0;i < this.SAX_FROM.size(); i++) {
-					String expAttr = String.format(ExperimentalFeatureProcessor.SAX_OUTLIER_TO_OUTLIER_FEATURE_NAME,
-							featureName,
-							this.SAX_FROM.get(i),
-							this.SAX_TO.get(i)
-					);
-					String likelyHandledname = GuardExpression.Factory.transformToVariableIdentifier(
-							DecisionMining.wekaUnescape(
-									WekaUtil.fixVarName(expAttr)));
-					this.converetedNames.put(expAttr, likelyHandledname);
-					classTypes.put(DecisionMining.fixVarName(expAttr), Type.BOOLEAN);
+				if (config.isExperimentalSAXFeatures()) {
+					for(int i=0;i < this.SAX_FROM.size(); i++) {
+						String expAttr = String.format(ExperimentalFeatureProcessor.SAX_OUTLIER_TO_OUTLIER_FEATURE_NAME,
+								featureName,
+								this.SAX_FROM.get(i),
+								this.SAX_TO.get(i)
+						);
+						String likelyHandledname = GuardExpression.Factory.transformToVariableIdentifier(
+								DecisionMining.wekaUnescape(
+										WekaUtil.fixVarName(expAttr)));
+						this.converetedNames.put(expAttr, likelyHandledname);
+						classTypes.put(DecisionMining.fixVarName(expAttr), Type.BOOLEAN);
+					}
 				}
 //				add dft feature names
-
-				for(int k=0; k < K_TOP_DFT_COEFICIENTS; k++) {
-//					add discrete feature for k-freq
-					String expAttr = String.format(ExperimentalFeatureProcessor.TOP_K_DFT_FREQ_FEATURE_NAME,
-							featureName,
-							k+1
-					);
-					String likelyHandledname = GuardExpression.Factory.transformToVariableIdentifier(
-							DecisionMining.wekaUnescape(
-									WekaUtil.fixVarName(expAttr)));
-					this.converetedNames.put(expAttr, likelyHandledname);
-					classTypes.put(DecisionMining.fixVarName(expAttr), Type.DISCRETE);
-//					add continuous feature for k-power
-					expAttr = String.format(ExperimentalFeatureProcessor.TOP_K_DFT_POWER_FEATURE_NAME,
-							featureName,
-							k+1
-					);
-					likelyHandledname = GuardExpression.Factory.transformToVariableIdentifier(
-							DecisionMining.wekaUnescape(
-									WekaUtil.fixVarName(expAttr)));
-					this.converetedNames.put(expAttr, likelyHandledname);
-					classTypes.put(DecisionMining.fixVarName(expAttr), Type.CONTINUOS);
+				if (config.isExperimentalDFTFeatures()) {
+					for(int k=0; k < K_TOP_DFT_COEFICIENTS; k++) {
+	//					add discrete feature for k-freq
+						String expAttr = String.format(ExperimentalFeatureProcessor.TOP_K_DFT_FREQ_FEATURE_NAME,
+								featureName,
+								k+1
+						);
+						String likelyHandledname = GuardExpression.Factory.transformToVariableIdentifier(
+								DecisionMining.wekaUnescape(
+										WekaUtil.fixVarName(expAttr)));
+						this.converetedNames.put(expAttr, likelyHandledname);
+						classTypes.put(DecisionMining.fixVarName(expAttr), Type.DISCRETE);
+	//					add continuous feature for k-power
+						expAttr = String.format(ExperimentalFeatureProcessor.TOP_K_DFT_POWER_FEATURE_NAME,
+								featureName,
+								k+1
+						);
+						likelyHandledname = GuardExpression.Factory.transformToVariableIdentifier(
+								DecisionMining.wekaUnescape(
+										WekaUtil.fixVarName(expAttr)));
+						this.converetedNames.put(expAttr, likelyHandledname);
+						classTypes.put(DecisionMining.fixVarName(expAttr), Type.CONTINUOS);
+					}
 				}
 			}
 		}
@@ -617,7 +654,10 @@ public class InvestigationTask extends SwingWorker<DiscoveredPetriNetWithData, I
 									alignment,
 									this.numberOfExecutions,
 									this.numberOfWritesPerTransition,
-									progress
+									progress,
+									config.isExperimentalDFTFeatures(),
+									config.isExperimentalSAXFeatures(),
+									config.isExperimentalEDTTSFeatures()
 									)
 								, index)
 							);
